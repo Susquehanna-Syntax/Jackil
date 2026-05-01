@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}All Tickets — Jackil{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in d1">
+  <div>
+    <div class="page-title">All Tickets</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ tickets|length }} ticket{{ tickets|length|pluralize }}</div>
+  </div>
+  <a href="{% url 'tickets:ticket_create' %}" class="btn btn-filled-lav">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Ticket
+  </a>
+</div>
+
+<div class="filter-bar fade-in d2">
+  <input type="text" class="form-input" placeholder="Search tickets..." value="{{ search }}" name="search" id="search_input">
+  <select class="form-select" id="status_filter">
+    <option value="">All Status</option>
+    <option value="open" {% if status == "open" %}selected{% endif %}>Open</option>
+    <option value="in_progress" {% if status == "in_progress" %}selected{% endif %}>In Progress</option>
+    <option value="pending" {% if status == "pending" %}selected{% endif %}>Pending</option>
+    <option value="resolved" {% if status == "resolved" %}selected{% endif %}>Resolved</option>
+    <option value="closed" {% if status == "closed" %}selected{% endif %}>Closed</option>
+  </select>
+  <select class="form-select" id="priority_filter">
+    <option value="">All Priority</option>
+    <option value="critical" {% if priority == "critical" %}selected{% endif %}>Critical</option>
+    <option value="high" {% if priority == "high" %}selected{% endif %}>High</option>
+    <option value="medium" {% if priority == "medium" %}selected{% endif %}>Medium</option>
+    <option value="low" {% if priority == "low" %}selected{% endif %}>Low</option>
+  </select>
+  <select class="form-select" id="assigned_filter">
+    <option value="">All Assignments</option>
+    <option value="mine" {% if assigned == "mine" %}selected{% endif %}>Assigned to Me</option>
+    <option value="unassigned" {% if assigned == "unassigned" %}selected{% endif %}>Unassigned</option>
+  </select>
+</div>
+
+{% if tickets %}
+<div class="ticket-list fade-in d3">
+  {% for ticket in tickets %}
+  <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="ticket-list-item">
+    <div class="ticket-list-dot" style="background: var(--{{ ticket.color_class }});"></div>
+    <div class="ticket-list-content">
+      <div class="ticket-list-title">{{ ticket.title }}</div>
+      <div class="ticket-list-meta">
+        #{{ ticket.pk }} &middot; {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
+        {% if ticket.assigned_to %}&middot; to {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}{% endif %}
+        &middot; {{ ticket.created_at|date:"M d, Y" }}
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+      <span class="tag tag-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
+      <span class="ticket-list-status tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state fade-in d3">
+  <div class="empty-state-icon">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </div>
+  <h3>No tickets found</h3>
+  <p>Try adjusting your filters or create a new ticket.</p>
+</div>
+{% endif %}
+
+<script>
+function applyFilters() {
+  const params = new URLSearchParams();
+  const search = document.getElementById('search_input').value;
+  const status = document.getElementById('status_filter').value;
+  const priority = document.getElementById('priority_filter').value;
+  const assigned = document.getElementById('assigned_filter').value;
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  if (priority) params.set('priority', priority);
+  if (assigned) params.set('assigned', assigned);
+  window.location.search = params.toString();
+}
+
+document.getElementById('status_filter').addEventListener('change', applyFilters);
+document.getElementById('priority_filter').addEventListener('change', applyFilters);
+document.getElementById('assigned_filter').addEventListener('change', applyFilters);
+document.getElementById('search_input').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') applyFilters();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}New Ticket — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'tickets:ticket_list' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to Tickets
+  </a>
+
+  <div class="page-title">Create Ticket</div>
+  <div style="font-size: 14px; color: var(--text-2); margin-bottom: 32px;">Fill in the details to submit a new IT ticket.</div>
+
+  <form method="post" style="max-width: 640px;">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label class="form-label" for="id_title">Title</label>
+      <input type="text" name="title" id="id_title" class="form-input" placeholder="e.g. WiFi not working in floor 3" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_description">Description</label>
+      <textarea name="description" id="id_description" class="form-textarea" placeholder="Describe the issue in detail..." required></textarea>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="form-group">
+        <label class="form-label" for="id_priority">Priority</label>
+        <select name="priority" id="id_priority" class="form-select">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
+      </div>
+
+      {% if departments %}
+      <div class="form-group">
+        <label class="form-label" for="id_department">Department</label>
+        <select name="department" id="id_department" class="form-select">
+          <option value="">-- None --</option>
+          {% for dept in departments %}
+          <option value="{{ dept.pk }}">{{ dept.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_tags">Tags <span style="color: var(--text-3); font-weight: 400;">(comma-separated)</span></label>
+      <input type="text" name="tags" id="id_tags" class="form-input" placeholder="network, urgent, hardware">
+    </div>
+
+    <button type="submit" class="btn btn-filled-lav">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create Ticket
+    </button>
+  </form>
+</div>
+{% endblock %}

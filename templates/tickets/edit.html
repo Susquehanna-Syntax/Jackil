@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit #{{ ticket.pk }} — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to Ticket
+  </a>
+
+  <div class="page-title">Edit Ticket #{{ ticket.pk }}</div>
+  <div style="font-size: 14px; color: var(--text-2); margin-bottom: 32px;">Update the ticket details below.</div>
+
+  <form method="post" style="max-width: 640px;">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label class="form-label" for="id_title">Title</label>
+      <input type="text" name="title" id="id_title" class="form-input" value="{{ ticket.title }}" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_description">Description</label>
+      <textarea name="description" id="id_description" class="form-textarea" required>{{ ticket.description }}</textarea>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="form-group">
+        <label class="form-label" for="id_priority">Priority</label>
+        <select name="priority" id="id_priority" class="form-select">
+          <option value="low" {% if ticket.priority == "low" %}selected{% endif %}>Low</option>
+          <option value="medium" {% if ticket.priority == "medium" %}selected{% endif %}>Medium</option>
+          <option value="high" {% if ticket.priority == "high" %}selected{% endif %}>High</option>
+          <option value="critical" {% if ticket.priority == "critical" %}selected{% endif %}>Critical</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_status">Status</label>
+        <select name="status" id="id_status" class="form-select">
+          <option value="open" {% if ticket.status == "open" %}selected{% endif %}>Open</option>
+          <option value="in_progress" {% if ticket.status == "in_progress" %}selected{% endif %}>In Progress</option>
+          <option value="pending" {% if ticket.status == "pending" %}selected{% endif %}>Pending</option>
+          <option value="resolved" {% if ticket.status == "resolved" %}selected{% endif %}>Resolved</option>
+          <option value="closed" {% if ticket.status == "closed" %}selected{% endif %}>Closed</option>
+        </select>
+      </div>
+    </div>
+
+    {% if departments %}
+    <div class="form-group">
+      <label class="form-label" for="id_department">Department</label>
+      <select name="department" id="id_department" class="form-select">
+        <option value="">-- None --</option>
+        {% for dept in departments %}
+        <option value="{{ dept.pk }}" {% if ticket.department and ticket.department.pk == dept.pk %}selected{% endif %}>{{ dept.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label class="form-label" for="id_tags">Tags <span style="color: var(--text-3); font-weight: 400;">(comma-separated)</span></label>
+      <input type="text" name="tags" id="id_tags" class="form-input" value="{{ ticket.tags }}">
+    </div>
+
+    <button type="submit" class="btn btn-filled-mint">
+      Save Changes
+    </button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Jackil — IT Ticket Management{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="layout">
+  <nav class="sidebar">
+    <a href="{% url 'tickets:dashboard' %}" class="sidebar-logo">J</a>
+    <a href="{% url 'tickets:dashboard' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" data-tip="Dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </a>
+    <a href="{% url 'tickets:ticket_list' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'ticket_list' %} active{% endif %}" data-tip="All Tickets">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    </a>
+    <a href="{% url 'tickets:ticket_create' %}" class="sidebar-icon" data-tip="New Ticket">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </a>
+    <div class="sidebar-spacer"></div>
+    <a href="{% url 'accounts:logout' %}" class="sidebar-avatar" data-tip="Logout" style="background: var(--{{ user.avatar_color|default:'lavender' }});">{{ user.avatar_initials }}</a>
+  </nav>
+
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+</body>
+</html>

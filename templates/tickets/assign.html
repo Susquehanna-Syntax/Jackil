@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Assign #{{ ticket.pk }} — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to Ticket
+  </a>
+
+  <div class="page-title">Assign Ticket #{{ ticket.pk }}</div>
+  <div style="font-size: 14px; color: var(--text-2); margin-bottom: 32px;">{{ ticket.title }}</div>
+
+  <div style="max-width: 480px;">
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="id_user_id">Assign To</label>
+        <select name="user_id" id="id_user_id" class="form-select">
+          <option value="">-- Unassign --</option>
+          {% for agent in agents %}
+          <option value="{{ agent.pk }}" {% if ticket.assigned_to and ticket.assigned_to.pk == agent.pk %}selected{% endif %}>
+            {{ agent.get_full_name|default:agent.username }}{% if agent.department %} ({{ agent.department }}){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-filled-lav">
+        Update Assignment
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

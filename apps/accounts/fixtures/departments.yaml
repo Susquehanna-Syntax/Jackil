@@ -1,0 +1,24 @@
+- model: accounts.department
+  pk: 1
+  fields:
+    name: Networking
+    description: Network infrastructure and connectivity issues
+    created_at: 2024-01-01T00:00:00Z
+- model: accounts.department
+  pk: 2
+  fields:
+    name: Hardware
+    description: Computer, printer, and device hardware issues
+    created_at: 2024-01-01T00:00:00Z
+- model: accounts.department
+  pk: 3
+  fields:
+    name: Software
+    description: Software installation and licensing issues
+    created_at: 2024-01-01T00:00:00Z
+- model: accounts.department
+  pk: 4
+  fields:
+    name: Security
+    description: Security incidents and access management
+    created_at: 2024-01-01T00:00:00Z

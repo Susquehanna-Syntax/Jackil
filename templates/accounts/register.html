@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Register — Jackil{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+  <div class="auth-card fade-in">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="width: 56px; height: 56px; background: var(--lavender); border-radius: var(--r-md); display: grid; place-items: center; margin: 0 auto; font-family: 'Fraunces', serif; font-weight: 700; font-size: 24px; color: var(--bg);">J</div>
+    </div>
+    <div class="auth-title">Create Account</div>
+    <div class="auth-sub">Join your team on Jackil</div>
+
+    <form method="post" style="margin-top: 8px;">
+      {% csrf_token %}
+
+      {% if form.errors %}
+      <div class="message message-error" style="margin-bottom: 16px;">
+        Please correct the errors below.
+      </div>
+      {% endif %}
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label" for="id_first_name">First Name</label>
+          <input type="text" name="first_name" id="id_first_name" class="form-input" value="{{ form.first_name.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="id_last_name">Last Name</label>
+          <input type="text" name="last_name" id="id_last_name" class="form-input" value="{{ form.last_name.value|default:'' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_username">Username</label>
+        <input type="text" name="username" id="id_username" class="form-input" placeholder="Choose a username" value="{{ form.username.value|default:'' }}" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_email">Email</label>
+        <input type="email" name="email" id="id_email" class="form-input" placeholder="your@email.com" value="{{ form.email.value|default:'' }}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_password">Password</label>
+        <input type="password" name="password" id="id_password" class="form-input" placeholder="Create a password" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_password_confirm">Confirm Password</label>
+        <input type="password" name="password_confirm" id="id_password_confirm" class="form-input" placeholder="Confirm your password" required>
+      </div>
+
+      <button type="submit" class="btn btn-filled-lav" style="width: 100%; justify-content: center; display: flex;">Create Account</button>
+    </form>
+
+    <div class="auth-link">Already have an account? <a href="{% url 'accounts:login' %}">Sign In</a></div>
+  </div>
+</div>
+{% endblock %}

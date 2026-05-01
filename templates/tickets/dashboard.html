@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">Dashboard <span>Overview</span></div>
+  <div class="hero-sub">Track and manage all IT tickets across your department.</div>
+</div>
+
+<div class="stat-grid fade-in d2">
+  <div class="stat-card">
+    <div class="stat-number" style="color: var(--sky);">{{ total }}</div>
+    <div class="stat-label">Total Tickets</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" style="color: var(--coral);">{{ critical }}</div>
+    <div class="stat-label">Critical</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" style="color: var(--lavender);">{{ open_total }}</div>
+    <div class="stat-label">Open</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" style="color: var(--peach);">{{ in_progress }}</div>
+    <div class="stat-label">In Progress</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" style="color: var(--mint);">{{ resolved }}</div>
+    <div class="stat-label">Resolved</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" style="color: var(--text-3);">{{ closed }}</div>
+    <div class="stat-label">Closed</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="two-col">
+  <div>
+    <div class="page-header fade-in d3">
+      <div class="section-heading">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Recent Tickets
+      </div>
+      <a href="{% url 'tickets:ticket_list' %}" class="btn btn-ghost">View All &rarr;</a>
+    </div>
+
+    {% if recent %}
+    <div class="ticket-list fade-in d4">
+      {% for ticket in recent %}
+      <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="ticket-list-item">
+        <div class="ticket-list-dot" style="background: var(--{{ ticket.color_class }});"></div>
+        <div class="ticket-list-content">
+          <div class="ticket-list-title">{{ ticket.title }}</div>
+          <div class="ticket-list-meta">
+            by {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
+            {% if ticket.department %}&middot; {{ ticket.department.name }}{% endif %}
+            &middot; {{ ticket.created_at|date:"M d" }}
+          </div>
+        </div>
+        <span class="ticket-list-status tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state fade-in d4">
+      <div class="empty-state-icon">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <h3>No Tickets Yet</h3>
+      <p>Get started by creating your first ticket.</p>
+      <a href="{% url 'tickets:ticket_create' %}" class="btn btn-filled-lav">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Ticket
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    {% if my_tickets %}
+    <div class="side-panel fade-in d5">
+      <div class="side-panel-title">Assigned to You</div>
+      {% for ticket in my_tickets %}
+      <a href="{% url 'tickets:ticket_detail' ticket.pk %}" style="display:block; padding: 10px 0; border-bottom: 1px solid var(--s3); text-decoration: none; color: inherit;">
+        <div style="font-size: 13px; font-weight: 500;">{{ ticket.title }}</div>
+        <div style="font-size: 11px; color: var(--text-3); margin-top: 2px;">#{{ ticket.pk }} &middot; {{ ticket.created_at|date:"M d" }}</div>
+      </a>
+      {% endfor %}
+      <a href="{% url 'tickets:ticket_list' %}?assigned=mine" style="display:block; padding: 10px 0; font-size: 12px; color: var(--lavender); text-decoration: none; font-weight: 600;">View all assigned &rarr;</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
