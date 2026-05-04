@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}Ticket #{{ ticket.pk }} — Jackil{% endblock %}
 
@@ -10,10 +9,16 @@
   </a>
 
   <div class="ticket-detail-header">
+    {% if user.role == "customer" %}
+    <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+      <span class="tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+    </div>
+    {% else %}
     <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
       <span class="tag tag-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
       <span class="tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
     </div>
+    {% endif %}
     <div class="ticket-detail-title">{{ ticket.title }}</div>
     <div class="ticket-detail-meta">
       <span>
@@ -24,10 +29,27 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         {{ ticket.created_at|date:"F d, Y" }}
       </span>
-      {% if ticket.assigned_to %}
+      {% if can_manage %}
       <span>
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="12" r="4"/></svg>
-        {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+        <span id="assign_trigger">
+          {% for u in ticket.assigned_users.all %}
+          <span class="assign-user-chip" title="Click to manage assignees">
+            {{ u.get_full_name|default:u.username }}
+          </span>
+          {% empty %}
+          <span style="color: var(--text-3);">Unassigned</span>
+          {% endfor %}
+        </span>
+      </span>
+      {% else %}
+      <span>
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="12" r="4"/></svg>
+        {% for u in ticket.assigned_users.all %}
+          {{ u.get_full_name|default:u.username }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+          Unassigned
+        {% endfor %}
       </span>
       {% endif %}
       {% if ticket.department %}
@@ -39,7 +61,7 @@
     </div>
   </div>
 
-  {% if ticket.tags %}
+  {% if user.role != "customer" and ticket.tags %}
   <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;">
     {% for tag in ticket.tag_list %}
     <span style="font-size: 11px; color: var(--text-3); background: var(--s2); padding: 3px 10px; border-radius: 14px;">{{ tag }}</span>
@@ -50,11 +72,8 @@
   <div class="ticket-detail-body">{{ ticket.description|linebreaks }}</div>
 
   <div class="ticket-detail-actions">
-    {% if user == ticket.created_by or user.role == 'admin' %}
+    {% if can_edit %}
     <a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-outline">Edit Ticket</a>
-    {% endif %}
-    {% if user.role == 'admin' or user == ticket.assigned_to %}
-    <a href="{% url 'tickets:ticket_assign' ticket.pk %}" class="btn btn-outline">Assign</a>
     {% endif %}
   </div>
 </div>
@@ -74,6 +93,8 @@
       <span class="comment-author">
         <span class="avatar-sm" style="background: var(--{{ comment.author.avatar_color|default:'lavender' }}); margin-right: 8px;">{{ comment.author.avatar_initials }}</span>
         {{ comment.author.get_full_name|default:comment.author.username }}
+        {% if comment.author.role == "agent" %}<span style="font-size: 10px; color: var(--mint); margin-left: 6px;">Support Assistant</span>{% endif %}
+        {% if comment.author.role == "admin" %}<span style="font-size: 10px; color: var(--lavender); margin-left: 6px;">Admin</span>{% endif %}
       </span>
       <span class="comment-time">{{ comment.created_at|date:"M d, Y H:i" }}</span>
     </div>
@@ -94,4 +115,208 @@
     </form>
   </div>
 </div>
+
+{% if user.role != "customer" %}
+<div class="divider"></div>
+
+<div class="ticket-detail-actions" style="margin-bottom: 32px;">
+  <button type="button" class="btn btn-outline" id="manage_trigger">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Manage Ticket
+  </button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_body %}
+<div class="modal-overlay" id="manage_modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Manage Ticket #{{ ticket.pk }}</div>
+      <button class="modal-close" id="manage_close" type="button">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-search">
+      <input type="text" id="modal_search" placeholder="Search to assign..." autocomplete="off">
+    </div>
+    <div class="modal-selected-tags" id="selected_tags"></div>
+    <div class="modal-body" id="search_results">
+      <div class="modal-empty">Type to search team members...</div>
+    </div>
+    <div style="padding: 16px 24px; border-top: 1px solid var(--s3);">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="modal_priority">Priority</label>
+          <select name="priority" id="modal_priority" class="form-select">
+            <option value="low" {% if ticket.priority == "low" %}selected{% endif %}>Low</option>
+            <option value="medium" {% if ticket.priority == "medium" %}selected{% endif %}>Medium</option>
+            <option value="high" {% if ticket.priority == "high" %}selected{% endif %}>High</option>
+            <option value="critical" {% if ticket.priority == "critical" %}selected{% endif %}>Critical</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="modal_status">Status</label>
+          <select name="status" id="modal_status" class="form-select">
+            <option value="open" {% if ticket.status == "open" %}selected{% endif %}>Open</option>
+            <option value="in_progress" {% if ticket.status == "in_progress" %}selected{% endif %}>In Progress</option>
+            <option value="pending" {% if ticket.status == "pending" %}selected{% endif %}>Pending</option>
+            <option value="resolved" {% if ticket.status == "resolved" %}selected{% endif %}>Resolved</option>
+            <option value="closed" {% if ticket.status == "closed" %}selected{% endif %}>Closed</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" name="assigned_users" id="assigned_users_input" value="">
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="manage_cancel" type="button">Cancel</button>
+      <button class="btn btn-filled-mint" type="submit">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('manage_modal');
+  const trigger = document.getElementById('assign_trigger');
+  const manageTrigger = document.getElementById('manage_trigger');
+  const closeBtn = document.getElementById('manage_close');
+  const cancelBtn = document.getElementById('manage_cancel');
+  const searchInput = document.getElementById('modal_search');
+  const resultsEl = document.getElementById('search_results');
+  const tagsEl = document.getElementById('selected_tags');
+  const hiddenInput = document.getElementById('assigned_users_input');
+
+  let selectedIds = new Set();
+  let allUsers = [];
+
+  function openModal() {
+    selectedIds.clear();
+    {% for u in ticket.assigned_users.all %}
+    selectedIds.add({{ u.pk }});
+    {% endfor %}
+    updateTags();
+    modal.classList.add('active');
+    searchInput.value = '';
+    searchInput.focus();
+    fetchUsers('');
+  }
+
+  function closeModal() {
+    modal.classList.remove('active');
+  }
+
+  function updateTags() {
+    if (selectedIds.size === 0) {
+      tagsEl.innerHTML = '';
+      return;
+    }
+    let html = '';
+    selectedIds.forEach(function(id) {
+      const user = allUsers.find(u => u.pk === id);
+      if (user) {
+        const name = user.first_name || user.last_name || user.username;
+        html += '<span class="modal-selected-tag">' +
+          name +
+          '<button type="button" class="modal-selected-tag-remove" data-id="' + id + '">&times;</button>' +
+          '</span>';
+      }
+    });
+    tagsEl.innerHTML = html;
+  }
+
+  function updateHiddenInput() {
+    hiddenInput.value = Array.from(selectedIds).join(',');
+  }
+
+  function fetchUsers(query) {
+    fetch('{% url "tickets:user_search" %}?q=' + encodeURIComponent(query))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        allUsers = data.users || [];
+        renderResults();
+      });
+  }
+
+  function renderResults() {
+    if (allUsers.length === 0) {
+      resultsEl.innerHTML = '<div class="modal-empty">No team members found.</div>';
+      return;
+    }
+    let html = '';
+    allUsers.forEach(function(user) {
+      const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username;
+      const isSelected = selectedIds.has(user.pk);
+      const dept = user.department ? ' · ' + user.department : '';
+      html += '<div class="modal-user-item' + (isSelected ? ' selected' : '') + '" data-id="' + user.pk + '">' +
+        '<div class="modal-user-info">' +
+          '<div class="modal-user-avatar" style="background: var(--' + (user.avatar_color || 'lavender') + ');">' +
+            getInitials(name) +
+          '</div>' +
+          '<div>' +
+            '<div class="modal-user-name">' + name + '</div>' +
+            '<div class="modal-user-dept">' + (user.department || 'Support') + dept + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="modal-check">' +
+          '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17"/></svg>' +
+        '</div>' +
+      '</div>';
+    });
+    resultsEl.innerHTML = html;
+  }
+
+  function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  function toggleUser(id) {
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      selectedIds.add(id);
+    }
+    updateTags();
+    updateHiddenInput();
+    renderResults();
+  }
+
+  if (trigger) trigger.addEventListener('click', openModal);
+  if (manageTrigger) manageTrigger.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  searchInput.addEventListener('input', function() {
+    fetchUsers(searchInput.value);
+  });
+
+  resultsEl.addEventListener('click', function(e) {
+    const item = e.target.closest('.modal-user-item');
+    if (item) {
+      toggleUser(parseInt(item.dataset.id));
+    }
+  });
+
+  tagsEl.addEventListener('click', function(e) {
+    const removeBtn = e.target.closest('.modal-selected-tag-remove');
+    if (removeBtn) {
+      toggleUser(parseInt(removeBtn.dataset.id));
+    }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
+    }
+  });
+
+  updateHiddenInput();
+});
+</script>
 {% endblock %}

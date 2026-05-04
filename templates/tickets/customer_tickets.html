@@ -1,12 +1,11 @@
 {% extends "base.html" %}
-{% load static %}
 
-{% block title %}All Tickets — Jackil{% endblock %}
+{% block title %}My Tickets — Jackil{% endblock %}
 
 {% block content %}
 <div class="page-header fade-in d1">
   <div>
-    <div class="page-title">All Tickets</div>
+    <div class="page-title">My Tickets</div>
     <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ tickets|length }} ticket{{ tickets|length|pluralize }}</div>
   </div>
   <a href="{% url 'tickets:ticket_create' %}" class="btn btn-filled-lav">
@@ -16,7 +15,7 @@
 </div>
 
 <div class="filter-bar fade-in d2">
-  <input type="text" class="form-input" placeholder="Search tickets..." value="{{ search }}" name="search" id="search_input">
+  <input type="text" class="form-input" placeholder="Search my tickets..." value="{{ search }}" name="search" id="search_input">
   <select class="form-select" id="status_filter">
     <option value="">All Status</option>
     <option value="open" {% if status == "open" %}selected{% endif %}>Open</option>
@@ -24,18 +23,6 @@
     <option value="pending" {% if status == "pending" %}selected{% endif %}>Pending</option>
     <option value="resolved" {% if status == "resolved" %}selected{% endif %}>Resolved</option>
     <option value="closed" {% if status == "closed" %}selected{% endif %}>Closed</option>
-  </select>
-  <select class="form-select" id="priority_filter">
-    <option value="">All Priority</option>
-    <option value="critical" {% if priority == "critical" %}selected{% endif %}>Critical</option>
-    <option value="high" {% if priority == "high" %}selected{% endif %}>High</option>
-    <option value="medium" {% if priority == "medium" %}selected{% endif %}>Medium</option>
-    <option value="low" {% if priority == "low" %}selected{% endif %}>Low</option>
-  </select>
-  <select class="form-select" id="assigned_filter">
-    <option value="">All Assignments</option>
-    <option value="mine" {% if assigned == "mine" %}selected{% endif %}>Assigned to Me</option>
-    <option value="unassigned" {% if assigned == "unassigned" %}selected{% endif %}>Unassigned</option>
   </select>
 </div>
 
@@ -47,34 +34,33 @@
     <div class="ticket-list-content">
       <div class="ticket-list-title">{{ ticket.title }}</div>
       <div class="ticket-list-meta">
-        #{{ ticket.pk }} &middot; {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
-        &middot; {{ ticket.created_at|date:"M d, Y" }}
+        #{{ ticket.pk }} &middot; {{ ticket.created_at|date:"M d, Y" }}
       </div>
       <div class="ticket-list-assignees" style="display: flex; gap: 4px; align-items: center; margin-top: 4px;">
         {% for u in ticket.assigned_users.all %}
         <span class="assignee-chip" title="{{ u.get_full_name|default:u.username }}">
-          {% if u.department %}{{ u.department.name }}{% else %}Support{% endif %}
-          &middot; {{ u.get_full_name|default:u.username }}
+          {{ u.get_full_name|default:u.username }}
         </span>
         {% empty %}
         <span style="font-size: 11px; color: var(--text-3);">Unassigned</span>
         {% endfor %}
       </div>
     </div>
-    <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
-      <span class="tag tag-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
-      <span class="ticket-list-status tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
-    </div>
+    <span class="ticket-list-status tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
   </a>
   {% endfor %}
 </div>
 {% else %}
 <div class="empty-state fade-in d3">
   <div class="empty-state-icon">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
   </div>
-  <h3>No tickets found</h3>
-  <p>Try adjusting your filters or create a new ticket.</p>
+  <h3>No Tickets Yet</h3>
+  <p>Create your first IT support ticket.</p>
+  <a href="{% url 'tickets:ticket_create' %}" class="btn btn-filled-lav">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Ticket
+  </a>
 </div>
 {% endif %}
 
@@ -83,18 +69,12 @@ function applyFilters() {
   const params = new URLSearchParams();
   const search = document.getElementById('search_input').value;
   const status = document.getElementById('status_filter').value;
-  const priority = document.getElementById('priority_filter').value;
-  const assigned = document.getElementById('assigned_filter').value;
   if (search) params.set('search', search);
   if (status) params.set('status', status);
-  if (priority) params.set('priority', priority);
-  if (assigned) params.set('assigned', assigned);
   window.location.search = params.toString();
 }
 
 document.getElementById('status_filter').addEventListener('change', applyFilters);
-document.getElementById('priority_filter').addEventListener('change', applyFilters);
-document.getElementById('assigned_filter').addEventListener('change', applyFilters);
 document.getElementById('search_input').addEventListener('keypress', function(e) {
   if (e.key === 'Enter') applyFilters();
 });

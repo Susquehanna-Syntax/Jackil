@@ -24,6 +24,7 @@ class Ticket(models.Model):
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default="medium")
     created_by = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="created_tickets")
     assigned_to = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_tickets")
+    assigned_users = models.ManyToManyField("accounts.User", blank=True, related_name="managed_tickets")
     department = models.ForeignKey("accounts.Department", on_delete=models.SET_NULL, null=True, blank=True)
     tags = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}Edit #{{ ticket.pk }} — Jackil{% endblock %}
 
@@ -10,7 +9,9 @@
   </a>
 
   <div class="page-title">Edit Ticket #{{ ticket.pk }}</div>
-  <div style="font-size: 14px; color: var(--text-2); margin-bottom: 32px;">Update the ticket details below.</div>
+  <div style="font-size: 14px; color: var(--text-2); margin-bottom: 32px;">
+    {% if user.role == "customer" %}Update the description below.{% else %}Update the ticket details below.{% endif %}
+  </div>
 
   <form method="post" style="max-width: 640px;">
     {% csrf_token %}
@@ -25,6 +26,8 @@
       <textarea name="description" id="id_description" class="form-textarea" required>{{ ticket.description }}</textarea>
     </div>
 
+    {% if user.role == "customer" %}
+    {% else %}
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
       <div class="form-group">
         <label class="form-label" for="id_priority">Priority</label>
@@ -64,6 +67,7 @@
       <label class="form-label" for="id_tags">Tags <span style="color: var(--text-3); font-weight: 400;">(comma-separated)</span></label>
       <input type="text" name="tags" id="id_tags" class="form-input" value="{{ ticket.tags }}">
     </div>
+    {% endif %}
 
     <button type="submit" class="btn btn-filled-mint">
       Save Changes

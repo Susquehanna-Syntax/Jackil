@@ -4,12 +4,12 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     ROLE_CHOICES = [
+        ("customer", "Customer"),
+        ("agent", "Support Assistant"),
         ("admin", "Admin"),
-        ("agent", "Agent"),
-        ("user", "User"),
     ]
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="user")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="customer")
     department = models.CharField(max_length=100, blank=True, default="")
     phone = models.CharField(max_length=20, blank=True, default="")
     avatar_color = models.CharField(max_length=20, default="lavender")
