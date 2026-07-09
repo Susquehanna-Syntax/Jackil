@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "apps.console",
     "apps.sla",
     "apps.kb",
+    "apps.automation",
 ]
 
 MIDDLEWARE = [

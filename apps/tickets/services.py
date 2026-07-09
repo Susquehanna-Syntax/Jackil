@@ -63,6 +63,10 @@ def post_message(ticket, author, body, kind="reply", files=None, is_public=None)
         from apps.sla.service import mark_first_response
 
         mark_first_response(ticket)
+    if kind in ("reply", "incoming_email"):
+        from apps.automation.engine import run_rules
+
+        run_rules(ticket, "on_reply", actor=author)
     return message
 
 

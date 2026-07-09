@@ -11,3 +11,7 @@ def apply_sla_on_create(sender, instance, created, **kwargs):
     from apps.sla.service import apply_sla
 
     apply_sla(instance)  # saves first_response_due / resolution_due
+
+    from apps.automation.engine import run_rules
+
+    run_rules(instance, "on_create")

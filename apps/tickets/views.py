@@ -237,7 +237,8 @@ def _handle_manage(request, ticket):
         ticket.priority = new_priority
 
     new_status = request.POST.get("status", ticket.status)
-    if ticket.status != new_status:
+    status_changed = ticket.status != new_status
+    if status_changed:
         record_system_event(
             ticket,
             actor,
@@ -251,6 +252,10 @@ def _handle_manage(request, ticket):
             ticket.closed_at = None
 
     ticket.save()
+    if status_changed:
+        from apps.automation.engine import run_rules
+
+        run_rules(ticket, "on_status_change", actor=actor)
     messages.success(request, f"Ticket #{ticket.pk} updated.")
 
 
@@ -394,3 +399,16 @@ def user_search(request):
     )
     result = list(agents)
     return JsonResponse({"users": result})
+
+
+@login_required
+def macro_list(request):
+    """Canned responses available to the current agent (for the composer)."""
+    if request.user.role not in ("agent", "admin"):
+        return JsonResponse({"macros": []})
+    from apps.automation.models import Macro
+
+    macros = Macro.objects.filter(Q(is_shared=True) | Q(created_by=request.user)).values(
+        "id", "name", "body"
+    )
+    return JsonResponse({"macros": list(macros)})
