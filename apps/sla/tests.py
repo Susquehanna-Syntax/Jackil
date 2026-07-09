@@ -117,3 +117,159 @@ class MarkFirstResponseTests(TestCase):
         result2 = mark_first_response(ticket, when=when2)
         self.assertFalse(result2)
         self.assertEqual(ticket.first_responded_at, when1)
+
+
+class SLASignalTests(TestCase):
+    def test_signal_applies_sla_on_create(self):
+        SLATarget.objects.update_or_create(
+            priority="high",
+            defaults={"response_minutes": 120, "resolution_minutes": 480},
+        )
+        ticket = Ticket.objects.create(
+            title="Signal test",
+            priority="high",
+            status="open",
+            created_by=_make_user(),
+        )
+        self.assertIsNotNone(ticket.first_response_due)
+        self.assertIsNotNone(ticket.resolution_due)
+
+
+class StatusHelpersTests(TestCase):
+    def _make_ticket(self, **kwargs):
+        defaults = dict(
+            title="Status test",
+            priority="high",
+            status="open",
+            created_by=_make_user(),
+            response_breached=False,
+            resolution_breached=False,
+        )
+        defaults.update(kwargs)
+        return Ticket(**defaults)
+
+    def test_response_status_none(self):
+        ticket = self._make_ticket(first_response_due=None)
+        from apps.sla.service import response_status
+
+        self.assertEqual(response_status(ticket), "none")
+
+    def test_response_status_open_and_overdue(self):
+        from apps.sla.service import response_status
+
+        now = timezone.now()
+        ticket = self._make_ticket(
+            first_response_due=now + timedelta(hours=2),
+            first_responded_at=None,
+        )
+        self.assertEqual(response_status(ticket, now=now), "open")
+
+        ticket.first_response_due = now - timedelta(hours=1)
+        self.assertEqual(response_status(ticket, now=now), "overdue")
+
+    def test_response_status_met_and_breached(self):
+        from apps.sla.service import response_status
+
+        ticket = self._make_ticket(
+            first_response_due=timezone.make_aware(datetime(2025, 1, 6, 14, 0)),
+            first_responded_at=timezone.make_aware(datetime(2025, 1, 6, 11, 0)),
+        )
+        self.assertEqual(response_status(ticket), "met")
+
+        ticket.first_responded_at = timezone.make_aware(datetime(2025, 1, 6, 15, 0))
+        self.assertEqual(response_status(ticket), "breached")
+
+    def test_resolution_status_met_on_close(self):
+        from apps.sla.service import resolution_status
+
+        ticket = self._make_ticket(
+            status="resolved",
+            resolution_due=timezone.make_aware(datetime(2025, 1, 6, 14, 0)),
+            closed_at=timezone.make_aware(datetime(2025, 1, 6, 11, 0)),
+        )
+        self.assertEqual(resolution_status(ticket), "met")
+
+        ticket.closed_at = timezone.make_aware(datetime(2025, 1, 6, 15, 0))
+        self.assertEqual(resolution_status(ticket), "breached")
+
+
+class BreachFlaggingTests(TestCase):
+    def test_check_and_flag_sets_breach_booleans(self):
+        from apps.sla.service import check_and_flag_breaches
+
+        user = User.objects.create_user(username="breach_test", password="pass")
+        ticket = Ticket(
+            title="Breach test",
+            priority="high",
+            status="open",
+            created_by=user,
+            response_breached=False,
+            resolution_breached=False,
+        )
+        ticket.save()
+        ticket.first_response_due = timezone.make_aware(datetime(2025, 1, 6, 10, 0))
+        ticket.save(update_fields=["first_response_due"])
+
+        now = timezone.make_aware(datetime(2025, 1, 6, 14, 0))
+        newly = check_and_flag_breaches(ticket, now=now)
+        self.assertIn("response", newly)
+        ticket.refresh_from_db()
+        self.assertTrue(ticket.response_breached)
+
+        # Second call returns [] (already flagged)
+        newly2 = check_and_flag_breaches(ticket, now=now)
+        self.assertEqual(newly2, [])
+
+
+class FirstAgentReplyTests(TestCase):
+    def test_first_agent_reply_marks_response(self):
+        from apps.tickets.services import post_message
+
+        now = timezone.now()
+        ticket = Ticket.objects.create(
+            title="Agent reply test",
+            priority="high",
+            status="open",
+            created_by=_make_user(),
+            first_response_due=now + timedelta(hours=1),
+            first_responded_at=None,
+        )
+        agent = User.objects.create_user(username="agent_user", role="agent")
+        post_message(ticket, agent, "hi", kind="reply")
+        ticket.refresh_from_db()
+        self.assertIsNotNone(ticket.first_responded_at)
+
+        # A customer reply should NOT mark it again
+        customer = User.objects.create_user(username="cust", role="customer")
+        post_message(ticket, customer, "thanks", kind="reply")
+        ticket.refresh_from_db()
+        # first_responded_at should remain the original (idempotent)
+
+
+class EscalationTests(TestCase):
+    def test_escalate_bumps_priority_on_resolution_breach(self):
+        from apps.sla.service import escalate
+
+        now = timezone.now()
+        ticket = Ticket.objects.create(
+            title="Escalation test",
+            priority="high",
+            status="open",
+            created_by=_make_user(),
+            resolution_due=now - timedelta(hours=1),
+            resolution_breached=False,
+        )
+        escalate(ticket, ["resolution"])
+        ticket.refresh_from_db()
+        self.assertEqual(ticket.priority, "critical")
+
+        # Verify system events were recorded
+        from apps.tickets.models import TicketMessage
+
+        messages = TicketMessage.objects.filter(ticket=ticket, kind="system")
+        breach_msg = messages.filter(body="SLA resolution target breached.").exists()
+        self.assertTrue(breach_msg)
+        escal_msg = messages.filter(
+            body="Auto-escalated priority high → critical (SLA breach)."
+        ).exists()
+        self.assertTrue(escal_msg)

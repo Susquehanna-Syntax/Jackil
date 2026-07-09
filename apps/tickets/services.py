@@ -59,6 +59,10 @@ def post_message(ticket, author, body, kind="reply", files=None, is_public=None)
     )
     if files:
         add_attachments(ticket, message, files, uploaded_by=author)
+    if kind == "reply" and author is not None and getattr(author, "role", "") in ("agent", "admin"):
+        from apps.sla.service import mark_first_response
+
+        mark_first_response(ticket)
     return message
 
 
