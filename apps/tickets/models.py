@@ -45,6 +45,12 @@ class Ticket(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     closed_at = models.DateTimeField(null=True, blank=True)
+    due_at = models.DateTimeField(null=True, blank=True)
+    first_response_due = models.DateTimeField(null=True, blank=True)
+    resolution_due = models.DateTimeField(null=True, blank=True)
+    first_responded_at = models.DateTimeField(null=True, blank=True)
+    response_breached = models.BooleanField(default=False)
+    resolution_breached = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]

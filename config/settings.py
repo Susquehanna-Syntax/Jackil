@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.tickets",
     "apps.inbox",
     "apps.console",
+    "apps.sla",
 ]
 
 MIDDLEWARE = [
