@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Help Center — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">Help <span>Center</span></div>
+  <div class="hero-sub">Answers, guides, and how-tos — search or browse by topic.</div>
+
+  <form method="get" class="kb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" name="q" value="{{ query }}" placeholder="Search the knowledge base…" autofocus>
+    <button type="submit" class="btn btn-filled-lav">Search</button>
+  </form>
+</div>
+
+{% if query %}
+<div class="section-heading" style="margin-top: 28px;">{{ total }} result{{ total|pluralize }} for “{{ query }}”</div>
+<div class="kb-article-list">
+  {% for a in results %}
+  <a href="{% url 'kb:article_detail' a.slug %}" class="kb-article-row">
+    <div class="kb-article-row-title">{{ a.title }}</div>
+    <div class="kb-article-row-summary">{{ a.summary|default:a.body|truncatewords:24 }}</div>
+    {% if a.category %}<span class="kb-chip">{{ a.category.name }}</span>{% endif %}
+  </a>
+  {% empty %}
+  <div class="empty-state">
+    <div class="empty-state-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+    <h3>No results</h3>
+    <p>Try a different search, or <a href="{% url 'tickets:ticket_create' %}" style="color: var(--lavender);">open a ticket</a>.</p>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="kb-categories fade-in d2">
+  {% for cat, articles in categories %}
+  <div class="kb-category">
+    <div class="kb-category-head">
+      <div class="kb-category-icon" style="background: var(--{{ cat.icon_color|default:'lavender' }});">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      </div>
+      <div>
+        <div class="kb-category-name">{{ cat.name }}</div>
+        {% if cat.description %}<div class="kb-category-desc">{{ cat.description }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="kb-category-articles">
+      {% for a in articles %}
+      <a href="{% url 'kb:article_detail' a.slug %}" class="kb-article-link">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        {{ a.title }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17"/></svg></div>
+    <h3>No articles yet</h3>
+    <p>Knowledge base articles will appear here once published.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

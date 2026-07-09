@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} — Help Center{% endblock %}
+
+{% block content %}
+<div class="fade-in d1 kb-article-page">
+  <a href="{% url 'kb:help_home' %}" class="btn btn-ghost" style="margin-bottom: 20px;">&larr; Help Center</a>
+
+  {% if article.category %}
+  <div class="kb-chip" style="margin-bottom: 12px;">{{ article.category.name }}</div>
+  {% endif %}
+  <h1 class="kb-article-title">{{ article.title }}</h1>
+  <div class="kb-article-meta">
+    {% if article.author %}By {{ article.author.get_full_name|default:article.author.username }} · {% endif %}
+    Updated {{ article.updated_at|date:"M d, Y" }} · {{ article.views }} view{{ article.views|pluralize }}
+    {% if not article.is_public %}<span class="msg-badge msg-badge-note" style="margin-left:8px;">Internal</span>{% endif %}
+  </div>
+
+  <div class="kb-article-body">{{ article.body|linebreaks }}</div>
+
+  {% if related %}
+  <div class="divider"></div>
+  <div class="section-heading">Related articles</div>
+  <div class="kb-article-list">
+    {% for a in related %}
+    <a href="{% url 'kb:article_detail' a.slug %}" class="kb-article-row">
+      <div class="kb-article-row-title">{{ a.title }}</div>
+      <div class="kb-article-row-summary">{{ a.summary|default:a.body|truncatewords:18 }}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="kb-article-cta">
+    Didn't find what you needed?
+    <a href="{% url 'tickets:ticket_create' %}" class="btn btn-outline">Open a ticket</a>
+  </div>
+</div>
+{% endblock %}

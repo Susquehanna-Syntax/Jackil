@@ -1,0 +1,14 @@
+{% extends "console/settings_base.html" %}
+{% block settings_content %}
+<div class="section-heading">Delete article</div>
+<div class="form-card">
+  <p style="color: var(--text-2); font-size: 14px; line-height: 1.6;">
+    Delete <strong>{{ article.title }}</strong>? This removes it from the Help Center permanently.
+  </p>
+  <form method="post" class="inbox-form-actions" style="margin-top: 20px;">
+    {% csrf_token %}
+    <a href="{% url 'console:kb_edit' article.pk %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-coral">Delete article</button>
+  </form>
+</div>
+{% endblock %}

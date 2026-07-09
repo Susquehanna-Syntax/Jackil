@@ -1,0 +1,46 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">Knowledge Base</div>
+  <a href="{% url 'console:kb_create' %}" class="btn btn-filled-lav">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Article
+  </a>
+</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 20px;">
+  Published public articles appear in the <a href="{% url 'kb:help_home' %}" style="color: var(--lavender);">Help Center</a>.
+</p>
+
+{% if articles %}
+<div class="inbox-list">
+  {% for a in articles %}
+  <a href="{% url 'console:kb_edit' a.pk %}" class="inbox-row" style="text-decoration: none;">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--{% if a.category %}{{ a.category.icon_color }}{% else %}lavender{% endif %});">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div>
+        <div class="inbox-name">
+          {{ a.title }}
+          {% if not a.is_published %}<span class="tag tag-closed">Draft</span>{% endif %}
+          {% if not a.is_public %}<span class="tag tag-pending">Internal</span>{% endif %}
+        </div>
+        <div class="inbox-addr">{% if a.category %}{{ a.category.name }} · {% endif %}{{ a.views }} views · updated {{ a.updated_at|date:"M d" }}</div>
+      </div>
+    </div>
+    <div class="inbox-row-meta">
+      <span class="btn btn-outline btn-sm">Edit</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+  <h3>No articles yet</h3>
+  <p>Write your first knowledge base article to help customers self-serve.</p>
+  <a href="{% url 'console:kb_create' %}" class="btn btn-filled-lav">New Article</a>
+</div>
+{% endif %}
+{% endblock %}

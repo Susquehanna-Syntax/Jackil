@@ -1,0 +1,37 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<a href="{% url 'console:kb_list' %}" class="btn btn-ghost" style="margin-bottom: 16px;">&larr; Back to articles</a>
+<div class="section-heading">{% if article %}Edit article{% else %}New article{% endif %}</div>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="form-card">
+    {% include "console/_field.html" with field=form.title %}
+    <div class="form-grid-2" style="margin-top: 14px;">
+      {% include "console/_field.html" with field=form.category %}
+      <div></div>
+    </div>
+    <div style="margin-top: 14px;">{% include "console/_field.html" with field=form.summary %}</div>
+    <div style="margin-top: 14px;">{% include "console/_field.html" with field=form.body %}</div>
+    <div class="form-check-row" style="margin-top: 16px;">
+      {% include "console/_check.html" with field=form.is_published %}
+      {% include "console/_check.html" with field=form.is_public %}
+    </div>
+  </div>
+
+  <div class="inbox-form-actions">
+    {% if article %}
+    <a href="{% url 'console:kb_delete' article.pk %}" class="btn btn-ghost" style="color: var(--coral);">Delete</a>
+    {% if article.is_published and article.is_public %}
+    <a href="{% url 'kb:article_detail' article.slug %}" class="btn btn-outline" target="_blank">View in Help Center</a>
+    {% endif %}
+    {% endif %}
+    <a href="{% url 'console:kb_list' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-mint">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Save article
+    </button>
+  </div>
+</form>
+{% endblock %}
