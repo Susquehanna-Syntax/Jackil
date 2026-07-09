@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ticket, TicketComment
+from .models import Attachment, Ticket, TicketComment, TicketMessage
 
 
 class TicketCommentInline(admin.TabularInline):
@@ -46,3 +46,16 @@ class TicketAdmin(admin.ModelAdmin):
 class TicketCommentAdmin(admin.ModelAdmin):
     list_display = ["ticket", "author", "created_at"]
     readonly_fields = ["ticket", "author", "body", "created_at"]
+
+
+@admin.register(TicketMessage)
+class TicketMessageAdmin(admin.ModelAdmin):
+    list_display = ["ticket", "author", "kind", "is_public", "created_at"]
+    list_filter = ["kind", "is_public"]
+    search_fields = ["body"]
+
+
+@admin.register(Attachment)
+class AttachmentAdmin(admin.ModelAdmin):
+    list_display = ["ticket", "message", "original_name", "size_display", "created_at"]
+    list_filter = ["content_type"]
