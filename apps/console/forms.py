@@ -59,3 +59,29 @@ class InboxForm(forms.ModelForm):
                 if not cleaned.get(field):
                     cleaned[field] = getattr(self.instance, field)
         return cleaned
+
+
+from apps.kb.models import KBArticle  # noqa: E402
+
+
+class KBArticleForm(forms.ModelForm):
+    class Meta:
+        model = KBArticle
+        fields = ["title", "category", "summary", "body", "is_published", "is_public"]
+        widgets = {
+            "body": forms.Textarea(attrs={"rows": 12}),
+            "summary": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            widget = field.widget
+            if isinstance(widget, forms.CheckboxInput):
+                widget.attrs.setdefault("class", "form-check")
+            elif isinstance(widget, forms.Textarea):
+                widget.attrs.setdefault("class", "form-textarea")
+            elif isinstance(widget, forms.Select):
+                widget.attrs.setdefault("class", "form-select")
+            else:
+                widget.attrs.setdefault("class", "form-input")

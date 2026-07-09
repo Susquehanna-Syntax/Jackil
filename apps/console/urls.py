@@ -11,4 +11,8 @@ urlpatterns = [
     path("email/<int:pk>/", views.inbox_edit, name="inbox_edit"),
     path("email/<int:pk>/delete/", views.inbox_delete, name="inbox_delete"),
     path("sla/", views.sla_settings, name="sla_settings"),
+    path("kb/", views.kb_list, name="kb_list"),
+    path("kb/new/", views.kb_create, name="kb_create"),
+    path("kb/<int:pk>/", views.kb_edit, name="kb_edit"),
+    path("kb/<int:pk>/delete/", views.kb_delete, name="kb_delete"),
 ]

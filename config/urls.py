@@ -8,6 +8,7 @@ urlpatterns = [
     path("", include("apps.tickets.urls", namespace="tickets")),
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("settings/", include("apps.console.urls", namespace="console")),
+    path("help/", include("apps.kb.urls", namespace="kb")),
 ]
 
 if settings.DEBUG:

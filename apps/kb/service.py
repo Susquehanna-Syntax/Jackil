@@ -25,3 +25,8 @@ def search_articles(query, public_only=True):
 
 def record_view(article):
     KBArticle.objects.filter(pk=article.pk).update(views=article.views + 1)
+
+
+def public_only_for(user):
+    """Customers see only public articles; agents/admins see everything."""
+    return getattr(user, "role", "customer") == "customer"
