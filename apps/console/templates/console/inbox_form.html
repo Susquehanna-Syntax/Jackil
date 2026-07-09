@@ -1,0 +1,74 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<a href="{% url 'console:inbox_list' %}" class="btn btn-ghost" style="margin-bottom: 16px;">&larr; Back to inboxes</a>
+
+<div class="section-heading">{% if inbox %}Edit inbox{% else %}New inbox{% endif %}</div>
+
+<form method="post" class="inbox-form">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="message message-error">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <div class="form-card">
+    <div class="form-card-title">General</div>
+    <div class="form-grid-2">
+      {% include "console/_field.html" with field=form.name %}
+      {% include "console/_field.html" with field=form.email_address %}
+    </div>
+    <div class="form-check-row">
+      {% include "console/_check.html" with field=form.is_default %}
+      {% include "console/_check.html" with field=form.active %}
+    </div>
+    {% include "console/_field.html" with field=form.signature %}
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">
+      <svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      Outbound — SMTP
+    </div>
+    <p class="form-card-hint">Used to send replies. Leave the host blank in development to print email to the console.</p>
+    <div class="form-grid-2">
+      {% include "console/_field.html" with field=form.smtp_host %}
+      {% include "console/_field.html" with field=form.smtp_port %}
+      {% include "console/_field.html" with field=form.smtp_username %}
+      {% include "console/_field.html" with field=form.smtp_password %}
+    </div>
+    <div class="form-check-row">
+      {% include "console/_check.html" with field=form.smtp_use_tls %}
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 20V9"/></svg>
+      Inbound — IMAP
+    </div>
+    <p class="form-card-hint">Used by <code>poll_inbox</code> to pull mail into tickets.</p>
+    <div class="form-grid-2">
+      {% include "console/_field.html" with field=form.imap_host %}
+      {% include "console/_field.html" with field=form.imap_port %}
+      {% include "console/_field.html" with field=form.imap_username %}
+      {% include "console/_field.html" with field=form.imap_password %}
+      {% include "console/_field.html" with field=form.imap_folder %}
+    </div>
+    <div class="form-check-row">
+      {% include "console/_check.html" with field=form.imap_use_ssl %}
+    </div>
+  </div>
+
+  <div class="inbox-form-actions">
+    {% if inbox %}
+    <a href="{% url 'console:inbox_delete' inbox.pk %}" class="btn btn-ghost" style="color: var(--coral);">Delete inbox</a>
+    {% endif %}
+    <a href="{% url 'console:inbox_list' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-mint">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Save inbox
+    </button>
+  </div>
+</form>
+{% endblock %}

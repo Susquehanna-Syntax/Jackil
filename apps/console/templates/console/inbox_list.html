@@ -1,0 +1,52 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">Email Inboxes</div>
+  <a href="{% url 'console:inbox_create' %}" class="btn btn-filled-lav">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Inbox
+  </a>
+</div>
+
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 20px;">
+  Inboxes route email into tickets. The default inbox sends outbound replies; add
+  IMAP details to pull inbound mail with <code>manage.py poll_inbox</code>.
+</p>
+
+{% if inboxes %}
+<div class="inbox-list">
+  {% for inbox in inboxes %}
+  <div class="inbox-row">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--{% cycle 'sky' 'mint' 'peach' 'lavender' 'rose' %});">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+      </div>
+      <div>
+        <div class="inbox-name">
+          {{ inbox.name }}
+          {% if inbox.is_default %}<span class="tag tag-open">Default</span>{% endif %}
+          {% if not inbox.active %}<span class="tag tag-closed">Inactive</span>{% endif %}
+        </div>
+        <div class="inbox-addr">{{ inbox.email_address }}</div>
+      </div>
+    </div>
+    <div class="inbox-row-meta">
+      <span class="inbox-flag{% if inbox.smtp_host %} on{% endif %}">SMTP {% if inbox.smtp_host %}✓{% else %}—{% endif %}</span>
+      <span class="inbox-flag{% if inbox.imap_host %} on{% endif %}">IMAP {% if inbox.imap_host %}✓{% else %}—{% endif %}</span>
+      <a href="{% url 'console:inbox_edit' inbox.pk %}" class="btn btn-outline btn-sm">Edit</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">
+    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+  </div>
+  <h3>No inboxes yet</h3>
+  <p>Add an inbox so Jackil can send and receive email on your tickets.</p>
+  <a href="{% url 'console:inbox_create' %}" class="btn btn-filled-lav">Add your first inbox</a>
+</div>
+{% endif %}
+{% endblock %}

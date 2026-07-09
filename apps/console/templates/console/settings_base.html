@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Settings — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">Settings <span>Console</span></div>
+  <div class="hero-sub">Configure how Jackil works for your team.</div>
+
+  <div class="settings-layout">
+    <nav class="settings-nav">
+      <a href="{% url 'console:settings_home' %}" class="settings-nav-item{% if section == 'home' %} active{% endif %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Overview
+      </a>
+      <a href="{% url 'console:inbox_list' %}" class="settings-nav-item{% if section == 'email' %} active{% endif %}">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+        Email Inboxes
+      </a>
+      <span class="settings-nav-item disabled">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        SLA Policies <span class="soon">Soon</span>
+      </span>
+      <span class="settings-nav-item disabled">
+        <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+        Automation <span class="soon">Soon</span>
+      </span>
+      <span class="settings-nav-item disabled">
+        <svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+        API &amp; Webhooks <span class="soon">Soon</span>
+      </span>
+    </nav>
+
+    <div class="settings-content">
+      {% block settings_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}

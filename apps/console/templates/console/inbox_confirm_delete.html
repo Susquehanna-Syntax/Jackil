@@ -1,0 +1,17 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="section-heading">Delete inbox</div>
+<div class="form-card">
+  <p style="color: var(--text-2); font-size: 14px; line-height: 1.6;">
+    Delete <strong>{{ inbox.name }}</strong> ({{ inbox.email_address }})? Tickets
+    already created from this inbox are kept, but Jackil will no longer send or
+    receive email through it. This can't be undone.
+  </p>
+  <form method="post" class="inbox-form-actions" style="margin-top: 20px;">
+    {% csrf_token %}
+    <a href="{% url 'console:inbox_edit' inbox.pk %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-coral">Delete inbox</button>
+  </form>
+</div>
+{% endblock %}

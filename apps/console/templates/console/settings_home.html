@@ -1,0 +1,37 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="section-heading">Overview</div>
+
+<div class="stat-grid" style="margin-bottom: 28px;">
+  <div class="stat-card">
+    <div class="stat-number">{{ active_inbox_count }}</div>
+    <div class="stat-label">Active Inboxes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">{{ inbox_count }}</div>
+    <div class="stat-label">Total Inboxes</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background: var(--sky);">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+    </div>
+    <div>
+      <div class="card-title">Email</div>
+      <div class="card-desc">
+        {% if default_inbox %}
+        Default inbox: <strong>{{ default_inbox.email_address }}</strong>
+        {% else %}
+        No default inbox configured yet — customers can't receive email replies.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <a href="{% url 'console:inbox_list' %}" class="btn btn-outline">Manage inboxes</a>
+  </div>
+</div>
+{% endblock %}
