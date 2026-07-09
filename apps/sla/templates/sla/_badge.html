@@ -1,0 +1,7 @@
+{% if status != "none" %}{% if not compact or status == "overdue" or status == "breached" %}
+<span class="sla-badge sla-{{ status }}{% if compact %} sla-compact{% endif %}">
+  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+  {% if not compact %}{{ label }}: {% endif %}
+  {% if status == "met" %}Met{% elif status == "breached" %}Breached{% elif status == "overdue" %}Overdue{% if due %} {{ due|timesince }}{% endif %}{% else %}{{ due|timeuntil }} left{% endif %}
+</span>
+{% endif %}{% endif %}

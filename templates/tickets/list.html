@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load sla_tags %}
 
 {% block title %}All Tickets — Jackil{% endblock %}
 
@@ -62,6 +63,7 @@
       </div>
     </div>
     <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+      {% sla_badge ticket "resolution" compact=True %}
       <span class="tag tag-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
       <span class="ticket-list-status tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
     </div>

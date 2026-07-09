@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load sla_tags %}
 
 {% block title %}Ticket #{{ ticket.pk }} — Jackil{% endblock %}
 
@@ -60,6 +61,19 @@
       {% endif %}
     </div>
   </div>
+
+  {% if can_manage %}
+  <div class="sla-row">
+    {% sla_badge ticket "response" %}
+    {% sla_badge ticket "resolution" %}
+    {% if ticket.due_at %}
+    <span class="sla-badge sla-due">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Due {{ ticket.due_at|date:"M d, H:i" }}
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
 
   {% if user.role != "customer" and ticket.tags %}
   <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;">
@@ -211,6 +225,11 @@
             <option value="closed" {% if ticket.status == "closed" %}selected{% endif %}>Closed</option>
           </select>
         </div>
+      </div>
+      <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
+        <label class="form-label" for="modal_due">Due date</label>
+        <input type="datetime-local" name="due_at" id="modal_due" class="form-input"
+               value="{% if ticket.due_at %}{{ ticket.due_at|date:'Y-m-d\TH:i' }}{% endif %}">
       </div>
     </div>
     <input type="hidden" name="assigned_users" id="assigned_users_input" value="">

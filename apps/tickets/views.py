@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from apps.accounts.models import Department, User
 
@@ -46,6 +47,20 @@ def dashboard_auth(request):
     week_ago = today - timedelta(days=7)
     this_week = Ticket.objects.filter(created_at__date__gte=week_ago).count()
 
+    now = timezone.now()
+    open_states = ["open", "in_progress", "pending"]
+    overdue_tickets = (
+        Ticket.objects.filter(status__in=open_states, resolution_due__lt=now)
+        .select_related("created_by", "assigned_to")
+        .order_by("resolution_due")[:6]
+    )
+    sla_overdue = Ticket.objects.filter(status__in=open_states, resolution_due__lt=now).count()
+    sla_breached = (
+        Ticket.objects.filter(status__in=open_states)
+        .filter(Q(response_breached=True) | Q(resolution_breached=True))
+        .count()
+    )
+
     ctx = {
         "total": total,
         "my_open": my_open,
@@ -57,6 +72,9 @@ def dashboard_auth(request):
         "recent": recent,
         "my_tickets": my_tickets,
         "this_week": this_week,
+        "overdue_tickets": overdue_tickets,
+        "sla_overdue": sla_overdue,
+        "sla_breached": sla_breached,
     }
     return render(request, "tickets/dashboard.html", ctx)
 
@@ -201,6 +219,12 @@ def _handle_manage(request, ticket):
                 record_system_event(ticket, actor, f"Assignees set to {names}.")
         except (ValueError, TypeError):
             pass
+
+    due_raw = request.POST.get("due_at", "").strip()
+    new_due = parse_datetime(due_raw) if due_raw else None
+    if new_due is not None and timezone.is_naive(new_due):
+        new_due = timezone.make_aware(new_due)
+    ticket.due_at = new_due
 
     new_priority = request.POST.get("priority", ticket.priority)
     if new_priority != ticket.priority:

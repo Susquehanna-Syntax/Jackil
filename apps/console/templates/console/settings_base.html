@@ -17,10 +17,10 @@
         <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
         Email Inboxes
       </a>
-      <span class="settings-nav-item disabled">
+      <a href="{% url 'console:sla_settings' %}" class="settings-nav-item{% if section == 'sla' %} active{% endif %}">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        SLA Policies <span class="soon">Soon</span>
-      </span>
+        SLA Policies
+      </a>
       <span class="settings-nav-item disabled">
         <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
         Automation <span class="soon">Soon</span>

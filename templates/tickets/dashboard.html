@@ -27,6 +27,10 @@
     <div class="stat-label">In Progress</div>
   </div>
   <div class="stat-card">
+    <div class="stat-number" style="color: var(--coral);">{{ sla_overdue }}</div>
+    <div class="stat-label">SLA Overdue</div>
+  </div>
+  <div class="stat-card">
     <div class="stat-number" style="color: var(--mint);">{{ resolved }}</div>
     <div class="stat-label">Resolved</div>
   </div>
@@ -81,6 +85,18 @@
   </div>
 
   <div>
+    {% if overdue_tickets %}
+    <div class="side-panel fade-in d5" style="margin-bottom: 20px; border: 1px solid rgba(240,144,128,0.25);">
+      <div class="side-panel-title" style="color: var(--coral);">Needs Attention</div>
+      {% for ticket in overdue_tickets %}
+      <a href="{% url 'tickets:ticket_detail' ticket.pk %}" style="display:block; padding: 10px 0; border-bottom: 1px solid var(--s3); text-decoration: none; color: inherit;">
+        <div style="font-size: 13px; font-weight: 500;">{{ ticket.title }}</div>
+        <div style="font-size: 11px; color: var(--coral); margin-top: 2px;">#{{ ticket.pk }} &middot; Overdue {{ ticket.resolution_due|timesince }}</div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     {% if my_tickets %}
     <div class="side-panel fade-in d5">
       <div class="side-panel-title">Assigned to You</div>

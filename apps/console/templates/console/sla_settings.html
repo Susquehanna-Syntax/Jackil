@@ -1,0 +1,76 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="section-heading">SLA Policies</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 20px;">
+  Set response and resolution targets (in minutes) for each priority. Times are
+  measured against the business-hours schedule below.
+</p>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="form-card">
+    <div class="form-card-title">Targets by priority</div>
+    <table class="sla-table">
+      <thead>
+        <tr><th>Priority</th><th>Response (min)</th><th>Resolution (min)</th><th>Active</th></tr>
+      </thead>
+      <tbody>
+        {% for t in targets %}
+        <tr>
+          <td><span class="tag tag-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+          <td><input type="number" min="1" name="response_{{ t.priority }}" value="{{ t.response_minutes }}" class="form-input sla-num"></td>
+          <td><input type="number" min="1" name="resolution_{{ t.priority }}" value="{{ t.resolution_minutes }}" class="form-input sla-num"></td>
+          <td><input type="checkbox" name="active_{{ t.priority }}" class="form-check" {% if t.active %}checked{% endif %}></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Business hours
+    </div>
+    <p class="form-card-hint">In 24/7 mode, SLA clocks run continuously. In business-hours mode, only the selected days and hours count.</p>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label" for="mode">Mode</label>
+        <select name="mode" id="mode" class="form-select">
+          <option value="24_7" {% if schedule.mode == "24_7" %}selected{% endif %}>24 / 7</option>
+          <option value="business" {% if schedule.mode == "business" %}selected{% endif %}>Business hours</option>
+        </select>
+      </div>
+      <div></div>
+      <div class="form-group">
+        <label class="form-label" for="workday_start">Workday start</label>
+        <input type="time" name="workday_start" id="workday_start" value="{{ schedule.workday_start|time:'H:i' }}" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="workday_end">Workday end</label>
+        <input type="time" name="workday_end" id="workday_end" value="{{ schedule.workday_end|time:'H:i' }}" class="form-input">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top: 14px;">
+      <label class="form-label">Working days</label>
+      <div class="weekday-row">
+        {% for num, label in weekdays %}
+        <label class="weekday-chip">
+          <input type="checkbox" name="workdays" value="{{ num }}" {% if num in schedule_days %}checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="inbox-form-actions">
+    <button type="submit" class="btn btn-filled-mint">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Save policies
+    </button>
+  </div>
+</form>
+{% endblock %}
