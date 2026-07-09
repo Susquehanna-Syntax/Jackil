@@ -1,0 +1,12 @@
+{% extends "console/settings_base.html" %}
+{% block settings_content %}
+<div class="section-heading">Delete rule</div>
+<div class="form-card">
+  <p style="color: var(--text-2); font-size: 14px; line-height: 1.6;">Delete <strong>{{ rule.name }}</strong>? This can't be undone.</p>
+  <form method="post" class="inbox-form-actions" style="margin-top: 20px;">
+    {% csrf_token %}
+    <a href="{% url 'console:rule_edit' rule.pk %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-coral">Delete rule</button>
+  </form>
+</div>
+{% endblock %}

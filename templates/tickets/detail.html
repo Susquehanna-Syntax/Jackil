@@ -167,6 +167,15 @@
         Attach files
         <input type="file" name="attachments" id="composer_files" multiple hidden>
       </label>
+      {% if can_post_internal %}
+      <div class="composer-macros">
+        <button type="button" class="composer-attach" id="macro_btn">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Macros
+        </button>
+        <div class="macro-menu" id="macro_menu" hidden></div>
+      </div>
+      {% endif %}
       <span class="composer-filenames" id="composer_filenames"></span>
       <button type="submit" class="btn btn-filled-lav composer-send" id="composer_send">Send Reply</button>
     </div>
@@ -410,6 +419,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const names = Array.from(fileInput.files).map(f => f.name);
         fileNames.textContent = names.length ? names.join(', ') : '';
       });
+    }
+
+    // Macro picker
+    const macroBtn = document.getElementById('macro_btn');
+    const macroMenu = document.getElementById('macro_menu');
+    if (macroBtn) {
+      let loaded = false;
+      macroBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        macroMenu.hidden = !macroMenu.hidden;
+        if (!loaded) {
+          fetch('{% url "tickets:macro_list" %}').then(r => r.json()).then(data => {
+            loaded = true;
+            if (!data.macros.length) { macroMenu.innerHTML = '<div class="macro-empty">No macros yet</div>'; return; }
+            macroMenu.innerHTML = data.macros.map(m =>
+              '<button type="button" class="macro-item" data-body="' + m.body.replace(/"/g, '&quot;') + '">' + m.name + '</button>'
+            ).join('');
+          });
+        }
+      });
+      macroMenu.addEventListener('click', function(e) {
+        const item = e.target.closest('.macro-item');
+        if (item) {
+          const body = item.dataset.body;
+          input.value = input.value ? input.value + '\n\n' + body : body;
+          macroMenu.hidden = true;
+          input.focus();
+        }
+      });
+      document.addEventListener('click', () => { macroMenu.hidden = true; });
     }
   }
 });

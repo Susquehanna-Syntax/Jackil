@@ -1,12 +1,14 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.automation.engine import ACTION_TYPES, CONDITION_FIELDS
+from apps.automation.models import AutomationRule, Macro
 from apps.inbox.models import Inbox
 from apps.kb.models import KBArticle
 from apps.sla.models import WEEKDAYS, BusinessSchedule, SLATarget
 
 from .decorators import admin_required
-from .forms import InboxForm, KBArticleForm
+from .forms import InboxForm, KBArticleForm, MacroForm
 
 
 @admin_required
@@ -150,3 +152,124 @@ def kb_delete(request, pk):
         messages.success(request, f"Article “{title}” deleted.")
         return redirect("console:kb_list")
     return render(request, "console/kb_confirm_delete.html", {"article": article, "section": "kb"})
+
+
+# ── Automation: rules + macros ──────────────────────────────────────────────
+
+
+@admin_required
+def automation_home(request):
+    ctx = {
+        "rules": AutomationRule.objects.all(),
+        "macros": Macro.objects.all(),
+        "section": "automation",
+    }
+    return render(request, "console/automation_home.html", ctx)
+
+
+@admin_required
+def macro_create(request):
+    return _macro_form(request, None)
+
+
+@admin_required
+def macro_edit(request, pk):
+    return _macro_form(request, get_object_or_404(Macro, pk=pk))
+
+
+def _macro_form(request, macro):
+    if request.method == "POST":
+        form = MacroForm(request.POST, instance=macro)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            if obj.created_by_id is None:
+                obj.created_by = request.user
+            obj.save()
+            messages.success(request, f"Macro “{obj.name}” saved.")
+            return redirect("console:automation_home")
+    else:
+        form = MacroForm(instance=macro)
+    return render(
+        request, "console/macro_form.html", {"form": form, "macro": macro, "section": "automation"}
+    )
+
+
+@admin_required
+def macro_delete(request, pk):
+    macro = get_object_or_404(Macro, pk=pk)
+    if request.method == "POST":
+        macro.delete()
+        messages.success(request, "Macro deleted.")
+        return redirect("console:automation_home")
+    return render(
+        request, "console/macro_confirm_delete.html", {"macro": macro, "section": "automation"}
+    )
+
+
+@admin_required
+def rule_create(request):
+    return _rule_form(request, None)
+
+
+@admin_required
+def rule_edit(request, pk):
+    return _rule_form(request, get_object_or_404(AutomationRule, pk=pk))
+
+
+def _parse_rule_post(request):
+    conditions = []
+    fields = request.POST.getlist("cond_field")
+    ops = request.POST.getlist("cond_op")
+    values = request.POST.getlist("cond_value")
+    for f, o, v in zip(fields, ops, values, strict=False):
+        if f and v:
+            conditions.append({"field": f, "op": o or "eq", "value": v})
+    actions = []
+    atypes = request.POST.getlist("act_type")
+    avalues = request.POST.getlist("act_value")
+    for t, v in zip(atypes, avalues, strict=False):
+        if t and v != "":
+            actions.append({"type": t, "value": v})
+    return conditions, actions
+
+
+def _rule_form(request, rule):
+    if request.method == "POST":
+        conditions, actions = _parse_rule_post(request)
+        name = request.POST.get("name", "").strip()
+        trigger = request.POST.get("trigger", "on_create")
+        is_active = request.POST.get("is_active") == "on"
+        order = request.POST.get("order", "0")
+        if name:
+            if rule is None:
+                rule = AutomationRule()
+            rule.name = name
+            rule.trigger = trigger
+            rule.is_active = is_active
+            rule.order = int(order) if order.isdigit() else 0
+            rule.conditions = conditions
+            rule.actions = actions
+            rule.save()
+            messages.success(request, f"Rule “{rule.name}” saved.")
+            return redirect("console:automation_home")
+        messages.error(request, "Rule name is required.")
+    ctx = {
+        "rule": rule,
+        "condition_fields": CONDITION_FIELDS,
+        "action_types": ACTION_TYPES,
+        "triggers": AutomationRule.TRIGGER_CHOICES,
+        "section": "automation",
+    }
+    return render(request, "console/rule_form.html", ctx)
+
+
+@admin_required
+def rule_delete(request, pk):
+    rule = get_object_or_404(AutomationRule, pk=pk)
+    if request.method == "POST":
+        rule.delete()
+        messages.success(request, "Rule deleted.")
+        return redirect("console:automation_home")
+    return render(
+        request, "console/rule_confirm_delete.html", {"rule": rule, "section": "automation"}
+    )

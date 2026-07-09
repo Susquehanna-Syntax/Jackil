@@ -85,3 +85,24 @@ class KBArticleForm(forms.ModelForm):
                 widget.attrs.setdefault("class", "form-select")
             else:
                 widget.attrs.setdefault("class", "form-input")
+
+
+from apps.automation.models import Macro  # noqa: E402
+
+
+class MacroForm(forms.ModelForm):
+    class Meta:
+        model = Macro
+        fields = ["name", "body", "is_shared"]
+        widgets = {"body": forms.Textarea(attrs={"rows": 6})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            w = field.widget
+            if isinstance(w, forms.CheckboxInput):
+                w.attrs.setdefault("class", "form-check")
+            elif isinstance(w, forms.Textarea):
+                w.attrs.setdefault("class", "form-textarea")
+            else:
+                w.attrs.setdefault("class", "form-input")

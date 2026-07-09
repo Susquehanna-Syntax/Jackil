@@ -1,0 +1,80 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">Automation Rules</div>
+  <a href="{% url 'console:rule_create' %}" class="btn btn-filled-lav">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Rule
+  </a>
+</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 16px;">
+  Rules run automatically when tickets are created, replied to, or change status.
+</p>
+
+{% if rules %}
+<div class="inbox-list" style="margin-bottom: 32px;">
+  {% for r in rules %}
+  <a href="{% url 'console:rule_edit' r.pk %}" class="inbox-row" style="text-decoration: none;">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--{% if r.is_active %}mint{% else %}s4{% endif %});">
+        <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+      </div>
+      <div>
+        <div class="inbox-name">
+          {{ r.name }}
+          {% if not r.is_active %}<span class="tag tag-closed">Off</span>{% endif %}
+        </div>
+        <div class="inbox-addr">{{ r.get_trigger_display }} · {{ r.conditions|length }} condition{{ r.conditions|length|pluralize }} · {{ r.actions|length }} action{{ r.actions|length|pluralize }} · ran {{ r.run_count }}×</div>
+      </div>
+    </div>
+    <div class="inbox-row-meta"><span class="btn btn-outline btn-sm">Edit</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" style="margin-bottom: 32px;">
+  <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg></div>
+  <h3>No rules yet</h3>
+  <p>Create a rule to auto-triage, assign, or escalate tickets.</p>
+  <a href="{% url 'console:rule_create' %}" class="btn btn-filled-lav">New Rule</a>
+</div>
+{% endif %}
+
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">Macros</div>
+  <a href="{% url 'console:macro_create' %}" class="btn btn-outline">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Macro
+  </a>
+</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 16px;">
+  Canned responses agents can insert into a reply.
+</p>
+
+{% if macros %}
+<div class="inbox-list">
+  {% for m in macros %}
+  <a href="{% url 'console:macro_edit' m.pk %}" class="inbox-row" style="text-decoration: none;">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--peach);">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </div>
+      <div>
+        <div class="inbox-name">{{ m.name }}{% if not m.is_shared %}<span class="tag tag-pending">Private</span>{% endif %}</div>
+        <div class="inbox-addr">{{ m.body|truncatewords:14 }}</div>
+      </div>
+    </div>
+    <div class="inbox-row-meta"><span class="btn btn-outline btn-sm">Edit</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+  <h3>No macros yet</h3>
+  <p>Save a canned response your team uses often.</p>
+  <a href="{% url 'console:macro_create' %}" class="btn btn-outline">New Macro</a>
+</div>
+{% endif %}
+{% endblock %}

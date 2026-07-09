@@ -1,0 +1,114 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<a href="{% url 'console:automation_home' %}" class="btn btn-ghost" style="margin-bottom: 16px;">&larr; Back to automation</a>
+<div class="section-heading">{% if rule %}Edit rule{% else %}New rule{% endif %}</div>
+
+<form method="post" id="rule_form">
+  {% csrf_token %}
+
+  <div class="form-card">
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label" for="name">Rule name</label>
+        <input type="text" name="name" id="name" class="form-input" value="{{ rule.name|default:'' }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="trigger">Trigger</label>
+        <select name="trigger" id="trigger" class="form-select">
+          {% for val, label in triggers %}
+          <option value="{{ val }}" {% if rule.trigger == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-check-row" style="margin-top: 14px;">
+      <label class="check-field"><input type="checkbox" name="is_active" class="form-check" {% if rule.is_active or not rule %}checked{% endif %}> <span>Active</span></label>
+      <div class="form-group" style="margin: 0;">
+        <label class="form-label" for="order">Order</label>
+        <input type="number" name="order" id="order" class="form-input sla-num" value="{{ rule.order|default:0 }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">Conditions <span style="color: var(--text-3); font-weight: 400;">(all must match)</span></div>
+    <div id="cond_rows">
+      {% for c in rule.conditions %}
+      <div class="rule-row">
+        <select name="cond_field" class="form-select">
+          {% for f in condition_fields %}<option value="{{ f }}" {% if c.field == f %}selected{% endif %}>{{ f }}</option>{% endfor %}
+        </select>
+        <select name="cond_op" class="form-select">
+          <option value="eq" {% if c.op == "eq" %}selected{% endif %}>is</option>
+          <option value="ne" {% if c.op == "ne" %}selected{% endif %}>is not</option>
+          <option value="contains" {% if c.op == "contains" %}selected{% endif %}>contains</option>
+        </select>
+        <input type="text" name="cond_value" class="form-input" value="{{ c.value }}">
+        <button type="button" class="rule-row-remove" title="Remove">&times;</button>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn btn-ghost" id="add_cond">+ Add condition</button>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">Actions</div>
+    <div id="act_rows">
+      {% for a in rule.actions %}
+      <div class="rule-row">
+        <select name="act_type" class="form-select">
+          {% for t in action_types %}<option value="{{ t }}" {% if a.type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+        <input type="text" name="act_value" class="form-input" value="{{ a.value }}" placeholder="value">
+        <button type="button" class="rule-row-remove" title="Remove">&times;</button>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn btn-ghost" id="add_act">+ Add action</button>
+    <p class="form-card-hint" style="margin-top: 10px;">
+      Action values: priority/status use their code (e.g. <code>critical</code>, <code>in_progress</code>);
+      <code>assign</code> takes a user id; <code>add_tag</code> / <code>add_note</code> take text.
+    </p>
+  </div>
+
+  <div class="inbox-form-actions">
+    {% if rule %}<a href="{% url 'console:rule_delete' rule.pk %}" class="btn btn-ghost" style="color: var(--coral);">Delete</a>{% endif %}
+    <a href="{% url 'console:automation_home' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-mint">Save rule</button>
+  </div>
+</form>
+
+<template id="cond_tpl">
+  <div class="rule-row">
+    <select name="cond_field" class="form-select">{% for f in condition_fields %}<option value="{{ f }}">{{ f }}</option>{% endfor %}</select>
+    <select name="cond_op" class="form-select"><option value="eq">is</option><option value="ne">is not</option><option value="contains">contains</option></select>
+    <input type="text" name="cond_value" class="form-input">
+    <button type="button" class="rule-row-remove" title="Remove">&times;</button>
+  </div>
+</template>
+<template id="act_tpl">
+  <div class="rule-row">
+    <select name="act_type" class="form-select">{% for t in action_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select>
+    <input type="text" name="act_value" class="form-input" placeholder="value">
+    <button type="button" class="rule-row-remove" title="Remove">&times;</button>
+  </div>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function add(tplId, containerId) {
+    const tpl = document.getElementById(tplId);
+    document.getElementById(containerId).appendChild(tpl.content.cloneNode(true));
+  }
+  document.getElementById('add_cond').addEventListener('click', () => add('cond_tpl', 'cond_rows'));
+  document.getElementById('add_act').addEventListener('click', () => add('act_tpl', 'act_rows'));
+  document.getElementById('rule_form').addEventListener('click', function(e) {
+    if (e.target.classList.contains('rule-row-remove')) e.target.closest('.rule-row').remove();
+  });
+  // start with one empty row each if none exist
+  if (!document.querySelector('#cond_rows .rule-row')) add('cond_tpl', 'cond_rows');
+  if (!document.querySelector('#act_rows .rule-row')) add('act_tpl', 'act_rows');
+});
+</script>
+{% endblock %}

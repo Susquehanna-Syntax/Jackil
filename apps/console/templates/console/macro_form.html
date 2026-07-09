@@ -1,0 +1,20 @@
+{% extends "console/settings_base.html" %}
+{% block settings_content %}
+<a href="{% url 'console:automation_home' %}" class="btn btn-ghost" style="margin-bottom: 16px;">&larr; Back to automation</a>
+<div class="section-heading">{% if macro %}Edit macro{% else %}New macro{% endif %}</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="form-card">
+    {% include "console/_field.html" with field=form.name %}
+    <div style="margin-top: 14px;">{% include "console/_field.html" with field=form.body %}</div>
+    <div class="form-check-row" style="margin-top: 14px;">
+      {% include "console/_check.html" with field=form.is_shared %}
+    </div>
+  </div>
+  <div class="inbox-form-actions">
+    {% if macro %}<a href="{% url 'console:macro_delete' macro.pk %}" class="btn btn-ghost" style="color: var(--coral);">Delete</a>{% endif %}
+    <a href="{% url 'console:automation_home' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-mint">Save macro</button>
+  </div>
+</form>
+{% endblock %}

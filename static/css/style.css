@@ -1213,3 +1213,16 @@ body {
 .kb-article-body { font-size: 15px; color: var(--text-2); line-height: 1.75; }
 .kb-article-body p { margin-bottom: 16px; }
 .kb-article-cta { margin-top: 36px; padding: 20px 24px; background: var(--s1); border-radius: var(--r-lg); font-size: 14px; color: var(--text-2); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* ── Automation rule builder (M3 p04) ── */
+.rule-row { display: grid; grid-template-columns: 1fr 1fr 1.4fr auto; gap: 10px; margin-bottom: 10px; align-items: center; }
+.rule-row-remove { background: var(--s2); border: none; color: var(--text-3); width: 34px; height: 34px; border-radius: var(--r-sm); cursor: pointer; font-size: 18px; transition: background 0.2s, color 0.2s; }
+.rule-row-remove:hover { background: rgba(240,144,128,0.16); color: var(--coral); }
+@media (max-width: 700px) { .rule-row { grid-template-columns: 1fr; } }
+
+/* ── Composer macro picker (M3 p04) ── */
+.composer-macros { position: relative; }
+.macro-menu { position: absolute; bottom: calc(100% + 6px); left: 0; min-width: 220px; background: var(--s2); border: 1px solid var(--s4); border-radius: var(--r-md); padding: 6px; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.4); max-height: 260px; overflow-y: auto; }
+.macro-item { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--text-2); font-family: inherit; font-size: 13px; padding: 9px 12px; border-radius: var(--r-sm); cursor: pointer; transition: background 0.2s, color 0.2s; }
+.macro-item:hover { background: var(--s3); color: var(--text-1); }
+.macro-empty { padding: 12px; color: var(--text-3); font-size: 12.5px; text-align: center; }
