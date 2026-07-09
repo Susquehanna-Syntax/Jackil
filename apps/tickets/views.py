@@ -256,6 +256,9 @@ def _handle_manage(request, ticket):
         from apps.automation.engine import run_rules
 
         run_rules(ticket, "on_status_change", actor=actor)
+        from apps.api.webhooks import fire_webhooks
+
+        fire_webhooks("ticket.updated", ticket)
     messages.success(request, f"Ticket #{ticket.pk} updated.")
 
 

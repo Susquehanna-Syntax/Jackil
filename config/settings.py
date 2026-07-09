@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.sla",
     "apps.kb",
     "apps.automation",
+    "apps.api",
 ]
 
 MIDDLEWARE = [
@@ -132,6 +133,7 @@ SITE_URL = config("SITE_URL", default="http://localhost:8000")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.api.auth.ApiKeyAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
