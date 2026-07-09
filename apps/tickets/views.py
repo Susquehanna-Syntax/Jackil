@@ -3,13 +3,15 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from apps.accounts.models import Department, User
 
-from .models import Ticket, TicketComment
+from . import permissions
+from .models import Attachment, Ticket
+from .services import AttachmentTooLarge, post_message, record_system_event
 
 
 def dashboard(request):
@@ -129,50 +131,118 @@ def ticket_list(request):
 def ticket_detail(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
 
-    if request.user.role == "customer" and ticket.created_by != request.user:
+    if not permissions.can_view_ticket(request.user, ticket):
         messages.error(request, "You do not have permission to view this ticket.")
-        return redirect("tickets:customer_tickets")
-
-    comments = ticket.comments.select_related("author").order_by("created_at")
+        return redirect("tickets:dashboard")
 
     if request.method == "POST":
-        body = request.POST.get("body", "").strip()
-        if body:
-            TicketComment.objects.create(ticket=ticket, author=request.user, body=body)
+        action = request.POST.get("action", "message")
+        if action == "manage" and permissions.can_manage_ticket(request.user):
+            _handle_manage(request, ticket)
             return redirect("tickets:ticket_detail", pk=pk)
+        # Default: post a message to the conversation.
+        _handle_message(request, ticket)
+        return redirect("tickets:ticket_detail", pk=pk)
 
-        if request.user.role in ("agent", "admin"):
-            assigned_user_ids = request.POST.get("assigned_users", "").strip()
-            if assigned_user_ids:
-                try:
-                    ids = [int(uid.strip()) for uid in assigned_user_ids.split(",") if uid.strip()]
-                    ticket.assigned_users.set(ids)
-                except (ValueError, TypeError):
-                    pass
-            ticket.priority = request.POST.get("priority", ticket.priority)
-            new_status = request.POST.get("status", ticket.status)
-
-            if ticket.status != new_status:
-                ticket.status = new_status
-                if new_status in ("resolved", "closed"):
-                    ticket.closed_at = timezone.now()
-                elif ticket.closed_at:
-                    ticket.closed_at = None
-
-            ticket.save()
-            messages.success(request, f"Ticket #{ticket.pk} updated.")
-            return redirect("tickets:ticket_detail", pk=pk)
-
+    thread = permissions.visible_messages(request.user, ticket).prefetch_related("attachments")
     agents = User.objects.filter(role__in=["admin", "agent"])
     ctx = {
         "ticket": ticket,
-        "comments": comments,
-        "can_edit": _can_edit(request.user, ticket),
-        "can_manage": _can_manage(request.user, ticket),
-        "can_assign": _can_assign(request.user, ticket),
+        "messages_thread": thread,
+        "can_edit": permissions.can_edit_ticket(request.user, ticket),
+        "can_manage": permissions.can_manage_ticket(request.user),
+        "can_assign": permissions.can_assign_ticket(request.user),
+        "can_post_internal": permissions.can_post_internal(request.user),
         "agents": agents,
     }
     return render(request, "tickets/detail.html", ctx)
+
+
+def _handle_message(request, ticket):
+    """Create a reply or internal note from the composer form."""
+    body = request.POST.get("body", "").strip()
+    files = request.FILES.getlist("attachments")
+    kind = request.POST.get("message_kind", "reply")
+    # Only agents/admins may post internal notes.
+    if kind == "note" and not permissions.can_post_internal(request.user):
+        kind = "reply"
+    if not body and not files:
+        return
+    try:
+        post_message(ticket, request.user, body, kind=kind, files=files)
+    except AttachmentTooLarge as exc:
+        messages.error(request, f"Attachment '{exc.name}' exceeds the size limit.")
+        return
+    ticket.save(update_fields=["updated_at"])
+    if kind == "note":
+        messages.success(request, "Internal note added.")
+    else:
+        messages.success(request, "Reply posted.")
+
+
+def _handle_manage(request, ticket):
+    """Apply assignee / priority / status changes and log system events."""
+    actor = request.user
+    assigned_user_ids = request.POST.get("assigned_users", "").strip()
+    if assigned_user_ids:
+        try:
+            ids = [int(uid.strip()) for uid in assigned_user_ids.split(",") if uid.strip()]
+            before = set(ticket.assigned_users.values_list("pk", flat=True))
+            ticket.assigned_users.set(ids)
+            if set(ids) != before:
+                names = (
+                    ", ".join(u.get_full_name() or u.username for u in ticket.assigned_users.all())
+                    or "no one"
+                )
+                record_system_event(ticket, actor, f"Assignees set to {names}.")
+        except (ValueError, TypeError):
+            pass
+
+    new_priority = request.POST.get("priority", ticket.priority)
+    if new_priority != ticket.priority:
+        record_system_event(
+            ticket,
+            actor,
+            f"Priority changed from {ticket.get_priority_display()} to "
+            f"{dict(Ticket.PRIORITY_CHOICES).get(new_priority, new_priority)}.",
+        )
+        ticket.priority = new_priority
+
+    new_status = request.POST.get("status", ticket.status)
+    if ticket.status != new_status:
+        record_system_event(
+            ticket,
+            actor,
+            f"Status changed from {ticket.get_status_display()} to "
+            f"{dict(Ticket.STATUS_CHOICES).get(new_status, new_status)}.",
+        )
+        ticket.status = new_status
+        if new_status in ("resolved", "closed"):
+            ticket.closed_at = timezone.now()
+        elif ticket.closed_at:
+            ticket.closed_at = None
+
+    ticket.save()
+    messages.success(request, f"Ticket #{ticket.pk} updated.")
+
+
+@login_required
+def attachment_download(request, pk):
+    attachment = get_object_or_404(Attachment.objects.select_related("ticket", "message"), pk=pk)
+    ticket = attachment.ticket
+    if not permissions.can_view_ticket(request.user, ticket):
+        raise Http404
+    # Customers may only download attachments on public messages (or ticket-level).
+    if request.user.role == "customer" and attachment.message and not attachment.message.is_public:
+        raise Http404
+    try:
+        return FileResponse(
+            attachment.file.open("rb"),
+            as_attachment=True,
+            filename=attachment.original_name,
+        )
+    except FileNotFoundError as exc:
+        raise Http404 from exc
 
 
 @login_required
@@ -211,7 +281,7 @@ def ticket_create(request):
 def ticket_edit(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
 
-    if not _can_edit(request.user, ticket):
+    if not permissions.can_edit_ticket(request.user, ticket):
         messages.error(request, "You do not have permission to edit this ticket.")
         return redirect("tickets:ticket_detail", pk=pk)
 
@@ -247,7 +317,7 @@ def ticket_edit(request, pk):
 def ticket_assign(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
 
-    if not _can_assign(request.user, ticket):
+    if not permissions.can_assign_ticket(request.user):
         messages.error(request, "You do not have permission to assign this ticket.")
         return redirect("tickets:ticket_detail", pk=pk)
 
@@ -258,6 +328,11 @@ def ticket_assign(request, pk):
             target = get_object_or_404(agents, pk=user_id)
             ticket.assigned_to = target
             ticket.save()
+            record_system_event(
+                ticket,
+                request.user,
+                f"Assigned to {target.get_full_name() or target.username}.",
+            )
             messages.success(
                 request,
                 f"Ticket #{ticket.pk} assigned to {target.get_full_name() or target.username}.",
@@ -271,28 +346,6 @@ def ticket_assign(request, pk):
     agents = User.objects.filter(role__in=["admin", "agent"])
     ctx = {"ticket": ticket, "agents": agents}
     return render(request, "tickets/assign.html", ctx)
-
-
-def _can_edit(user, ticket):
-    if user.role == "admin":
-        return True
-    if user.role == "agent":
-        return True
-    if user.role == "customer":
-        return ticket.created_by == user
-    return False
-
-
-def _can_manage(user, ticket):
-    return user.role in ("admin", "agent")
-
-
-def _can_assign(user, ticket):
-    if user.role == "admin":
-        return True
-    if user.role == "agent":
-        return True
-    return False
 
 
 @login_required
