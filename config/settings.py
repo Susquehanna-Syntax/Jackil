@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -113,9 +114,7 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 # email↔ticket pipeline is testable without a live mailbox. In production set
 # EMAIL_BACKEND to SMTP and configure the inbox under Settings ▸ Email, which
 # stores per-inbox SMTP/IMAP credentials in the database (see apps.inbox).
-EMAIL_BACKEND = config(
-    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
-)
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = config("EMAIL_HOST", default="localhost")
 EMAIL_PORT = config("EMAIL_PORT", default=25, cast=int)
 EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")

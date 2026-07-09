@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Django migrations are auto-generated; don't lint or reformat them.
+extend-exclude = ["*/migrations/*", ".venv", "staticfiles"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "DJ"]
+ignore = [
+    "E501",   # line length handled by the formatter
+    "B008",   # function calls in argument defaults (common in DRF/Django)
+    "DJ001",  # allow null=True on text fields where we intentionally use it
+]
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings.py" = ["F405", "F403"]

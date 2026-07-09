@@ -33,16 +33,66 @@ CUSTOMERS = [
 ]
 
 TICKETS = [
-    ("Laptop won't connect to VPN", "Since the update this morning I can't reach the VPN. Error 812.", "high", "open"),
-    ("Request new monitor", "Would like a second monitor for my desk, 27 inch if possible.", "low", "open"),
-    ("Password reset for payroll portal", "Locked out of the payroll portal after too many attempts.", "medium", "in_progress"),
-    ("Office AC not working on 3rd floor", "The AC has been off since Monday, it's getting warm.", "medium", "open"),
-    ("New hire onboarding — accounts", "Please provision email + Slack for our new designer starting Monday.", "high", "in_progress"),
-    ("Expense report rejected", "My March expense report was rejected but no reason was given.", "low", "pending"),
-    ("Printer on 2nd floor jammed", "Paper jam that won't clear, tried the usual steps.", "medium", "resolved"),
-    ("Software license for Figma", "Need a Figma license for the product team, 3 seats.", "medium", "open"),
-    ("Badge not working at side entrance", "My badge works at the front but not the side door.", "low", "closed"),
-    ("Critical: mail server down", "No one in the sales team can send or receive email.", "critical", "open"),
+    (
+        "Laptop won't connect to VPN",
+        "Since the update this morning I can't reach the VPN. Error 812.",
+        "high",
+        "open",
+    ),
+    (
+        "Request new monitor",
+        "Would like a second monitor for my desk, 27 inch if possible.",
+        "low",
+        "open",
+    ),
+    (
+        "Password reset for payroll portal",
+        "Locked out of the payroll portal after too many attempts.",
+        "medium",
+        "in_progress",
+    ),
+    (
+        "Office AC not working on 3rd floor",
+        "The AC has been off since Monday, it's getting warm.",
+        "medium",
+        "open",
+    ),
+    (
+        "New hire onboarding — accounts",
+        "Please provision email + Slack for our new designer starting Monday.",
+        "high",
+        "in_progress",
+    ),
+    (
+        "Expense report rejected",
+        "My March expense report was rejected but no reason was given.",
+        "low",
+        "pending",
+    ),
+    (
+        "Printer on 2nd floor jammed",
+        "Paper jam that won't clear, tried the usual steps.",
+        "medium",
+        "resolved",
+    ),
+    (
+        "Software license for Figma",
+        "Need a Figma license for the product team, 3 seats.",
+        "medium",
+        "open",
+    ),
+    (
+        "Badge not working at side entrance",
+        "My badge works at the front but not the side door.",
+        "low",
+        "closed",
+    ),
+    (
+        "Critical: mail server down",
+        "No one in the sales team can send or receive email.",
+        "critical",
+        "open",
+    ),
 ]
 
 
@@ -137,17 +187,21 @@ class Command(BaseCommand):
                 TicketComment.objects.create(
                     ticket=ticket,
                     author=random.choice(agents + customers),
-                    body=random.choice([
-                        "Taking a look at this now.",
-                        "Could you share a screenshot of the error?",
-                        "Thanks, that worked!",
-                        "Escalating to the network team.",
-                        "Any update on this?",
-                    ]),
+                    body=random.choice(
+                        [
+                            "Taking a look at this now.",
+                            "Could you share a screenshot of the error?",
+                            "Thanks, that worked!",
+                            "Escalating to the network team.",
+                            "Any update on this?",
+                        ]
+                    ),
                 )
 
-        self.stdout.write(self.style.SUCCESS(
-            f"Seeded: {Department.objects.count()} departments, "
-            f"{User.objects.count()} users, {Ticket.objects.count()} tickets, "
-            f"{TicketComment.objects.count()} comments."
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Seeded: {Department.objects.count()} departments, "
+                f"{User.objects.count()} users, {Ticket.objects.count()} tickets, "
+                f"{TicketComment.objects.count()} comments."
+            )
+        )

@@ -1,13 +1,15 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout, authenticate
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Q
-from django.utils import timezone
+from django.db.models import Q
 from django.http import JsonResponse
-from datetime import timedelta
-from .models import Ticket, TicketComment
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
 from apps.accounts.models import Department, User
+
+from .models import Ticket, TicketComment
 
 
 def dashboard(request):
@@ -27,9 +29,17 @@ def dashboard_auth(request):
     in_progress = Ticket.objects.filter(status="in_progress").count()
     resolved = Ticket.objects.filter(status="resolved").count()
     closed = Ticket.objects.filter(status="closed").count()
-    critical = Ticket.objects.filter(priority="critical", status__in=["open", "in_progress"]).count()
-    recent = Ticket.objects.select_related("created_by", "assigned_to", "department").prefetch_related("assigned_users")[:8]
-    my_tickets = Ticket.objects.filter(assigned_to=request.user).select_related("created_by", "assigned_to", "department").prefetch_related("assigned_users")[:5]
+    critical = Ticket.objects.filter(
+        priority="critical", status__in=["open", "in_progress"]
+    ).count()
+    recent = Ticket.objects.select_related(
+        "created_by", "assigned_to", "department"
+    ).prefetch_related("assigned_users")[:8]
+    my_tickets = (
+        Ticket.objects.filter(assigned_to=request.user)
+        .select_related("created_by", "assigned_to", "department")
+        .prefetch_related("assigned_users")[:5]
+    )
     today = timezone.now().date()
     week_ago = today - timedelta(days=7)
     this_week = Ticket.objects.filter(created_at__date__gte=week_ago).count()
@@ -51,9 +61,12 @@ def dashboard_auth(request):
 
 @login_required
 def customer_tickets(request):
-    tickets = Ticket.objects.filter(created_by=request.user).select_related(
-        "assigned_to", "department"
-    ).prefetch_related("assigned_users").order_by("-created_at")
+    tickets = (
+        Ticket.objects.filter(created_by=request.user)
+        .select_related("assigned_to", "department")
+        .prefetch_related("assigned_users")
+        .order_by("-created_at")
+    )
 
     status = request.GET.get("status")
     search = request.GET.get("search", "").strip()
@@ -61,9 +74,7 @@ def customer_tickets(request):
     if status:
         tickets = tickets.filter(status=status)
     if search:
-        tickets = tickets.filter(
-            Q(title__icontains=search) | Q(description__icontains=search)
-        )
+        tickets = tickets.filter(Q(title__icontains=search) | Q(description__icontains=search))
 
     ctx = {
         "tickets": tickets,
@@ -78,7 +89,9 @@ def ticket_list(request):
     if request.user.role == "customer":
         return customer_tickets(request)
 
-    tickets = Ticket.objects.select_related("created_by", "assigned_to", "department").prefetch_related("assigned_users")
+    tickets = Ticket.objects.select_related(
+        "created_by", "assigned_to", "department"
+    ).prefetch_related("assigned_users")
 
     status = request.GET.get("status")
     priority = request.GET.get("priority")
@@ -95,7 +108,9 @@ def ticket_list(request):
         tickets = tickets.filter(assigned_to__isnull=True)
     if search:
         tickets = tickets.filter(
-            Q(title__icontains=search) | Q(description__icontains=search) | Q(tags__icontains=search)
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(tags__icontains=search)
         )
 
     tickets = tickets[:50]
@@ -174,7 +189,9 @@ def ticket_create(request):
             ticket = Ticket.objects.create(
                 title=title,
                 description=description,
-                priority="medium" if request.user.role == "customer" else request.POST.get("priority", "medium"),
+                priority="medium"
+                if request.user.role == "customer"
+                else request.POST.get("priority", "medium"),
                 created_by=request.user,
                 department_id=department_id if department_id else None,
                 tags="" if request.user.role == "customer" else tags,
@@ -241,7 +258,10 @@ def ticket_assign(request, pk):
             target = get_object_or_404(agents, pk=user_id)
             ticket.assigned_to = target
             ticket.save()
-            messages.success(request, f"Ticket #{ticket.pk} assigned to {target.get_full_name() or target.username}.")
+            messages.success(
+                request,
+                f"Ticket #{ticket.pk} assigned to {target.get_full_name() or target.username}.",
+            )
         else:
             ticket.assigned_to = None
             ticket.save()
@@ -288,6 +308,8 @@ def user_search(request):
             | Q(email__icontains=query)
         )
 
-    agents = agents.values("pk", "username", "first_name", "last_name", "email", "role", "avatar_color", "department")
+    agents = agents.values(
+        "pk", "username", "first_name", "last_name", "email", "role", "avatar_color", "department"
+    )
     result = list(agents)
     return JsonResponse({"users": result})

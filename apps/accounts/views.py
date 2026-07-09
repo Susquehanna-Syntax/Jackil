@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django import forms
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+
 from .models import User
 
 
@@ -50,7 +51,9 @@ def user_login(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
-            user = authenticate(username=form.cleaned_data["username"], password=form.cleaned_data["password"])
+            user = authenticate(
+                username=form.cleaned_data["username"], password=form.cleaned_data["password"]
+            )
             if user:
                 login(request, user)
                 messages.success(request, f"Welcome back, {user.get_full_name() or user.username}!")
