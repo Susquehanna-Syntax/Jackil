@@ -169,7 +169,7 @@ def _handle_message(request, ticket):
     if not body and not files:
         return
     try:
-        post_message(ticket, request.user, body, kind=kind, files=files)
+        msg = post_message(ticket, request.user, body, kind=kind, files=files)
     except AttachmentTooLarge as exc:
         messages.error(request, f"Attachment '{exc.name}' exceeds the size limit.")
         return
@@ -178,6 +178,10 @@ def _handle_message(request, ticket):
         messages.success(request, "Internal note added.")
     else:
         messages.success(request, "Reply posted.")
+    if kind == "reply":
+        from apps.inbox.email_service import send_ticket_reply
+
+        send_ticket_reply(msg)
 
 
 def _handle_manage(request, ticket):
