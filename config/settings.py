@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "apps.automation",
     "apps.api",
     "apps.reports",
+    "apps.customfields",
 ]
 
 MIDDLEWARE = [
