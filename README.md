@@ -1,134 +1,104 @@
 # Jackil
 
-Free and open source IT ticket management software for departments. Built with Django and deployed via Docker.
+Free and open-source IT ticket-management (helpdesk) software for a single
+organization with departments. Built with Django, with a warm-dark, pastel
+design system.
 
 ## Tech Stack
 
-- **Backend:** Django 5.0
-- **Database:** PostgreSQL 16
+- **Backend:** Django 5.2 (LTS) + Django REST Framework
+- **Database:** PostgreSQL (production) / SQLite (zero-dependency local dev)
+- **Static:** WhiteNoise
+- **Background work:** management commands (`poll_inbox`, `check_sla`) via cron —
+  no Celery/Redis dependency
 - **Containerization:** Docker + Docker Compose
 
+## Features
 
-## Quick Start
+### Conversations & Email
+- Unified conversation thread per ticket: public replies, internal notes
+  (agents only), inbound/outbound email, and system audit events
+- File attachments on messages, access-controlled downloads
+- Two-way email: per-inbox SMTP/IMAP config, `poll_inbox` threads inbound mail
+  onto tickets (plus-address token / `[#id]` subject), replies email the requester
 
-### Prerequisites
+### SLA, Due Dates & Escalation
+- SLA response/resolution targets per priority, business-hours schedule
+- Auto-computed due times, first-response clock, breach detection (`check_sla`),
+  auto-escalation, due dates, dashboard "Needs Attention" widget
 
-- Docker and Docker Compose installed
-- Python 3.12+ (for local development)
+### Automation, Knowledge Base, Reporting & API
+- Automation rules (trigger → conditions → actions) and canned-response macros
+- Public Help Center with categories/articles + admin authoring
+- Reporting dashboard: volume, status/priority mix, SLA compliance, CSAT, agent load
+- Token-authenticated REST API (`/api/v1/`) + outbound webhooks
 
-### Run with Docker
+### Custom Fields & Request Forms
+- Admin-defined custom fields (text, dropdown, checkbox, number, date)
+- Request forms that drive dynamic customer intake; values shown on the ticket
+
+### Search, Notifications & More
+- Global search across tickets and the knowledge base (permission-scoped)
+- In-app notifications with unread badge; user profiles and preferences
+- Roles (customer / agent / admin) with role-based access throughout
+
+### Pro / Enterprise
+- CSV data export, activity/audit log, CSAT (satisfaction) ratings
+- White-label branding (product name, tagline, accent color)
+
+## Quick Start (local dev, SQLite — no Postgres needed)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# .env (gitignored) — minimal local config
+cat > .env <<'ENV'
+DEBUG=1
+USE_SQLITE=1
+SECRET_KEY=dev-only-change-me
+ENV
+
+python manage.py migrate
+python manage.py seed_demo --fresh   # demo departments, users, tickets, KB, forms
+python manage.py runserver
+```
+
+Visit `http://localhost:8000`. Demo logins: `admin` / `admin12345` (admin),
+`aria` / `password123` (agent), `jordan` / `password123` (customer).
+
+### Run with Docker (PostgreSQL)
 
 ```bash
 docker compose up --build
 ```
 
-The app will be available at `http://localhost:8000`.
-
-### Run Locally
+## Background jobs (cron)
 
 ```bash
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export DATABASE_URL=postgres://jackil:jackil123@localhost:5432/jackil
-export SECRET_KEY=your-secret-key
-export DEBUG=1
-
-# Run migrations
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Run dev server
-python manage.py runserver
+python manage.py poll_inbox    # fetch inbound email over IMAP
+python manage.py check_sla     # flag SLA breaches and escalate
 ```
 
-Visit `http://localhost:8000` to see the landing page.
-
-## Project Structure
+## Project layout
 
 ```
-Jackil/
-├── Dockerfile                 # Production container (Gunicorn)
-├── docker-compose.yml         # Web + PostgreSQL services
-├── requirements.txt           # Python dependencies
-├── manage.py                  # Django management
-├── entrypoint.sh              # Migration entrypoint
-│
-├── config/                    # Project settings
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-│
-├── apps/
-│   ├── accounts/              # Custom user model, auth
-│   │   ├── models.py          # User (AbstractUser), Department
-│   │   ├── views.py           # Login, register, logout
-│   │   └── admin.py
-│   │
-│   └── tickets/               # Ticket management
-│       ├── models.py          # Ticket, TicketComment
-│       ├── views.py           # CRUD views
-│       ├── admin.py
-│       └── urls.py
-│
-├── templates/                 # HTML templates
-│   ├── base.html              # Frosted glass sidebar layout
-│   ├── accounts/              # Login, Register
-│   └── tickets/               # Dashboard, list, detail, forms
-│
-    ├── static/
-│   └── css/style.css          # CSS styles
+apps/
+├── accounts/       User (roles), Department, profile
+├── tickets/        Ticket, TicketMessage, Attachment, TicketRating, permissions, SLA hooks
+├── inbox/          Inbox (SMTP/IMAP), outbound email, inbound ingest
+├── sla/            SLA targets, business schedule, engine, check_sla
+├── automation/     Macros + automation rules engine
+├── kb/             Knowledge base / Help Center
+├── api/            REST API (DRF), API keys, webhooks
+├── reports/        Reporting & analytics
+├── customfields/   Custom fields + request forms
+├── notifications/  In-app notifications
+└── console/        Admin settings console + branding
 ```
 
-## Features
-
-- **Ticket Management:** Create, edit, assign, and close IT tickets
-- **User Roles:** Admin, Agent, User with role-based access
-- **Departments:** Group tickets by department
-- **Priorities:** Critical, High, Medium, Low
-- **Statuses:** Open, In Progress, Pending, Resolved, Closed
-- **Comments:** Add comments to tickets for team communication
-- **Tagging:** Tag tickets for easy filtering
-- **Dashboard:** Overview with stats and recent tickets
-- **Search & Filter:** Filter tickets by status, priority, and assignment
-
-
-## Database
-
-By default, PostgreSQL runs in Docker Compose. Connection details:
-
-| Setting | Value |
-|---------|-------|
-| Host | db |
-| Port | 5432 |
-| Database | jackil |
-| User | jackil |
-| Password | jackil123 |
-
-For local development with a local PostgreSQL instance, update `DATABASES` in `config/settings.py` or set the environment variables accordingly.
-
-## Admin
-
-Access Django admin at `http://localhost:8000/admin/`.
-
-Create an admin user:
-
-```bash
-docker exec -it jackil_web python manage.py createsuperuser
-```
-
-Or locally:
-
-```bash
-python manage.py createsuperuser
-```
+Engineering docs live under `docs/` (`architecture.md`, `dev/`).
 
 ## License
 
