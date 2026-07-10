@@ -11,6 +11,7 @@ urlpatterns = [
     path("help/", include("apps.kb.urls", namespace="kb")),
     path("api/v1/", include("apps.api.urls", namespace="api")),
     path("reports/", include("apps.reports.urls", namespace="reports")),
+    path("notifications/", include("apps.notifications.urls", namespace="notifications")),
 ]
 
 if settings.DEBUG:

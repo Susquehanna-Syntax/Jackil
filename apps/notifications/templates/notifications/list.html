@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Notifications — Jackil{% endblock %}
+{% block content %}
+<div class="fade-in d1">
+  <div class="page-header">
+    <div class="hero-title" style="margin-bottom:0;">Notifications</div>
+    {% if notes %}
+    <form method="post" action="{% url 'notifications:read_all' %}">{% csrf_token %}
+      <button class="btn btn-outline">Mark all read</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% if notes %}
+<div class="notif-list fade-in d2">
+  {% for n in notes %}
+  <a href="{% url 'notifications:open' n.pk %}" class="notif-item{% if not n.is_read %} unread{% endif %}">
+    <span class="avatar-sm" style="background: var(--{{ n.actor.avatar_color|default:'lavender' }});">{% if n.actor %}{{ n.actor.avatar_initials }}{% else %}J{% endif %}</span>
+    <div class="notif-body">
+      <div class="notif-verb">{{ n.verb }}</div>
+      <div class="notif-time">{{ n.created_at|timesince }} ago{% if n.ticket %} · #{{ n.ticket_id }}{% endif %}</div>
+    </div>
+    {% if not n.is_read %}<span class="notif-dot"></span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state fade-in d2"><div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div><h3>You're all caught up</h3><p>Notifications about your tickets show up here.</p></div>
+{% endif %}
+{% endblock %}

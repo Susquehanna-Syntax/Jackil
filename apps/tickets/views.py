@@ -379,6 +379,11 @@ def ticket_assign(request, pk):
                 request.user,
                 f"Assigned to {target.get_full_name() or target.username}.",
             )
+            from apps.notifications.service import notify
+
+            notify(
+                target, f"You were assigned to “{ticket.title}”", actor=request.user, ticket=ticket
+            )
             messages.success(
                 request,
                 f"Ticket #{ticket.pk} assigned to {target.get_full_name() or target.username}.",
@@ -421,13 +426,18 @@ def global_search(request):
     articles = []
     if query:
         tq = Ticket.objects.select_related("created_by", "assigned_to")
+        # Customers only match on public message bodies (never internal notes),
+        # so a search term can't reveal the existence/content of a private note.
         if request.user.role == "customer":
             tq = tq.filter(created_by=request.user)
+            message_match = Q(messages__body__icontains=query, messages__is_public=True)
+        else:
+            message_match = Q(messages__body__icontains=query)
         tickets = tq.filter(
             Q(title__icontains=query)
             | Q(description__icontains=query)
             | Q(tags__icontains=query)
-            | Q(messages__body__icontains=query)
+            | message_match
         ).distinct()[:25]
 
         from apps.kb.service import public_only_for, search_articles

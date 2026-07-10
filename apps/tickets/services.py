@@ -67,6 +67,11 @@ def post_message(ticket, author, body, kind="reply", files=None, is_public=None)
         from apps.automation.engine import run_rules
 
         run_rules(ticket, "on_reply", actor=author)
+        from apps.notifications.service import notify_ticket_participants
+
+        notify_ticket_participants(
+            ticket, f"New reply on “{ticket.title}”", actor=author, exclude=[author]
+        )
     return message
 
 
