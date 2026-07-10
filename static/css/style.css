@@ -1276,3 +1276,10 @@ body {
 .csat-input .csat-star:hover { color: var(--peach); }
 .csat-star.on { color: var(--lemon); }
 .csat-label { font-size: 13px; color: var(--text-2); }
+
+/* ── Profile color picker (M5) ── */
+.color-picker { display: flex; gap: 10px; }
+.color-swatch { cursor: pointer; }
+.color-swatch input { position: absolute; opacity: 0; }
+.color-swatch span { display: block; width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; transition: border-color 0.2s, transform 0.2s; }
+.color-swatch input:checked + span { border-color: var(--text-1); transform: scale(1.12); }

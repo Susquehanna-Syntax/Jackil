@@ -69,3 +69,30 @@ def user_logout(request):
     logout(request)
     messages.success(request, "You have been logged out.")
     return redirect("accounts:login")
+
+
+AVATAR_COLORS = ["lavender", "mint", "peach", "sky", "rose", "coral", "lemon"]
+
+
+@login_required
+def profile(request):
+    user = request.user
+    if request.method == "POST":
+        user.first_name = request.POST.get("first_name", user.first_name).strip()
+        user.last_name = request.POST.get("last_name", user.last_name).strip()
+        user.email = request.POST.get("email", user.email).strip()
+        user.phone = request.POST.get("phone", user.phone).strip()
+        color = request.POST.get("avatar_color", user.avatar_color)
+        if color in AVATAR_COLORS:
+            user.avatar_color = color
+        prefs = user.preferences or {}
+        prefs["show_needs_attention"] = request.POST.get("show_needs_attention") == "on"
+        user.preferences = prefs
+        user.save()
+        messages.success(request, "Profile updated.")
+        return redirect("accounts:profile")
+    return render(
+        request,
+        "accounts/profile.html",
+        {"avatar_colors": AVATAR_COLORS, "prefs": user.preferences or {}},
+    )

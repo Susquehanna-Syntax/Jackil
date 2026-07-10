@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Profile — Jackil{% endblock %}
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">Your <span>Profile</span></div>
+  <div class="hero-sub">Update your details and preferences.</div>
+
+  <form method="post" style="max-width: 640px;">
+    {% csrf_token %}
+    <div class="form-card">
+      <div class="form-card-title">Details</div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label" for="fn">First name</label><input type="text" name="first_name" id="fn" class="form-input" value="{{ user.first_name }}"></div>
+        <div class="form-group"><label class="form-label" for="ln">Last name</label><input type="text" name="last_name" id="ln" class="form-input" value="{{ user.last_name }}"></div>
+        <div class="form-group"><label class="form-label" for="em">Email</label><input type="email" name="email" id="em" class="form-input" value="{{ user.email }}"></div>
+        <div class="form-group"><label class="form-label" for="ph">Phone</label><input type="text" name="phone" id="ph" class="form-input" value="{{ user.phone }}"></div>
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Avatar color</label>
+        <div class="color-picker">
+          {% for c in avatar_colors %}
+          <label class="color-swatch">
+            <input type="radio" name="avatar_color" value="{{ c }}" {% if user.avatar_color == c %}checked{% endif %}>
+            <span style="background: var(--{{ c }});"></span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {% if user.role != "customer" %}
+    <div class="form-card">
+      <div class="form-card-title">Dashboard</div>
+      <label class="check-field"><input type="checkbox" name="show_needs_attention" class="form-check" {% if prefs.show_needs_attention|default_if_none:True %}checked{% endif %}> <span>Show the “Needs Attention” panel on the dashboard</span></label>
+    </div>
+    {% endif %}
+
+    <div class="inbox-form-actions">
+      <button type="submit" class="btn btn-filled-mint">Save profile</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

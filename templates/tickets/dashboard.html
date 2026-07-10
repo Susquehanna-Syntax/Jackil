@@ -85,7 +85,7 @@
   </div>
 
   <div>
-    {% if overdue_tickets %}
+    {% if overdue_tickets and show_needs_attention %}
     <div class="side-panel fade-in d5" style="margin-bottom: 20px; border: 1px solid rgba(240,144,128,0.25);">
       <div class="side-panel-title" style="color: var(--coral);">Needs Attention</div>
       {% for ticket in overdue_tickets %}

@@ -75,6 +75,7 @@ def dashboard_auth(request):
         "overdue_tickets": overdue_tickets,
         "sla_overdue": sla_overdue,
         "sla_breached": sla_breached,
+        "show_needs_attention": (request.user.preferences or {}).get("show_needs_attention", True),
     }
     return render(request, "tickets/dashboard.html", ctx)
 

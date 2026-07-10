@@ -48,7 +48,10 @@
     <div class="sidebar-spacer"></div>
     <div style="font-size: 10px; color: var(--text-3); text-align: center; padding: 0 4px; line-height: 1.3;">Customer</div>
     {% endif %}
-    <a href="{% url 'accounts:logout' %}" class="sidebar-avatar" data-tip="Logout" style="background: var(--{{ user.avatar_color|default:'lavender' }});">{{ user.avatar_initials }}</a>
+    <a href="{% url 'accounts:profile' %}" class="sidebar-avatar" data-tip="Your profile" style="background: var(--{{ user.avatar_color|default:'lavender' }});">{{ user.avatar_initials }}</a>
+    <a href="{% url 'accounts:logout' %}" class="sidebar-icon" data-tip="Log out">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </a>
   </nav>
 
   <main class="main">
