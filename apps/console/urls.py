@@ -28,4 +28,11 @@ urlpatterns = [
     path("api/webhooks/new/", views.webhook_create, name="webhook_create"),
     path("api/webhooks/<int:pk>/", views.webhook_edit, name="webhook_edit"),
     path("api/webhooks/<int:pk>/delete/", views.webhook_delete, name="webhook_delete"),
+    path("forms/", views.field_list, name="field_list"),
+    path("forms/fields/new/", views.field_create, name="field_create"),
+    path("forms/fields/<int:pk>/", views.field_edit, name="field_edit"),
+    path("forms/fields/<int:pk>/delete/", views.field_delete, name="field_delete"),
+    path("forms/requests/new/", views.reqform_create, name="reqform_create"),
+    path("forms/requests/<int:pk>/", views.reqform_edit, name="reqform_edit"),
+    path("forms/requests/<int:pk>/delete/", views.reqform_delete, name="reqform_delete"),
 ]

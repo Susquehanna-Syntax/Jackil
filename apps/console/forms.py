@@ -126,3 +126,41 @@ class WebhookForm(forms.ModelForm):
                 w.attrs.setdefault("class", "form-select")
             else:
                 w.attrs.setdefault("class", "form-input")
+
+
+from apps.customfields.models import CustomField, RequestForm  # noqa: E402
+
+
+def _style(form):
+    for field in form.fields.values():
+        w = field.widget
+        if isinstance(w, forms.CheckboxInput):
+            w.attrs.setdefault("class", "form-check")
+        elif isinstance(w, forms.Textarea):
+            w.attrs.setdefault("class", "form-textarea")
+        elif isinstance(w, forms.Select):
+            w.attrs.setdefault("class", "form-select")
+        else:
+            w.attrs.setdefault("class", "form-input")
+
+
+class CustomFieldForm(forms.ModelForm):
+    class Meta:
+        model = CustomField
+        fields = ["label", "field_type", "choices", "help_text", "required", "is_active", "order"]
+        widgets = {"choices": forms.Textarea(attrs={"rows": 4})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _style(self)
+
+
+class RequestFormForm(forms.ModelForm):
+    class Meta:
+        model = RequestForm
+        fields = ["name", "description", "intro", "department", "is_active", "order"]
+        widgets = {"intro": forms.Textarea(attrs={"rows": 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _style(self)

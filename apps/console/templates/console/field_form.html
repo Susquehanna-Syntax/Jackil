@@ -1,0 +1,26 @@
+{% extends "console/settings_base.html" %}
+{% block settings_content %}
+<a href="{% url 'console:field_list' %}" class="btn btn-ghost" style="margin-bottom:16px;">&larr; Back</a>
+<div class="section-heading">{% if field %}Edit field{% else %}New field{% endif %}</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="form-card">
+    <div class="form-grid-2">
+      {% include "console/_field.html" with field=form.label %}
+      {% include "console/_field.html" with field=form.field_type %}
+    </div>
+    <div style="margin-top:14px;">{% include "console/_field.html" with field=form.choices %}</div>
+    <div style="margin-top:14px;">{% include "console/_field.html" with field=form.help_text %}</div>
+    <div class="form-check-row" style="margin-top:14px;">
+      {% include "console/_check.html" with field=form.required %}
+      {% include "console/_check.html" with field=form.is_active %}
+      {% include "console/_field.html" with field=form.order %}
+    </div>
+  </div>
+  <div class="inbox-form-actions">
+    {% if field %}<form method="post" action="{% url 'console:field_delete' field.pk %}" style="display:inline;" onsubmit="return confirm('Delete field?');">{% csrf_token %}<button class="btn btn-ghost" style="color:var(--coral);">Delete</button></form>{% endif %}
+    <a href="{% url 'console:field_list' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-mint">Save field</button>
+  </div>
+</form>
+{% endblock %}

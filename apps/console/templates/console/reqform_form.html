@@ -1,0 +1,35 @@
+{% extends "console/settings_base.html" %}
+{% block settings_content %}
+<a href="{% url 'console:field_list' %}" class="btn btn-ghost" style="margin-bottom:16px;">&larr; Back</a>
+<div class="section-heading">{% if reqform %}Edit request form{% else %}New request form{% endif %}</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="form-card">
+    {% include "console/_field.html" with field=form.name %}
+    <div style="margin-top:14px;">{% include "console/_field.html" with field=form.description %}</div>
+    <div style="margin-top:14px;">{% include "console/_field.html" with field=form.intro %}</div>
+    <div class="form-grid-2" style="margin-top:14px;">
+      {% include "console/_field.html" with field=form.department %}
+      {% include "console/_field.html" with field=form.order %}
+    </div>
+    <div class="form-check-row" style="margin-top:14px;">{% include "console/_check.html" with field=form.is_active %}</div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-title">Fields on this form</div>
+    <p class="form-card-hint">Check fields to include; they appear in listed order.</p>
+    {% for f in all_fields %}
+    <label class="check-field" style="display:flex; padding:8px 0; border-bottom:1px solid var(--s2);">
+      <input type="checkbox" name="form_fields" value="{{ f.pk }}" class="form-check" {% if f.pk in selected_ids %}checked{% endif %}>
+      <span>{{ f.label }} <span style="color:var(--text-3);">· {{ f.get_field_type_display }}</span></span>
+    </label>
+    {% empty %}
+    <p style="color:var(--text-3); font-size:13px;">No custom fields yet — create some first.</p>
+    {% endfor %}
+  </div>
+  <div class="inbox-form-actions">
+    {% if reqform %}<form method="post" action="{% url 'console:reqform_delete' reqform.pk %}" style="display:inline;" onsubmit="return confirm('Delete form?');">{% csrf_token %}<button class="btn btn-ghost" style="color:var(--coral);">Delete</button></form>{% endif %}
+    <a href="{% url 'console:field_list' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-mint">Save form</button>
+  </div>
+</form>
+{% endblock %}

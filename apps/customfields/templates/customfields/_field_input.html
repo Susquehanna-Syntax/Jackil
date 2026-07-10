@@ -1,0 +1,20 @@
+<div class="form-group">
+  <label class="form-label" for="cf_{{ field.key }}">{{ field.label }}{% if field.required %} <span style="color: var(--coral);">*</span>{% endif %}</label>
+  {% if field.field_type == "textarea" %}
+  <textarea name="cf_{{ field.key }}" id="cf_{{ field.key }}" class="form-textarea" {% if field.required %}required{% endif %}>{{ value|default:'' }}</textarea>
+  {% elif field.field_type == "dropdown" %}
+  <select name="cf_{{ field.key }}" id="cf_{{ field.key }}" class="form-select">
+    <option value="">-- Select --</option>
+    {% for opt in field.choice_list %}<option value="{{ opt }}" {% if value == opt %}selected{% endif %}>{{ opt }}</option>{% endfor %}
+  </select>
+  {% elif field.field_type == "checkbox" %}
+  <label class="check-field"><input type="checkbox" name="cf_{{ field.key }}" class="form-check" {% if value %}checked{% endif %}> <span>{{ field.help_text|default:"Yes" }}</span></label>
+  {% elif field.field_type == "number" %}
+  <input type="number" name="cf_{{ field.key }}" id="cf_{{ field.key }}" class="form-input" value="{{ value|default:'' }}" {% if field.required %}required{% endif %}>
+  {% elif field.field_type == "date" %}
+  <input type="date" name="cf_{{ field.key }}" id="cf_{{ field.key }}" class="form-input" value="{{ value|default:'' }}" {% if field.required %}required{% endif %}>
+  {% else %}
+  <input type="text" name="cf_{{ field.key }}" id="cf_{{ field.key }}" class="form-input" value="{{ value|default:'' }}" {% if field.required %}required{% endif %}>
+  {% endif %}
+  {% if field.help_text and field.field_type != "checkbox" %}<div class="field-help">{{ field.help_text }}</div>{% endif %}
+</div>

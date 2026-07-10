@@ -283,7 +283,12 @@ def attachment_download(request, pk):
 
 @login_required
 def ticket_create(request):
+    from apps.customfields.service import active_forms, get_form, save_field_values
+
     departments = Department.objects.all()
+    forms = list(active_forms())
+    form_slug = request.POST.get("form_slug") or request.GET.get("form", "")
+    selected_form = get_form(form_slug) if form_slug else None
 
     if request.method == "POST":
         title = request.POST.get("title", "").strip()
@@ -302,6 +307,8 @@ def ticket_create(request):
                 department_id=department_id if department_id else None,
                 tags="" if request.user.role == "customer" else tags,
             )
+            if selected_form:
+                save_field_values(ticket, selected_form, request.POST)
             messages.success(request, f"Ticket #{ticket.pk} created successfully.")
             return redirect("tickets:ticket_detail", pk=ticket.pk)
         else:
@@ -309,6 +316,9 @@ def ticket_create(request):
 
     ctx = {
         "departments": departments,
+        "request_forms": forms,
+        "selected_form": selected_form,
+        "form_fields": selected_form.ordered_fields() if selected_form else [],
     }
     return render(request, "tickets/create.html", ctx)
 

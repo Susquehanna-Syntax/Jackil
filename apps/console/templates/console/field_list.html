@@ -1,0 +1,54 @@
+{% extends "console/settings_base.html" %}
+{% block settings_content %}
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">Custom Fields</div>
+  <a href="{% url 'console:field_create' %}" class="btn btn-filled-lav">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Field
+  </a>
+</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 16px;">Reusable fields you can add to request forms.</p>
+{% if fields %}
+<div class="inbox-list" style="margin-bottom: 32px;">
+  {% for f in fields %}
+  <a href="{% url 'console:field_edit' f.pk %}" class="inbox-row" style="text-decoration:none;">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--lavender);"><svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div>
+      <div>
+        <div class="inbox-name">{{ f.label }}{% if f.required %}<span class="tag tag-critical">Required</span>{% endif %}{% if not f.is_active %}<span class="tag tag-closed">Off</span>{% endif %}</div>
+        <div class="inbox-addr">{{ f.get_field_type_display }} · key <code>{{ f.key }}</code></div>
+      </div>
+    </div>
+    <div class="inbox-row-meta"><span class="btn btn-outline btn-sm">Edit</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" style="margin-bottom:32px;"><div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div><h3>No custom fields</h3><p>Create fields like "Asset tag" or "Operating system".</p><a href="{% url 'console:field_create' %}" class="btn btn-filled-lav">New Field</a></div>
+{% endif %}
+
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">Request Forms</div>
+  <a href="{% url 'console:reqform_create' %}" class="btn btn-filled-peach">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Form
+  </a>
+</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 16px;">Intake forms customers pick when opening a ticket.</p>
+{% if forms_list %}
+<div class="inbox-list">
+  {% for rf in forms_list %}
+  <a href="{% url 'console:reqform_edit' rf.pk %}" class="inbox-row" style="text-decoration:none;">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--peach);"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="9" y1="13" x2="15" y2="13"/></svg></div>
+      <div>
+        <div class="inbox-name">{{ rf.name }}{% if not rf.is_active %}<span class="tag tag-closed">Off</span>{% endif %}</div>
+        <div class="inbox-addr">{{ rf.fields.count }} field{{ rf.fields.count|pluralize }}{% if rf.department %} · {{ rf.department.name }}{% endif %}</div>
+      </div>
+    </div>
+    <div class="inbox-row-meta"><span class="btn btn-outline btn-sm">Edit</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div><h3>No request forms</h3><p>Group fields into a form for a request type.</p><a href="{% url 'console:reqform_create' %}" class="btn btn-filled-peach">New Form</a></div>
+{% endif %}
+{% endblock %}

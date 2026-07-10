@@ -85,6 +85,19 @@
 
   <div class="ticket-detail-body">{{ ticket.description|linebreaks }}</div>
 
+  {% with fvs=ticket.field_values.all %}
+  {% if fvs %}
+  <div class="ticket-custom-fields">
+    {% for fv in fvs %}
+    <div class="cf-item">
+      <span class="cf-label">{{ fv.field.label }}</span>
+      <span class="cf-value">{{ fv.display|default:"—" }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
   <div class="ticket-detail-actions">
     {% if can_edit %}
     <a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-filled-sky">Edit Ticket</a>

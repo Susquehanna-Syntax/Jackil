@@ -349,3 +349,110 @@ def webhook_delete(request, pk):
         Webhook.objects.filter(pk=pk).delete()
         messages.success(request, "Webhook deleted.")
     return redirect("console:api_home")
+
+
+# ── Custom fields + request forms ───────────────────────────────────────────
+
+
+@admin_required
+def field_list(request):
+    from apps.customfields.models import CustomField, RequestForm
+
+    ctx = {
+        "fields": CustomField.objects.all(),
+        "forms_list": RequestForm.objects.all(),
+        "section": "forms",
+    }
+    return render(request, "console/field_list.html", ctx)
+
+
+@admin_required
+def field_create(request):
+    return _field_form(request, None)
+
+
+@admin_required
+def field_edit(request, pk):
+    from apps.customfields.models import CustomField
+
+    return _field_form(request, get_object_or_404(CustomField, pk=pk))
+
+
+def _field_form(request, field):
+    from .forms import CustomFieldForm
+
+    if request.method == "POST":
+        form = CustomFieldForm(request.POST, instance=field)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Custom field saved.")
+            return redirect("console:field_list")
+    else:
+        form = CustomFieldForm(instance=field)
+    return render(
+        request, "console/field_form.html", {"form": form, "field": field, "section": "forms"}
+    )
+
+
+@admin_required
+def field_delete(request, pk):
+    from apps.customfields.models import CustomField
+
+    if request.method == "POST":
+        CustomField.objects.filter(pk=pk).delete()
+        messages.success(request, "Custom field deleted.")
+    return redirect("console:field_list")
+
+
+@admin_required
+def reqform_create(request):
+    return _reqform_form(request, None)
+
+
+@admin_required
+def reqform_edit(request, pk):
+    from apps.customfields.models import RequestForm
+
+    return _reqform_form(request, get_object_or_404(RequestForm, pk=pk))
+
+
+def _reqform_form(request, reqform):
+    from apps.customfields.models import CustomField, RequestFormField
+
+    from .forms import RequestFormForm
+
+    if request.method == "POST":
+        form = RequestFormForm(request.POST, instance=reqform)
+        if form.is_valid():
+            obj = form.save()
+            # Rebuild the form's field set from checked custom fields.
+            RequestFormField.objects.filter(form=obj).delete()
+            for i, field_id in enumerate(request.POST.getlist("form_fields")):
+                if field_id.isdigit():
+                    RequestFormField.objects.create(form=obj, field_id=int(field_id), order=i)
+            messages.success(request, f"Request form “{obj.name}” saved.")
+            return redirect("console:field_list")
+    else:
+        form = RequestFormForm(instance=reqform)
+    selected_ids = list(reqform.fields.values_list("id", flat=True)) if reqform else []
+    return render(
+        request,
+        "console/reqform_form.html",
+        {
+            "form": form,
+            "reqform": reqform,
+            "all_fields": CustomField.objects.filter(is_active=True),
+            "selected_ids": selected_ids,
+            "section": "forms",
+        },
+    )
+
+
+@admin_required
+def reqform_delete(request, pk):
+    from apps.customfields.models import RequestForm
+
+    if request.method == "POST":
+        RequestForm.objects.filter(pk=pk).delete()
+        messages.success(request, "Request form deleted.")
+    return redirect("console:field_list")
