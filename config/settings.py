@@ -80,6 +80,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.notifications.context_processors.notifications",
                 "apps.console.context_processors.branding",
+                "config.context_processors.features",
             ],
         },
     },
