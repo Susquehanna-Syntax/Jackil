@@ -164,6 +164,9 @@ def ticket_detail(request, pk):
 
     thread = permissions.visible_messages(request.user, ticket).prefetch_related("attachments")
     agents = User.objects.filter(role__in=["admin", "agent"])
+    from .models import TicketRating
+
+    rating = TicketRating.objects.filter(ticket=ticket).first()
     ctx = {
         "ticket": ticket,
         "messages_thread": thread,
@@ -172,6 +175,9 @@ def ticket_detail(request, pk):
         "can_assign": permissions.can_assign_ticket(request.user),
         "can_post_internal": permissions.can_post_internal(request.user),
         "agents": agents,
+        "rating": rating,
+        "can_rate": request.user.id == ticket.created_by_id
+        and ticket.status in ("resolved", "closed"),
     }
     return render(request, "tickets/detail.html", ctx)
 
@@ -417,6 +423,99 @@ def user_search(request):
     )
     result = list(agents)
     return JsonResponse({"users": result})
+
+
+@login_required
+def ticket_rate(request, pk):
+    """Customer rates a resolved/closed ticket (CSAT)."""
+    from .models import TicketRating
+
+    ticket = get_object_or_404(Ticket, pk=pk)
+    if ticket.created_by_id != request.user.id or ticket.status not in ("resolved", "closed"):
+        return redirect("tickets:ticket_detail", pk=pk)
+    if request.method == "POST":
+        try:
+            score = int(request.POST.get("score", "0"))
+        except ValueError:
+            score = 0
+        if 1 <= score <= 5:
+            TicketRating.objects.update_or_create(
+                ticket=ticket,
+                defaults={
+                    "score": score,
+                    "comment": request.POST.get("comment", "").strip(),
+                    "created_by": request.user,
+                },
+            )
+            messages.success(request, "Thanks for your feedback!")
+    return redirect("tickets:ticket_detail", pk=pk)
+
+
+@login_required
+def ticket_export(request):
+    """Export tickets as CSV (staff only) — enterprise data export."""
+    import csv
+
+    from django.http import HttpResponse
+
+    if request.user.role not in ("agent", "admin"):
+        return redirect("tickets:dashboard")
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="jackil-tickets.csv"'
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "ID",
+            "Title",
+            "Status",
+            "Priority",
+            "Source",
+            "Created by",
+            "Requester email",
+            "Assigned to",
+            "Department",
+            "Tags",
+            "Created",
+            "Resolution due",
+            "Closed",
+        ]
+    )
+    for t in Ticket.objects.select_related("created_by", "assigned_to", "department"):
+        writer.writerow(
+            [
+                t.id,
+                t.title,
+                t.get_status_display(),
+                t.get_priority_display(),
+                t.source,
+                t.created_by.get_full_name() or t.created_by.username if t.created_by_id else "",
+                t.requester_email,
+                (t.assigned_to.get_full_name() or t.assigned_to.username)
+                if t.assigned_to_id
+                else "",
+                t.department.name if t.department_id else "",
+                t.tags,
+                t.created_at.strftime("%Y-%m-%d %H:%M") if t.created_at else "",
+                t.resolution_due.strftime("%Y-%m-%d %H:%M") if t.resolution_due else "",
+                t.closed_at.strftime("%Y-%m-%d %H:%M") if t.closed_at else "",
+            ]
+        )
+    return response
+
+
+@login_required
+def activity_log(request):
+    """Recent audit trail across tickets (staff only)."""
+    if request.user.role not in ("agent", "admin"):
+        return redirect("tickets:dashboard")
+    from .models import TicketMessage
+
+    events = (
+        TicketMessage.objects.filter(kind="system")
+        .select_related("author", "ticket")
+        .order_by("-created_at")[:100]
+    )
+    return render(request, "tickets/activity.html", {"events": events})
 
 
 @login_required

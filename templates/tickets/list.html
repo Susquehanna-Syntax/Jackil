@@ -10,10 +10,14 @@
     <div class="page-title">All Tickets</div>
     <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ tickets|length }} ticket{{ tickets|length|pluralize }}</div>
   </div>
-  <a href="{% url 'tickets:ticket_create' %}" class="btn btn-filled-lav">
-    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    New Ticket
-  </a>
+  <div style="display:flex; gap:8px;">
+    <a href="{% url 'tickets:activity_log' %}" class="btn btn-outline">Activity</a>
+    <a href="{% url 'tickets:ticket_export' %}" class="btn btn-outline">Export CSV</a>
+    <a href="{% url 'tickets:ticket_create' %}" class="btn btn-filled-lav">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Ticket
+    </a>
+  </div>
 </div>
 
 <div class="filter-bar fade-in d2">

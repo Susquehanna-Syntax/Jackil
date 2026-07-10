@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Activity — Jackil{% endblock %}
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">Activity <span>Log</span></div>
+  <div class="hero-sub">Audit trail of automated and manual changes across all tickets.</div>
+</div>
+{% if events %}
+<div class="activity-feed fade-in d2">
+  {% for e in events %}
+  <a href="{% url 'tickets:ticket_detail' e.ticket_id %}" class="activity-item">
+    <span class="activity-dot"></span>
+    <div class="activity-body">
+      <div class="activity-text">{{ e.body }}</div>
+      <div class="activity-meta">#{{ e.ticket_id }} · {{ e.ticket.title|truncatechars:44 }} · {% if e.author %}{{ e.author.get_full_name|default:e.author.username }} · {% endif %}{{ e.created_at|timesince }} ago</div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state fade-in d2"><div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><h3>No activity yet</h3><p>Ticket changes will appear here.</p></div>
+{% endif %}
+{% endblock %}

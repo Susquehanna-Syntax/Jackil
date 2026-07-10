@@ -183,3 +183,18 @@ class Attachment(models.Model):
             if n < 1024 or unit == "GB":
                 return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
             n /= 1024
+
+
+class TicketRating(models.Model):
+    """Customer satisfaction (CSAT) rating for a resolved ticket."""
+
+    ticket = models.OneToOneField(Ticket, on_delete=models.CASCADE, related_name="rating")
+    score = models.PositiveSmallIntegerField()  # 1–5
+    comment = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.score}★ on #{self.ticket_id}"

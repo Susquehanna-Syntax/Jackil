@@ -100,6 +100,12 @@ def reports_home(request):
         if t.status in ("resolved", "closed") and t.closed_at and t.created_at:
             resolution_deltas.append(t.closed_at - t.created_at)
 
+    from apps.tickets.models import TicketRating
+
+    ratings = TicketRating.objects.all()
+    csat_count = ratings.count()
+    csat_avg = round(sum(r.score for r in ratings) / csat_count, 1) if csat_count else None
+
     resp_total = resp_met + resp_breached
     res_total = res_met + res_breached
 
@@ -128,5 +134,7 @@ def reports_home(request):
         "avg_first_response_h": _avg_hours(first_response_deltas),
         "avg_resolution_h": _avg_hours(resolution_deltas),
         "top_agents": top_agents,
+        "csat_avg": csat_avg,
+        "csat_count": csat_count,
     }
     return render(request, "reports/home.html", ctx)

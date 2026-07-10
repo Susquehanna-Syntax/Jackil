@@ -103,6 +103,24 @@
     <a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-filled-sky">Edit Ticket</a>
     {% endif %}
   </div>
+
+  {% if rating %}
+  <div class="csat-card rated">
+    <div class="csat-stars">{% for i in "12345" %}<span class="csat-star{% if forloop.counter <= rating.score %} on{% endif %}">★</span>{% endfor %}</div>
+    <div class="csat-label">{% if request.user.id == ticket.created_by_id %}You rated{% else %}Customer rated{% endif %} this {{ rating.score }}/5{% if rating.comment %} — “{{ rating.comment }}”{% endif %}</div>
+  </div>
+  {% elif can_rate %}
+  <form method="post" action="{% url 'tickets:ticket_rate' ticket.pk %}" class="csat-card" id="csat_form">
+    {% csrf_token %}
+    <div class="csat-prompt">How was your support experience?</div>
+    <div class="csat-stars csat-input" id="csat_stars">
+      {% for i in "12345" %}<button type="button" class="csat-star" data-score="{{ forloop.counter }}">★</button>{% endfor %}
+    </div>
+    <input type="hidden" name="score" id="csat_score" value="">
+    <input type="text" name="comment" class="form-input" placeholder="Add a comment (optional)" style="margin-top:12px;">
+    <button type="submit" class="btn btn-filled-mint" style="margin-top:12px;">Submit rating</button>
+  </form>
+  {% endif %}
 </div>
 
 <div class="divider"></div>
@@ -204,6 +222,22 @@
     Manage Ticket
   </button>
 </div>
+{% endif %}
+
+{% if can_rate and not rating %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const stars = document.querySelectorAll('#csat_stars .csat-star');
+  const scoreInput = document.getElementById('csat_score');
+  stars.forEach(function(star) {
+    star.addEventListener('click', function() {
+      const s = parseInt(star.dataset.score);
+      scoreInput.value = s;
+      stars.forEach(x => x.classList.toggle('on', parseInt(x.dataset.score) <= s));
+    });
+  });
+});
+</script>
 {% endif %}
 {% endblock %}
 

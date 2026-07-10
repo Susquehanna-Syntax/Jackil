@@ -14,6 +14,7 @@
   <div class="stat-card"><div class="stat-number" style="color: var(--lavender);">{{ resp_pct }}%</div><div class="stat-label">Response SLA met</div></div>
   <div class="stat-card"><div class="stat-number" style="color: var(--peach);">{% if avg_first_response_h is not None %}{{ avg_first_response_h }}h{% else %}—{% endif %}</div><div class="stat-label">Avg first response</div></div>
   <div class="stat-card"><div class="stat-number" style="color: var(--rose);">{% if avg_resolution_h is not None %}{{ avg_resolution_h }}h{% else %}—{% endif %}</div><div class="stat-label">Avg resolution</div></div>
+  <div class="stat-card"><div class="stat-number" style="color: var(--lemon);">{% if csat_avg is not None %}{{ csat_avg }}★{% else %}—{% endif %}</div><div class="stat-label">CSAT ({{ csat_count }})</div></div>
 </div>
 
 <div class="divider"></div>
