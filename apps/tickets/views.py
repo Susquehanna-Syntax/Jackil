@@ -461,6 +461,15 @@ def ticket_export(request):
 
     if request.user.role not in ("agent", "admin"):
         return redirect("tickets:dashboard")
+
+    def safe(value):
+        """Neutralize CSV formula injection: prefix cells that a spreadsheet
+        would treat as a formula with a leading apostrophe."""
+        text = "" if value is None else str(value)
+        if text and text[0] in ("=", "+", "-", "@", "\t", "\r"):
+            return "'" + text
+        return text
+
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="jackil-tickets.csv"'
     writer = csv.writer(response)
@@ -484,18 +493,22 @@ def ticket_export(request):
     for t in Ticket.objects.select_related("created_by", "assigned_to", "department"):
         writer.writerow(
             [
-                t.id,
-                t.title,
-                t.get_status_display(),
-                t.get_priority_display(),
-                t.source,
-                t.created_by.get_full_name() or t.created_by.username if t.created_by_id else "",
-                t.requester_email,
-                (t.assigned_to.get_full_name() or t.assigned_to.username)
-                if t.assigned_to_id
-                else "",
-                t.department.name if t.department_id else "",
-                t.tags,
+                safe(t.id),
+                safe(t.title),
+                safe(t.get_status_display()),
+                safe(t.get_priority_display()),
+                safe(t.source),
+                safe(
+                    t.created_by.get_full_name() or t.created_by.username if t.created_by_id else ""
+                ),
+                safe(t.requester_email),
+                safe(
+                    (t.assigned_to.get_full_name() or t.assigned_to.username)
+                    if t.assigned_to_id
+                    else ""
+                ),
+                safe(t.department.name if t.department_id else ""),
+                safe(t.tags),
                 t.created_at.strftime("%Y-%m-%d %H:%M") if t.created_at else "",
                 t.resolution_due.strftime("%Y-%m-%d %H:%M") if t.resolution_due else "",
                 t.closed_at.strftime("%Y-%m-%d %H:%M") if t.closed_at else "",
