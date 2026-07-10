@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">Reports <span>&amp; Analytics</span></div>
+  <div class="hero-sub">How your support team is performing.</div>
+</div>
+
+<div class="stat-grid fade-in d2">
+  <div class="stat-card"><div class="stat-number" style="color: var(--sky);">{{ total }}</div><div class="stat-label">Total Tickets</div></div>
+  <div class="stat-card"><div class="stat-number" style="color: var(--mint);">{{ res_pct }}%</div><div class="stat-label">Resolution SLA met</div></div>
+  <div class="stat-card"><div class="stat-number" style="color: var(--lavender);">{{ resp_pct }}%</div><div class="stat-label">Response SLA met</div></div>
+  <div class="stat-card"><div class="stat-number" style="color: var(--peach);">{% if avg_first_response_h is not None %}{{ avg_first_response_h }}h{% else %}—{% endif %}</div><div class="stat-label">Avg first response</div></div>
+  <div class="stat-card"><div class="stat-number" style="color: var(--rose);">{% if avg_resolution_h is not None %}{{ avg_resolution_h }}h{% else %}—{% endif %}</div><div class="stat-label">Avg resolution</div></div>
+</div>
+
+<div class="divider"></div>
+
+<div class="report-grid">
+  <div class="report-card">
+    <div class="section-heading">Ticket volume · last 14 days <span class="report-sub">{{ volume_total }} created</span></div>
+    <div class="report-bars">
+      {% for v in volume %}
+      <div class="report-bar-col" title="{{ v.day|date:'M d' }}: {{ v.n }}">
+        <div class="report-bar" style="height: {{ v.pct }}%;"></div>
+        <div class="report-bar-label">{{ v.day|date:"j" }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="report-card">
+    <div class="section-heading">By status</div>
+    {% for r in status_rows %}
+    <div class="report-row">
+      <div class="report-row-label">{{ r.label }}</div>
+      <div class="report-track"><div class="report-fill" style="width: {{ r.pct }}%; background: var(--{{ r.color }});"></div></div>
+      <div class="report-row-count">{{ r.count }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="report-card">
+    <div class="section-heading">By priority</div>
+    {% for r in priority_rows %}
+    <div class="report-row">
+      <div class="report-row-label">{{ r.label }}</div>
+      <div class="report-track"><div class="report-fill" style="width: {{ r.pct }}%; background: var(--{{ r.color }});"></div></div>
+      <div class="report-row-count">{{ r.count }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="report-card">
+    <div class="section-heading">Agent load</div>
+    {% for a in top_agents %}
+    <div class="report-agent">
+      <span class="avatar-sm" style="background: var(--{{ a.avatar_color|default:'lavender' }});">{% if a.first_name %}{{ a.first_name.0 }}{{ a.last_name.0 }}{% else %}{{ a.username|slice:':2'|upper }}{% endif %}</span>
+      <span class="report-agent-name">{{ a.first_name }} {{ a.last_name }}{% if not a.first_name %}{{ a.username }}{% endif %}</span>
+      <span class="report-agent-load">{{ a.load }} assigned</span>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-3); font-size: 13px;">No agents yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

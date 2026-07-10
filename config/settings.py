@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.kb",
     "apps.automation",
     "apps.api",
+    "apps.reports",
 ]
 
 MIDDLEWARE = [

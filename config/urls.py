@@ -10,6 +10,7 @@ urlpatterns = [
     path("settings/", include("apps.console.urls", namespace="console")),
     path("help/", include("apps.kb.urls", namespace="kb")),
     path("api/v1/", include("apps.api.urls", namespace="api")),
+    path("reports/", include("apps.reports.urls", namespace="reports")),
 ]
 
 if settings.DEBUG:
