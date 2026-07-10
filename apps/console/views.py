@@ -273,3 +273,79 @@ def rule_delete(request, pk):
     return render(
         request, "console/rule_confirm_delete.html", {"rule": rule, "section": "automation"}
     )
+
+
+# ── API keys + webhooks ─────────────────────────────────────────────────────
+
+
+@admin_required
+def api_home(request):
+    from apps.api.models import ApiKey, Webhook
+
+    ctx = {
+        "keys": ApiKey.objects.select_related("user"),
+        "webhooks": Webhook.objects.all(),
+        "new_key": request.session.pop("new_api_key", None),
+        "section": "api",
+    }
+    return render(request, "console/api_home.html", ctx)
+
+
+@admin_required
+def key_create(request):
+    from apps.api.models import ApiKey
+
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip() or "API key"
+        key = ApiKey.objects.create(name=name, user=request.user)
+        request.session["new_api_key"] = key.key
+        messages.success(request, "API key created — copy it now, it won't be shown in full again.")
+    return redirect("console:api_home")
+
+
+@admin_required
+def key_delete(request, pk):
+    from apps.api.models import ApiKey
+
+    if request.method == "POST":
+        ApiKey.objects.filter(pk=pk).delete()
+        messages.success(request, "API key revoked.")
+    return redirect("console:api_home")
+
+
+@admin_required
+def webhook_create(request):
+    return _webhook_form(request, None)
+
+
+@admin_required
+def webhook_edit(request, pk):
+    from apps.api.models import Webhook
+
+    return _webhook_form(request, get_object_or_404(Webhook, pk=pk))
+
+
+def _webhook_form(request, webhook):
+    from .forms import WebhookForm
+
+    if request.method == "POST":
+        form = WebhookForm(request.POST, instance=webhook)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Webhook saved.")
+            return redirect("console:api_home")
+    else:
+        form = WebhookForm(instance=webhook)
+    return render(
+        request, "console/webhook_form.html", {"form": form, "webhook": webhook, "section": "api"}
+    )
+
+
+@admin_required
+def webhook_delete(request, pk):
+    from apps.api.models import Webhook
+
+    if request.method == "POST":
+        Webhook.objects.filter(pk=pk).delete()
+        messages.success(request, "Webhook deleted.")
+    return redirect("console:api_home")

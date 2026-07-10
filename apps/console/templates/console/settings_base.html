@@ -29,10 +29,10 @@
         <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
         Automation
       </a>
-      <span class="settings-nav-item disabled">
+      <a href="{% url 'console:api_home' %}" class="settings-nav-item{% if section == 'api' %} active{% endif %}">
         <svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
-        API &amp; Webhooks <span class="soon">Soon</span>
-      </span>
+        API &amp; Webhooks
+      </a>
     </nav>
 
     <div class="settings-content">

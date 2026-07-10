@@ -22,4 +22,10 @@ urlpatterns = [
     path("automation/rules/new/", views.rule_create, name="rule_create"),
     path("automation/rules/<int:pk>/", views.rule_edit, name="rule_edit"),
     path("automation/rules/<int:pk>/delete/", views.rule_delete, name="rule_delete"),
+    path("api/", views.api_home, name="api_home"),
+    path("api/keys/new/", views.key_create, name="key_create"),
+    path("api/keys/<int:pk>/delete/", views.key_delete, name="key_delete"),
+    path("api/webhooks/new/", views.webhook_create, name="webhook_create"),
+    path("api/webhooks/<int:pk>/", views.webhook_edit, name="webhook_edit"),
+    path("api/webhooks/<int:pk>/delete/", views.webhook_delete, name="webhook_delete"),
 ]

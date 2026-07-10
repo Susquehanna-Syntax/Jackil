@@ -106,3 +106,23 @@ class MacroForm(forms.ModelForm):
                 w.attrs.setdefault("class", "form-textarea")
             else:
                 w.attrs.setdefault("class", "form-input")
+
+
+from apps.api.models import Webhook  # noqa: E402
+
+
+class WebhookForm(forms.ModelForm):
+    class Meta:
+        model = Webhook
+        fields = ["name", "url", "event", "is_active"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            w = field.widget
+            if isinstance(w, forms.CheckboxInput):
+                w.attrs.setdefault("class", "form-check")
+            elif isinstance(w, forms.Select):
+                w.attrs.setdefault("class", "form-select")
+            else:
+                w.attrs.setdefault("class", "form-input")

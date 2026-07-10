@@ -1,0 +1,28 @@
+{% extends "console/settings_base.html" %}
+{% block settings_content %}
+<a href="{% url 'console:api_home' %}" class="btn btn-ghost" style="margin-bottom: 16px;">&larr; Back to API &amp; Webhooks</a>
+<div class="section-heading">{% if webhook %}Edit webhook{% else %}New webhook{% endif %}</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="form-card">
+    {% include "console/_field.html" with field=form.name %}
+    <div style="margin-top:14px;">{% include "console/_field.html" with field=form.url %}</div>
+    <div class="form-grid-2" style="margin-top:14px;">
+      {% include "console/_field.html" with field=form.event %}
+      <div></div>
+    </div>
+    <div class="form-check-row" style="margin-top:14px;">
+      {% include "console/_check.html" with field=form.is_active %}
+    </div>
+  </div>
+  <div class="inbox-form-actions">
+    {% if webhook %}
+    <form method="post" action="{% url 'console:webhook_delete' webhook.pk %}" onsubmit="return confirm('Delete this webhook?');" style="display:inline;">
+      {% csrf_token %}<button type="submit" class="btn btn-ghost" style="color: var(--coral);">Delete</button>
+    </form>
+    {% endif %}
+    <a href="{% url 'console:api_home' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-filled-mint">Save webhook</button>
+  </div>
+</form>
+{% endblock %}

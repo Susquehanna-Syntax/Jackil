@@ -1,0 +1,87 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+{% if new_key %}
+<div class="api-key-reveal">
+  <div class="api-key-reveal-label">New API key — copy it now, it won't be shown again in full:</div>
+  <code class="api-key-reveal-value">{{ new_key }}</code>
+</div>
+{% endif %}
+
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">API Keys</div>
+  <form method="post" action="{% url 'console:key_create' %}" style="display:flex; gap:8px;">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Key name" class="form-input" style="width: 160px;">
+    <button type="submit" class="btn btn-filled-lav">New Key</button>
+  </form>
+</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 16px;">
+  Authenticate requests with <code>Authorization: Api-Key &lt;key&gt;</code> against <code>/api/v1/</code>.
+</p>
+
+{% if keys %}
+<div class="inbox-list" style="margin-bottom: 32px;">
+  {% for k in keys %}
+  <div class="inbox-row">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--sky);">
+        <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.778-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg>
+      </div>
+      <div>
+        <div class="inbox-name">{{ k.name }}{% if not k.is_active %}<span class="tag tag-closed">Inactive</span>{% endif %}</div>
+        <div class="inbox-addr"><code>{{ k.masked }}</code> · {{ k.user }} · {% if k.last_used_at %}used {{ k.last_used_at|timesince }} ago{% else %}never used{% endif %}</div>
+      </div>
+    </div>
+    <div class="inbox-row-meta">
+      <form method="post" action="{% url 'console:key_delete' k.pk %}" onsubmit="return confirm('Revoke this API key?');">
+        {% csrf_token %}<button type="submit" class="btn btn-outline btn-sm" style="color: var(--coral);">Revoke</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" style="margin-bottom: 32px;">
+  <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.778-7.778z"/></svg></div>
+  <h3>No API keys</h3>
+  <p>Create a key to access the REST API.</p>
+</div>
+{% endif %}
+
+<div class="settings-section-head">
+  <div class="section-heading" style="margin-bottom: 0;">Webhooks</div>
+  <a href="{% url 'console:webhook_create' %}" class="btn btn-filled-peach">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Webhook
+  </a>
+</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 16px;">
+  Jackil POSTs a JSON payload to your URL when the chosen event fires.
+</p>
+
+{% if webhooks %}
+<div class="inbox-list">
+  {% for w in webhooks %}
+  <a href="{% url 'console:webhook_edit' w.pk %}" class="inbox-row" style="text-decoration: none;">
+    <div class="inbox-row-main">
+      <div class="inbox-avatar" style="background: var(--{% if w.is_active %}mint{% else %}s4{% endif %});">
+        <svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+      </div>
+      <div>
+        <div class="inbox-name">{{ w.name }}<span class="tag tag-open">{{ w.get_event_display }}</span></div>
+        <div class="inbox-addr">{{ w.url }}{% if w.last_status %} · last: {{ w.last_status }}{% endif %}</div>
+      </div>
+    </div>
+    <div class="inbox-row-meta"><span class="btn btn-outline btn-sm">Edit</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg></div>
+  <h3>No webhooks</h3>
+  <p>Add a webhook to notify another system on ticket events.</p>
+</div>
+{% endif %}
+{% endblock %}

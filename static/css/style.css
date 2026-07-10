@@ -1226,3 +1226,8 @@ body {
 .macro-item { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--text-2); font-family: inherit; font-size: 13px; padding: 9px 12px; border-radius: var(--r-sm); cursor: pointer; transition: background 0.2s, color 0.2s; }
 .macro-item:hover { background: var(--s3); color: var(--text-1); }
 .macro-empty { padding: 12px; color: var(--text-3); font-size: 12.5px; text-align: center; }
+
+/* ── API console (M3 p05) ── */
+.api-key-reveal { background: rgba(126,221,181,0.08); border: 1px solid rgba(126,221,181,0.3); border-radius: var(--r-md); padding: 16px 18px; margin-bottom: 20px; }
+.api-key-reveal-label { font-size: 12.5px; color: var(--mint); margin-bottom: 8px; font-weight: 600; }
+.api-key-reveal-value { display: block; font-family: ui-monospace, monospace; font-size: 13px; color: var(--text-1); background: var(--bg); padding: 10px 14px; border-radius: var(--r-sm); word-break: break-all; }
