@@ -415,6 +415,35 @@ def user_search(request):
 
 
 @login_required
+def global_search(request):
+    query = request.GET.get("q", "").strip()
+    tickets = []
+    articles = []
+    if query:
+        tq = Ticket.objects.select_related("created_by", "assigned_to")
+        if request.user.role == "customer":
+            tq = tq.filter(created_by=request.user)
+        tickets = tq.filter(
+            Q(title__icontains=query)
+            | Q(description__icontains=query)
+            | Q(tags__icontains=query)
+            | Q(messages__body__icontains=query)
+        ).distinct()[:25]
+
+        from apps.kb.service import public_only_for, search_articles
+
+        articles = search_articles(query, public_only=public_only_for(request.user))[:10]
+
+    ctx = {
+        "query": query,
+        "tickets": tickets,
+        "articles": articles,
+        "result_count": len(tickets) + len(articles),
+    }
+    return render(request, "tickets/search.html", ctx)
+
+
+@login_required
 def macro_list(request):
     """Canned responses available to the current agent (for the composer)."""
     if request.user.role not in ("agent", "admin"):
