@@ -6,7 +6,7 @@ ingestion, and are unit-testable in isolation.
 
 from django.conf import settings
 
-from .models import Attachment, TicketMessage
+from .models import Attachment, Ticket, TicketMessage
 
 
 class AttachmentTooLarge(Exception):
@@ -59,18 +59,14 @@ def post_message(ticket, author, body, kind="reply", files=None, is_public=None)
     )
     if files:
         add_attachments(ticket, message, files, uploaded_by=author)
-    if kind == "reply" and author is not None and getattr(author, "role", "") in ("agent", "admin"):
-        from apps.sla.service import mark_first_response
-
-        mark_first_response(ticket)
     if kind in ("reply", "incoming_email"):
-        from apps.automation.engine import run_rules
+        from .events import ticket_replied
 
-        run_rules(ticket, "on_reply", actor=author)
+        ticket_replied.send(sender=Ticket, ticket=ticket, author=author, message=message, kind=kind)
         from apps.notifications.service import notify_ticket_participants
 
         notify_ticket_participants(
-            ticket, f"New reply on “{ticket.title}”", actor=author, exclude=[author]
+            ticket, f'New reply on "{ticket.title}"', actor=author, exclude=[author]
         )
     return message
 
