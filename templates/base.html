@@ -35,9 +35,11 @@
       {% if unread_notifications %}<span class="notif-badge">{{ unread_notifications }}</span>{% endif %}
     </a>
     {% if user.role != "customer" %}
+    {% if 'reports' in enabled_features %}
     <a href="{% url 'reports:reports_home' %}" class="sidebar-icon{% if '/reports/' in request.path %} active{% endif %}" data-tip="Reports">
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     </a>
+    {% endif %}
     {% endif %}
     {% if user.role == "admin" %}
     <a href="{% url 'console:settings_home' %}" class="sidebar-icon{% if '/settings/' in request.path %} active{% endif %}" data-tip="Settings">
