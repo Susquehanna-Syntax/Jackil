@@ -5,13 +5,14 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from apps.accounts.models import Department, User
 
 from . import permissions
-from .models import Attachment, Ticket
+from .models import Attachment, SavedView, Ticket
 from .services import AttachmentTooLarge, post_message, record_system_event
 
 
@@ -136,14 +137,49 @@ def ticket_list(request):
 
     tickets = tickets[:50]
 
+    saved_views = SavedView.objects.filter(
+        Q(owner=request.user) | Q(is_shared=True)
+    ).select_related("owner")
+    current_query = request.GET.urlencode()
+
     ctx = {
         "tickets": tickets,
         "status": status,
         "priority": priority,
         "assigned": assigned,
         "search": search,
+        "saved_views": saved_views,
+        "current_query": current_query,
     }
     return render(request, "tickets/list.html", ctx)
+
+
+@login_required
+def saved_view_create(request):
+    if request.method != "POST":
+        return redirect("tickets:ticket_list")
+    name = request.POST.get("name", "").strip()
+    query = request.POST.get("query", "").strip().lstrip("?")
+    if name:
+        SavedView.objects.create(
+            name=name[:80],
+            owner=request.user,
+            query=query[:500],
+            is_shared=bool(request.POST.get("is_shared")),
+        )
+        messages.success(request, f'Saved view "{name}".')
+    return redirect(f"{reverse('tickets:ticket_list')}?{query}" if query else "tickets:ticket_list")
+
+
+@login_required
+def saved_view_delete(request, pk):
+    view = get_object_or_404(SavedView, pk=pk)
+    if view.owner_id != request.user.id:
+        raise Http404
+    if request.method == "POST":
+        view.delete()
+        messages.success(request, "View deleted.")
+    return redirect("tickets:ticket_list")
 
 
 @login_required

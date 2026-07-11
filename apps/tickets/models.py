@@ -198,3 +198,19 @@ class TicketRating(models.Model):
 
     def __str__(self):
         return f"{self.score}★ on #{self.ticket_id}"
+
+
+class SavedView(models.Model):
+    """A named, saved ticket-list filter set (an encoded querystring)."""
+
+    name = models.CharField(max_length=80)
+    owner = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="saved_views")
+    query = models.CharField(max_length=500, blank=True)
+    is_shared = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
