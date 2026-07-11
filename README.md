@@ -5,8 +5,7 @@ organization with departments. Built with Django, with a warm-dark, pastel
 design system.
 
 📖 **Full documentation:** open [`docs/wiki.html`](docs/wiki.html) in a browser
-for a single-page guide covering setup, day-to-day use, the API, and the
-open-core architecture.
+for a single-page guide covering setup, day-to-day use, and the API.
 
 ## Tech Stack
 
@@ -52,29 +51,6 @@ open-core architecture.
 ### Pro / Enterprise
 - CSV data export, activity/audit log, CSAT (satisfaction) ratings
 - White-label branding (product name, tagline, accent color)
-
-## Open-core architecture
-
-The open **core** (accounts, tickets, inbox, kb, notifications, console) never
-imports a **pro** app. Instead:
-
-- `tickets` emits domain **signals** (`ticket_created`, `ticket_replied`,
-  `ticket_status_changed`); pro apps subscribe in their `AppConfig.ready()`.
-- `config.features.feature_enabled(slug)` reports which pro apps are installed;
-  templates read `enabled_features` to hide absent features, and URLconfs gate
-  pro routes behind it.
-
-Removing any pro app from `INSTALLED_APPS` leaves `manage.py check`, the test
-suite, and the rendered UI all working — the feature simply disappears. Tiers:
-
-| Tier | Apps |
-|---|---|
-| **Core (open)** | accounts, tickets, inbox, kb, notifications, console |
-| **Pro** | sla, automation, api + webhooks, reports, customfields |
-| **Enterprise** | white-label branding (SSO/SAML, audit retention — roadmap) |
-
-Paid features are protected by **not shipping the code** (private apps), never by
-defeatable in-code license checks.
 
 ## Quick Start (local dev, SQLite — no Postgres needed)
 

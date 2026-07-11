@@ -236,7 +236,7 @@
     <a href="#kb" class="nav-link"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Knowledge Base</a>
     <a href="#notifications" class="nav-link"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications &amp; CSAT</a>
 
-    <div class="nav-section-label">Pro &amp; Enterprise</div>
+    <div class="nav-section-label">Advanced</div>
     <a href="#sla" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>SLA &amp; Escalation</a>
     <a href="#automation" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>Automation &amp; Macros</a>
     <a href="#customfields" class="nav-link"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>Custom Fields &amp; Forms</a>
@@ -245,7 +245,7 @@
     <a href="#branding" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10a2.5 2.5 0 002.5-2.5c0-.61-.23-1.2-.64-1.67a2.5 2.5 0 011.9-4.15H19a3 3 0 003-3c0-4.97-4.5-8.68-10-8.68z"/></svg>White-label Branding</a>
 
     <div class="nav-section-label">Reference</div>
-    <a href="#open-core" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>Open-core Architecture</a>
+    <a href="#architecture" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>Architecture</a>
     <a href="#datamodel" class="nav-link"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Data Model</a>
 
     <div class="nav-spacer"></div>
@@ -266,12 +266,12 @@
         <div class="hero-banner-placeholder">Warm-dark design system</div>
       </div>
       <div class="hero-title">The <span>Jackil</span> helpdesk</div>
-      <div class="hero-sub">Jackil is a self-hosted IT ticket-management app for a single organization with departments. Django 5.2 + DRF, Postgres in production or SQLite in dev, with an open core and optional pro/enterprise modules. This guide covers setup, day-to-day use, and the API.</div>
+      <div class="hero-sub">Jackil is a self-hosted IT ticket-management app for a single organization with departments. Django 5.2 + DRF, Postgres in production or SQLite in dev, built as a small core with optional modules that attach through signals. This guide covers setup, day-to-day use, and the API.</div>
       <div class="hero-badges">
         <span class="badge badge-lav">Django 5.2 LTS</span>
         <span class="badge badge-mint">DRF REST API</span>
         <span class="badge badge-sky">Self-hosted</span>
-        <span class="badge badge-peach">Open-core</span>
+        <span class="badge badge-peach">Modular</span>
       </div>
     </div>
 
@@ -280,7 +280,7 @@
     <div class="section" id="overview">
       <div class="section-label">Introduction</div>
       <div class="section-title">What is <span style="color:var(--lavender)">Jackil</span>?</div>
-      <div class="section-desc">A complete helpdesk you run yourself — email-to-ticket, SLAs, automation, a knowledge base, and a REST API — with none of the per-agent SaaS pricing.</div>
+      <div class="section-desc">A complete helpdesk you run yourself — email-to-ticket, SLAs, automation, a knowledge base, and a REST API — fully under your control.</div>
       <div class="prose">
         <p>Jackil turns inbound requests (from the web portal or a monitored email inbox) into <strong>tickets</strong> that agents triage, discuss, and resolve. It is built for one organization split into <strong>departments</strong>, with three roles — admin, agent, and customer — and a warm, focused UI.</p>
       </div>
@@ -318,7 +318,7 @@
       </div>
       <div class="callout callout-info">
         <div class="callout-icon">i</div>
-        <div>Jackil follows an <strong>open-core</strong> model: the core (accounts, tickets, inbox, KB, notifications) is decoupled from optional pro modules (SLA, automation, API, reporting, custom fields) and enterprise features (white-label branding). Removing a pro app degrades gracefully — see <a href="#open-core">Open-core Architecture</a>.</div>
+        <div>Jackil is <strong>modular</strong>: the core (accounts, tickets, inbox, KB, notifications) is decoupled from optional modules (SLA, automation, API, reporting, custom fields, branding) that attach through signals and a feature registry. Removing a module degrades gracefully — see <a href="#architecture">Architecture</a>.</div>
       </div>
     </div>
 
@@ -494,7 +494,7 @@ python manage.py runserver 127.0.0.1:8000</pre></div>
     </div>
 
     <div class="section" id="sla">
-      <div class="section-label">Pro</div>
+      <div class="section-label">Service Levels</div>
       <div class="section-title">SLA &amp; <span style="color:var(--sky)">Escalation</span></div>
       <div class="section-desc">Business-hours response and resolution targets with breach escalation.</div>
       <div class="prose">
@@ -513,7 +513,7 @@ python manage.py runserver 127.0.0.1:8000</pre></div>
     </div>
 
     <div class="section" id="automation">
-      <div class="section-label">Pro</div>
+      <div class="section-label">Workflow</div>
       <div class="section-title">Automation &amp; <span style="color:var(--mint)">Macros</span></div>
       <div class="section-desc">Rules that react to ticket events, and canned responses for agents.</div>
       <div class="prose">
@@ -525,7 +525,7 @@ python manage.py runserver 127.0.0.1:8000</pre></div>
     </div>
 
     <div class="section" id="customfields">
-      <div class="section-label">Pro</div>
+      <div class="section-label">Intake</div>
       <div class="section-title">Custom Fields &amp; <span style="color:var(--rose)">Forms</span></div>
       <div class="section-desc">Capture the right details with typed fields on tailored request forms.</div>
       <div class="prose">
@@ -534,7 +534,7 @@ python manage.py runserver 127.0.0.1:8000</pre></div>
     </div>
 
     <div class="section" id="reporting">
-      <div class="section-label">Pro</div>
+      <div class="section-label">Insights</div>
       <div class="section-title">Reporting &amp; <span style="color:var(--peach)">Export</span></div>
       <div class="section-desc">Volume, resolution, and satisfaction — plus a safe CSV export.</div>
       <div class="prose">
@@ -547,7 +547,7 @@ python manage.py runserver 127.0.0.1:8000</pre></div>
     </div>
 
     <div class="section" id="api">
-      <div class="section-label">Pro</div>
+      <div class="section-label">Integrations</div>
       <div class="section-title">REST <span style="color:var(--mint)">API</span> &amp; Webhooks</div>
       <div class="section-desc">Token-authenticated endpoints for tickets, with outbound webhooks on events.</div>
       <div class="prose">
@@ -577,7 +577,7 @@ python manage.py runserver 127.0.0.1:8000</pre></div>
     </div>
 
     <div class="section" id="branding">
-      <div class="section-label">Enterprise</div>
+      <div class="section-label">Appearance</div>
       <div class="section-title">White-label <span style="color:var(--coral)">Branding</span></div>
       <div class="section-desc">Make Jackil yours — product name, tagline, and accent color.</div>
       <div class="prose">
@@ -585,26 +585,25 @@ python manage.py runserver 127.0.0.1:8000</pre></div>
       </div>
     </div>
 
-    <div class="section" id="open-core">
+    <div class="section" id="architecture">
       <div class="section-label">Reference</div>
-      <div class="section-title">Open-core <span style="color:var(--lavender)">Architecture</span></div>
-      <div class="section-desc">The core never imports a pro app; pro apps subscribe to it.</div>
+      <div class="section-title">Modular <span style="color:var(--lavender)">Architecture</span></div>
+      <div class="section-desc">Optional modules attach to a small core without the core depending on them.</div>
       <div class="prose">
-        <p>Jackil is structured so the paid modules can live in private repositories while the core stays open. Three seams make this work:</p>
+        <p>Jackil is a small core (accounts, tickets, inbox, knowledge base, notifications) with optional modules that plug in through three seams:</p>
         <ul>
-          <li><strong>Domain signals</strong> — the core <code>tickets</code> app emits <code>ticket_created</code>, <code>ticket_replied</code>, and <code>ticket_status_changed</code>. Pro apps connect receivers in their <code>AppConfig.ready()</code>.</li>
-          <li><strong>Feature registry</strong> — <code>config.features.feature_enabled(slug)</code> reports which pro apps are installed; templates read <code>enabled_features</code> to hide absent features.</li>
-          <li><strong>Guarded routes</strong> — root and console URLconfs, plus nav links, are gated by the registry, so a removed app leaves no broken links.</li>
+          <li><strong>Domain signals</strong> — the core <code>tickets</code> app emits <code>ticket_created</code>, <code>ticket_replied</code>, and <code>ticket_status_changed</code>. Modules connect receivers in their <code>AppConfig.ready()</code>.</li>
+          <li><strong>Feature registry</strong> — <code>config.features.feature_enabled(slug)</code> reports which modules are installed; templates read <code>enabled_features</code> to hide anything absent.</li>
+          <li><strong>Guarded routes</strong> — root and console URLconfs, plus nav links, are gated by the registry, so a disabled module leaves no broken links.</li>
         </ul>
-        <p>Remove any pro app from <code>INSTALLED_APPS</code> and the system check, the test suite, and the rendered UI all keep working — the feature simply disappears. No runtime license checks are used; protection is by <strong>not shipping the code</strong>.</p>
+        <p>Remove any optional module from <code>INSTALLED_APPS</code> and the system check, the test suite, and the rendered UI all keep working — that feature simply disappears.</p>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Tier</th><th>Apps</th></tr></thead>
+          <thead><tr><th>Group</th><th>Modules</th></tr></thead>
           <tbody>
-            <tr><td><span class="badge badge-mint">Core (open)</span></td><td>accounts, tickets, inbox, kb, notifications, console</td></tr>
-            <tr><td><span class="badge badge-lav">Pro</span></td><td>sla, automation, api + webhooks, reports, customfields</td></tr>
-            <tr><td><span class="badge badge-peach">Enterprise</span></td><td>white-label branding, (SSO/SAML, audit retention — roadmap)</td></tr>
+            <tr><td><span class="badge badge-mint">Core</span></td><td>accounts, tickets, inbox, kb, notifications, console</td></tr>
+            <tr><td><span class="badge badge-lav">Optional</span></td><td>sla, automation, api + webhooks, reports, customfields, branding</td></tr>
           </tbody>
         </table>
       </div>
