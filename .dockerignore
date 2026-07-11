@@ -1,0 +1,41 @@
+# Secrets & local env — never bake into the image
+.env
+.env.*
+
+# Virtualenvs
+.venv/
+venv/
+
+# VCS & CI
+.git/
+.gitignore
+.github/
+
+# Local database & user uploads (not part of the image)
+db.sqlite3
+*.sqlite3
+media/
+
+# Collected static (regenerated at build/deploy time)
+staticfiles/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+
+# Editor / tooling
+.idea/
+.vscode/
+
+# Agent/session tooling & dev docs (not needed at runtime)
+.claude/
+.remember/
+.rexymcp/
+aionly/
+docs/
+handoff.md
+recommendations.md
+REXYMCP.md
+rexymcp.toml
