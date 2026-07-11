@@ -4,6 +4,10 @@ Free and open-source IT ticket-management (helpdesk) software for a single
 organization with departments. Built with Django, with a warm-dark, pastel
 design system.
 
+📖 **Full documentation:** open [`docs/wiki.html`](docs/wiki.html) in a browser
+for a single-page guide covering setup, day-to-day use, the API, and the
+open-core architecture.
+
 ## Tech Stack
 
 - **Backend:** Django 5.2 (LTS) + Django REST Framework
@@ -31,20 +35,46 @@ design system.
 - Automation rules (trigger → conditions → actions) and canned-response macros
 - Public Help Center with categories/articles + admin authoring
 - Reporting dashboard: volume, status/priority mix, SLA compliance, CSAT, agent load
-- Token-authenticated REST API (`/api/v1/`) + outbound webhooks
+- Token-authenticated REST API (`/api/v1/`) + outbound webhooks, with per-user/
+  anon rate throttling and a bounded, client-overridable page size (`?page_size=`)
 
 ### Custom Fields & Request Forms
 - Admin-defined custom fields (text, dropdown, checkbox, number, date)
 - Request forms that drive dynamic customer intake; values shown on the ticket
 
-### Search, Notifications & More
+### Search, Saved Views, Notifications & More
 - Global search across tickets and the knowledge base (permission-scoped)
+- **Saved views** — persist named ticket-list filter sets (status/priority/
+  assignment/search), recall in one click, share with the team
 - In-app notifications with unread badge; user profiles and preferences
 - Roles (customer / agent / admin) with role-based access throughout
 
 ### Pro / Enterprise
 - CSV data export, activity/audit log, CSAT (satisfaction) ratings
 - White-label branding (product name, tagline, accent color)
+
+## Open-core architecture
+
+The open **core** (accounts, tickets, inbox, kb, notifications, console) never
+imports a **pro** app. Instead:
+
+- `tickets` emits domain **signals** (`ticket_created`, `ticket_replied`,
+  `ticket_status_changed`); pro apps subscribe in their `AppConfig.ready()`.
+- `config.features.feature_enabled(slug)` reports which pro apps are installed;
+  templates read `enabled_features` to hide absent features, and URLconfs gate
+  pro routes behind it.
+
+Removing any pro app from `INSTALLED_APPS` leaves `manage.py check`, the test
+suite, and the rendered UI all working — the feature simply disappears. Tiers:
+
+| Tier | Apps |
+|---|---|
+| **Core (open)** | accounts, tickets, inbox, kb, notifications, console |
+| **Pro** | sla, automation, api + webhooks, reports, customfields |
+| **Enterprise** | white-label branding (SSO/SAML, audit retention — roadmap) |
+
+Paid features are protected by **not shipping the code** (private apps), never by
+defeatable in-code license checks.
 
 ## Quick Start (local dev, SQLite — no Postgres needed)
 
@@ -86,7 +116,7 @@ python manage.py check_sla     # flag SLA breaches and escalate
 ```
 apps/
 ├── accounts/       User (roles), Department, profile
-├── tickets/        Ticket, TicketMessage, Attachment, TicketRating, permissions, SLA hooks
+├── tickets/        Ticket, TicketMessage, Attachment, TicketRating, SavedView, domain signals (events.py)
 ├── inbox/          Inbox (SMTP/IMAP), outbound email, inbound ingest
 ├── sla/            SLA targets, business schedule, engine, check_sla
 ├── automation/     Macros + automation rules engine
@@ -98,7 +128,8 @@ apps/
 └── console/        Admin settings console + branding
 ```
 
-Engineering docs live under `docs/` (`architecture.md`, `dev/`).
+Engineering docs live under `docs/` — `architecture.md`, the milestone/phase
+history in `dev/`, and the single-page user guide `wiki.html`.
 
 ## License
 
