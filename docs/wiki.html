@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jackil — Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1c1c21; --s1: #232329; --s2: #2a2a31; --s3: #32323a; --s4: #3a3a43;
+    --border: #3a3a43; --text-1: #eae8e4; --text-2: #a09ca6; --text-3: #6e6b76;
+    --rose: #f2a0b8; --lavender: #baa8e8; --mint: #7eddb5; --peach: #f0b888;
+    --sky: #82c4ee; --lemon: #e2d478; --coral: #f09080;
+    --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 24px;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --sidebar-w: 260px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-1); min-height: 100vh; line-height: 1.6; overflow-x: hidden; }
+  .layout { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-w); z-index: 100; display: flex; flex-direction: column; padding: 28px 0; overflow-y: auto; background: rgba(28,28,33,0.82); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border-right: 1px solid rgba(255,255,255,0.04); }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 2px; }
+  .sidebar-header { padding: 0 24px 24px; border-bottom: 1px solid var(--s3); margin-bottom: 16px; }
+  .sidebar-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-1); margin-bottom: 6px; }
+  .sidebar-logo-icon { width: 36px; height: 36px; background: var(--mint); border-radius: var(--r-sm); display: grid; place-items: center; font-family: 'Fraunces', serif; font-weight: 700; font-size: 16px; color: var(--bg); transition: transform 0.5s var(--ease-out-expo); flex-shrink: 0; overflow: hidden; }
+  .sidebar-logo:hover .sidebar-logo-icon { transform: rotate(-8deg) scale(1.08); }
+  .sidebar-logo-text { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; letter-spacing: -0.3px; }
+  .sidebar-version { font-size: 11px; color: var(--text-3); font-weight: 500; padding-left: 48px; }
+  .nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); padding: 16px 24px 8px; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 8px 24px; font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; transition: color 0.2s, background 0.2s, transform 0.3s var(--ease-out-expo); }
+  .nav-link:hover { color: var(--text-1); background: rgba(255,255,255,0.03); transform: translateX(3px); }
+  .nav-link.active { color: var(--mint); background: rgba(126,221,181,0.06); }
+  .nav-link svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .nav-spacer { flex: 1; }
+  .nav-footer { padding: 16px 24px; border-top: 1px solid var(--s3); margin-top: 16px; }
+  .nav-footer-link { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); text-decoration: none; transition: color 0.2s; padding: 6px 0; }
+  .nav-footer-link:hover { color: var(--text-2); }
+  .nav-footer-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .sqsy-footer { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--s3); display: flex; align-items: center; gap: 10px; }
+  .sqsy-logo-placeholder { width: 28px; height: 28px; border-radius: 6px; background: var(--s3); display: grid; place-items: center; flex-shrink: 0; overflow: hidden; }
+  .sqsy-badge { font-size: 10px; color: var(--text-3); font-weight: 500; letter-spacing: 0.3px; line-height: 1.4; }
+  .sqsy-badge a { color: var(--lavender); text-decoration: none; transition: color 0.2s; }
+  .sqsy-badge a:hover { color: var(--rose); }
+
+  /* MAIN */
+  .main { grid-column: 2; padding: 40px 56px 80px; max-width: 960px; margin: 0 auto; width: 100%; }
+  .hero { margin-bottom: 48px; animation: fadeUp 0.6s var(--ease-out-expo) both; }
+  .hero-banner { width: 100%; height: 220px; border-radius: var(--r-xl); background: var(--s1); overflow: hidden; margin-bottom: 28px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .hero-banner-placeholder { font-size: 12px; color: var(--text-3); font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; position: absolute; bottom: 16px; right: 20px; background: var(--s2); padding: 4px 12px; border-radius: 6px; }
+  .hero-banner-art { display: flex; gap: 16px; align-items: center; opacity: 0.25; }
+  .hero-banner-art div { border-radius: var(--r-md); animation: floatSlow 6s ease-in-out infinite alternate; }
+  .hero-banner-art div:nth-child(1) { width: 60px; height: 60px; background: var(--lavender); animation-delay: 0s; }
+  .hero-banner-art div:nth-child(2) { width: 80px; height: 80px; background: var(--mint); animation-delay: 0.5s; border-radius: 50%; }
+  .hero-banner-art div:nth-child(3) { width: 50px; height: 50px; background: var(--rose); animation-delay: 1s; }
+  .hero-banner-art div:nth-child(4) { width: 70px; height: 70px; background: var(--peach); animation-delay: 1.5s; border-radius: 50%; }
+  .hero-banner-art div:nth-child(5) { width: 55px; height: 55px; background: var(--sky); animation-delay: 2s; }
+  @keyframes floatSlow { from { transform: translateY(6px) rotate(-2deg); } to { transform: translateY(-6px) rotate(2deg); } }
+  .hero-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 36px; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 10px; }
+  .hero-title span { color: var(--mint); }
+  .hero-sub { font-size: 15px; color: var(--text-2); max-width: 600px; line-height: 1.7; margin-bottom: 20px; }
+  .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge { font-size: 11px; font-weight: 600; padding: 5px 14px; border-radius: 20px; letter-spacing: 0.3px; }
+  .badge-lav { color: var(--lavender); background: rgba(186,168,232,0.1); }
+  .badge-mint { color: var(--mint); background: rgba(126,221,181,0.1); }
+  .badge-sky { color: var(--sky); background: rgba(130,196,238,0.1); }
+  .badge-peach { color: var(--peach); background: rgba(240,184,136,0.1); }
+
+  .section { scroll-margin-top: 24px; margin-bottom: 56px; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; }
+  .section-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 26px; letter-spacing: -0.3px; margin-bottom: 8px; line-height: 1.3; }
+  /* section title accent colors are set inline per-section for variety */
+  .section-desc { font-size: 14px; color: var(--text-2); margin-bottom: 24px; max-width: 640px; line-height: 1.7; }
+  .divider { height: 1px; background: var(--s3); margin: 0 0 56px; }
+  h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; margin-top: 28px; color: var(--text-1); }
+  h3:first-child { margin-top: 0; }
+
+  .prose { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+  .prose p { margin-bottom: 14px; }
+  .prose strong { color: var(--text-1); font-weight: 600; }
+  .prose a { color: var(--sky); text-decoration: none; transition: color 0.2s; }
+  .prose a:hover { color: var(--rose); }
+  .prose ul, .prose ol { margin: 12px 0 16px 20px; }
+  .prose li { margin-bottom: 6px; }
+
+  .code-block { background: var(--s1); border: 1px solid var(--s3); border-radius: var(--r-md); padding: 20px 24px; margin: 16px 0 20px; overflow-x: auto; position: relative; }
+  .code-block pre { font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.7; color: var(--text-2); white-space: pre; margin: 0; }
+  .code-block .code-label { position: absolute; top: 0; right: 0; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); background: var(--s2); padding: 4px 12px; border-radius: 0 var(--r-md) 0 var(--r-sm); }
+  code { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; background: var(--s2); padding: 2px 8px; border-radius: 6px; color: var(--mint); }
+  .hl-comment { color: var(--text-3); } .hl-keyword { color: var(--lemon); } .hl-string { color: var(--mint); }
+  .hl-flag { color: var(--peach); } .hl-var { color: var(--sky); } .hl-cmd { color: var(--rose); } .hl-num { color: var(--lemon); }
+
+  .table-wrap { margin: 16px 0 20px; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--s3); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--s2); }
+  th { text-align: left; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-3); padding: 12px 16px; }
+  td { padding: 10px 16px; color: var(--text-2); border-top: 1px solid var(--s3); }
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: rgba(255,255,255,0.015); }
+  td code { font-size: 12px; background: var(--s2); padding: 2px 6px; border-radius: 4px; }
+
+  .callout { padding: 18px 22px; border-radius: var(--r-md); margin: 16px 0 20px; font-size: 13px; line-height: 1.6; display: flex; gap: 12px; align-items: flex-start; }
+  .callout-icon { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .callout-info { background: rgba(130,196,238,0.08); color: var(--sky); }
+  .callout-info .callout-icon { background: var(--sky); color: var(--bg); }
+  .callout-warn { background: rgba(240,144,128,0.08); color: var(--coral); }
+  .callout-warn .callout-icon { background: var(--coral); color: var(--bg); }
+  .callout-tip { background: rgba(126,221,181,0.08); color: var(--mint); }
+  .callout-tip .callout-icon { background: var(--mint); color: var(--bg); }
+
+
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 20px 0; }
+  .feature-card { background: var(--s1); border-radius: var(--r-lg); padding: 22px; transition: transform 0.5s var(--ease-out-expo), background 0.3s; }
+  .feature-card:hover { transform: translateY(-3px); background: var(--s2); }
+  .feature-card-icon { width: 38px; height: 38px; border-radius: var(--r-sm); display: grid; place-items: center; margin-bottom: 14px; color: var(--bg); font-weight: 700; font-size: 15px; }
+  .feature-card-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .feature-card-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+  .api-method { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; min-width: 50px; text-align: center; }
+  .m-get { background: rgba(130,196,238,0.15); color: var(--sky); }
+  .m-post { background: rgba(126,221,181,0.15); color: var(--mint); }
+  .m-patch { background: rgba(240,184,136,0.15); color: var(--peach); }
+  .m-delete { background: rgba(242,160,184,0.15); color: var(--rose); }
+
+  .steps { counter-reset: step; margin: 16px 0 20px; }
+  .step { display: flex; gap: 16px; padding: 12px 0; align-items: flex-start; counter-increment: step; }
+  .step::before { content: counter(step); width: 28px; height: 28px; border-radius: 8px; background: var(--s2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--sky); flex-shrink: 0; margin-top: 1px; }
+  .step-content { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+  .main::-webkit-scrollbar { width: 6px; }
+  .main::-webkit-scrollbar-track { background: transparent; }
+  .main::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 3px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .mobile-toggle { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 200; width: 48px; height: 48px; border-radius: 50%; background: var(--lavender); border: none; cursor: pointer; place-items: center; color: var(--bg); transition: transform 0.4s var(--ease-out-expo); }
+  .mobile-toggle:active { transform: scale(0.88); }
+  .mobile-toggle svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+  @media (max-width: 900px) { :root { --sidebar-w: 240px; } .main { padding: 32px 28px 60px; } .feature-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } .sidebar { transform: translateX(-100%); transition: transform 0.4s var(--ease-out-expo); width: 280px; } .sidebar.open { transform: translateX(0); } .main { grid-column: 1; padding: 24px 20px 60px; } .feature-grid { grid-template-columns: 1fr; } .mobile-toggle { display: grid; } .hero-banner { height: 160px; } }
+
+  .page-footer { text-align: center; padding: 40px 0 20px; color: var(--text-3); font-size: 12px; }
+  .page-footer a { color: var(--text-3); text-decoration: none; transition: color 0.2s; }
+  .page-footer a:hover { color: var(--lavender); }
+  .footer-sqsy-logo { width: 48px; height: 48px; border-radius: var(--r-sm); background: var(--s2); display: inline-grid; place-items: center; margin-bottom: 12px; overflow: hidden; transition: transform 0.5s var(--ease-out-expo); }
+  .footer-sqsy-logo:hover { transform: scale(1.06) rotate(-3deg); }
+
+  /* ── Mockup preview frames ── */
+  .mockup { background: var(--bg); border: 1px solid var(--s3); border-radius: var(--r-lg); overflow: hidden; margin: 16px 0 20px; font-size: 12px; color: var(--text-2); }
+  .mockup-bar { background: var(--s1); padding: 8px 14px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--s3); }
+  .mockup-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .mockup-dot:nth-child(1) { background: var(--rose); opacity: .6; }
+  .mockup-dot:nth-child(2) { background: var(--lemon); opacity: .6; }
+  .mockup-dot:nth-child(3) { background: var(--mint); opacity: .6; }
+  .mockup-url { margin-left: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-3); background: var(--s2); padding: 3px 10px; border-radius: 4px; flex: 1; }
+  .mockup-body { padding: 20px; }
+  .mockup-sidebar { display: grid; grid-template-columns: 48px 1fr; min-height: 200px; }
+  .mockup-nav { background: var(--s1); border-right: 1px solid var(--s3); padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .mockup-nav-dot { width: 24px; height: 24px; border-radius: 6px; background: var(--s3); }
+  .mockup-nav-dot.active { background: rgba(126,221,181,0.15); }
+  .mockup-main { padding: 16px 20px; flex: 1; }
+  .m-card { background: var(--s1); border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--s3); }
+  .m-btn { display: inline-block; padding: 5px 14px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+  .m-btn-lav { background: var(--lavender); color: var(--bg); }
+  .m-btn-sky { background: var(--sky); color: var(--bg); }
+  .m-btn-mint { background: var(--mint); color: var(--bg); }
+  .m-btn-outline { border: 1px solid var(--s4); color: var(--text-2); }
+  .m-input { background: var(--s2); border: 1px solid var(--s3); border-radius: 6px; padding: 5px 10px; color: var(--text-3); font-size: 10px; width: 100%; margin: 3px 0; display: block; }
+  .m-label { font-size: 10px; color: var(--text-2); font-weight: 600; margin-top: 6px; display: block; }
+  .m-h2 { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--text-1); margin-bottom: 4px; }
+  .m-h3 { font-size: 11px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+  .m-muted { font-size: 10px; color: var(--text-3); }
+  .m-badge { font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .m-badge-mint { color: var(--mint); background: rgba(126,221,181,0.12); }
+  .m-badge-sky { color: var(--sky); background: rgba(130,196,238,0.12); }
+  .m-badge-rose { color: var(--rose); background: rgba(242,160,184,0.12); }
+  .m-badge-peach { color: var(--peach); background: rgba(240,184,136,0.12); }
+  .m-row { display: flex; align-items: center; gap: 8px; }
+  .m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .m-table { width: 100%; font-size: 10px; border-collapse: collapse; }
+  .m-table th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); font-weight: 600; padding: 6px 8px; background: var(--s2); }
+  .m-table td { padding: 5px 8px; border-top: 1px solid var(--s3); color: var(--text-2); }
+  .m-qr { width: 80px; height: 80px; background: #fff; border-radius: 8px; display: grid; place-items: center; margin: 8px auto; }
+  .m-qr-lg { width: 140px; height: 140px; background: #fff; border-radius: var(--r-md); display: grid; place-items: center; margin: 12px auto; }
+  .m-qr-inner { width: 60%; height: 60%; background: repeating-conic-gradient(var(--bg) 0% 25%, #fff 0% 50%) 0 0 / 8px 8px; border-radius: 2px; }
+  .m-camera { background: var(--s2); border-radius: var(--r-sm); height: 120px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 10px; border: 1.5px dashed var(--s4); margin-bottom: 8px; flex-direction: column; gap: 4px; }
+  .m-camera svg { width: 20px; height: 20px; stroke: var(--text-3); fill: none; stroke-width: 1.5; }
+  .m-stat { text-align: center; background: var(--s1); border-radius: var(--r-sm); padding: 10px 8px; border: 1px solid var(--s3); }
+  .m-stat-num { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--text-1); }
+  .m-stat-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+  .m-progress { height: 4px; background: var(--s3); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .m-progress-fill { height: 100%; border-radius: 2px; }
+  .m-tab-bar { display: flex; gap: 4px; margin-bottom: 10px; }
+  .m-tab { font-size: 10px; font-weight: 600; padding: 4px 12px; border-radius: 6px; color: var(--text-3); background: transparent; }
+  .m-tab.active { background: rgba(130,196,238,0.12); color: var(--sky); }
+  .m-checkbox { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-2); margin: 2px 0; }
+  .m-checkbox::before { content: ''; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--s4); display: inline-block; flex-shrink: 0; }
+  .m-checkbox.checked::before { background: var(--mint); border-color: var(--mint); }
+  .m-scan-ok { background: rgba(126,221,181,0.08); border: 1px solid rgba(126,221,181,0.2); border-radius: var(--r-sm); padding: 8px 12px; font-size: 10px; color: var(--mint); margin-bottom: 6px; }
+  .m-scan-dup { background: rgba(226,212,120,0.08); border: 1px solid rgba(226,212,120,0.2); border-radius: var(--r-sm); padding: 8px 12px; font-size: 10px; color: var(--lemon); margin-bottom: 6px; }
+  .m-phone { max-width: 180px; margin: 0 auto; background: var(--s1); border-radius: 20px; border: 2px solid var(--s3); padding: 8px; }
+  .m-phone-screen { background: var(--bg); border-radius: 14px; padding: 12px; min-height: 200px; }
+  .m-phone-notch { width: 60px; height: 4px; background: var(--s3); border-radius: 2px; margin: 0 auto 8px; }
+</style>
+</head>
+<body>
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle navigation">
+  <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+</button>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <a href="#overview" class="sidebar-logo">
+        <div class="sidebar-logo-icon">J</div>
+        <div class="sidebar-logo-text">Jackil</div>
+      </a>
+      <div class="sidebar-version">Self-hosted helpdesk · v1.0</div>
+    </div>
+
+    <div class="nav-section-label">Getting Started</div>
+    <a href="#overview" class="nav-link active"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Overview</a>
+    <a href="#quickstart" class="nav-link"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Quick Start</a>
+    <a href="#configuration" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Configuration</a>
+
+    <div class="nav-section-label">Core</div>
+    <a href="#roles" class="nav-link"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>Roles &amp; Accounts</a>
+    <a href="#tickets" class="nav-link"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Tickets &amp; Conversations</a>
+    <a href="#saved-views" class="nav-link"><svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Saved Views</a>
+    <a href="#email" class="nav-link"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>Email Inbox</a>
+    <a href="#kb" class="nav-link"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Knowledge Base</a>
+    <a href="#notifications" class="nav-link"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications &amp; CSAT</a>
+
+    <div class="nav-section-label">Pro &amp; Enterprise</div>
+    <a href="#sla" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>SLA &amp; Escalation</a>
+    <a href="#automation" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>Automation &amp; Macros</a>
+    <a href="#customfields" class="nav-link"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>Custom Fields &amp; Forms</a>
+    <a href="#reporting" class="nav-link"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reporting &amp; Export</a>
+    <a href="#api" class="nav-link"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>REST API &amp; Webhooks</a>
+    <a href="#branding" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10a2.5 2.5 0 002.5-2.5c0-.61-.23-1.2-.64-1.67a2.5 2.5 0 011.9-4.15H19a3 3 0 003-3c0-4.97-4.5-8.68-10-8.68z"/></svg>White-label Branding</a>
+
+    <div class="nav-section-label">Reference</div>
+    <a href="#open-core" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>Open-core Architecture</a>
+    <a href="#datamodel" class="nav-link"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Data Model</a>
+
+    <div class="nav-spacer"></div>
+    <div class="nav-footer">
+      <a href="https://github.com/Susquehanna-Syntax/Jackil" class="nav-footer-link" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 00-1-3.5c3 0 6-2 6-5.5a4.2 4.2 0 00-1.2-3 4.2 4.2 0 00-.1-3S17.2 2.6 14 4.5a11 11 0 00-6 0C5 2.5 3.4 3 3.4 3a4.2 4.2 0 00-.1 3A4.2 4.2 0 002 9c0 3.5 3 5.5 6 5.5a4.8 4.8 0 00-1 3.5v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg>GitHub Repository</a>
+      <a href="https://github.com/Susquehanna-Syntax/Jackil/issues" class="nav-footer-link" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Report a Bug</a>
+      <div class="sqsy-footer">
+        <div class="sqsy-logo-placeholder"><span style="font-family:'Fraunces',serif; font-size:13px; color:var(--text-2);">S</span></div>
+        <div class="sqsy-badge">Built by <a href="https://github.com/Susquehanna-Syntax" target="_blank" rel="noopener">Susquehanna Syntax</a></div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main" id="top">
+    <div class="hero">
+      <div class="hero-banner">
+        <div class="hero-banner-art"><div></div><div></div><div></div><div></div><div></div></div>
+        <div class="hero-banner-placeholder">Warm-dark design system</div>
+      </div>
+      <div class="hero-title">The <span>Jackil</span> helpdesk</div>
+      <div class="hero-sub">Jackil is a self-hosted IT ticket-management app for a single organization with departments. Django 5.2 + DRF, Postgres in production or SQLite in dev, with an open core and optional pro/enterprise modules. This guide covers setup, day-to-day use, and the API.</div>
+      <div class="hero-badges">
+        <span class="badge badge-lav">Django 5.2 LTS</span>
+        <span class="badge badge-mint">DRF REST API</span>
+        <span class="badge badge-sky">Self-hosted</span>
+        <span class="badge badge-peach">Open-core</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section" id="overview">
+      <div class="section-label">Introduction</div>
+      <div class="section-title">What is <span style="color:var(--lavender)">Jackil</span>?</div>
+      <div class="section-desc">A complete helpdesk you run yourself — email-to-ticket, SLAs, automation, a knowledge base, and a REST API — with none of the per-agent SaaS pricing.</div>
+      <div class="prose">
+        <p>Jackil turns inbound requests (from the web portal or a monitored email inbox) into <strong>tickets</strong> that agents triage, discuss, and resolve. It is built for one organization split into <strong>departments</strong>, with three roles — admin, agent, and customer — and a warm, focused UI.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon" style="background:var(--lavender)">✦</div>
+          <div class="feature-card-title">Conversations, not tickets</div>
+          <div class="feature-card-desc">Every ticket is a threaded conversation with public replies, internal notes, attachments, and a full system audit trail.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon" style="background:var(--mint)">✉</div>
+          <div class="feature-card-title">Email in &amp; out</div>
+          <div class="feature-card-desc">Poll an IMAP inbox to create and thread tickets; replies go back out over SMTP. Customers never need an account.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon" style="background:var(--sky)">⚡</div>
+          <div class="feature-card-title">SLA &amp; automation</div>
+          <div class="feature-card-desc">Business-hours SLA targets, breach escalation, and rule-based automation that fires on create, reply, and status change.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon" style="background:var(--peach)">◈</div>
+          <div class="feature-card-title">Knowledge base</div>
+          <div class="feature-card-desc">Publish self-service articles so customers can deflect common issues before they open a ticket.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon" style="background:var(--rose)">⧉</div>
+          <div class="feature-card-title">Custom forms</div>
+          <div class="feature-card-desc">Define request forms with typed custom fields, so the right details arrive with every new ticket.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon" style="background:var(--coral)">⟐</div>
+          <div class="feature-card-title">REST API &amp; webhooks</div>
+          <div class="feature-card-desc">Full token-authenticated API with outbound webhooks on ticket events, throttling, and bounded pagination.</div>
+        </div>
+      </div>
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div>Jackil follows an <strong>open-core</strong> model: the core (accounts, tickets, inbox, KB, notifications) is decoupled from optional pro modules (SLA, automation, API, reporting, custom fields) and enterprise features (white-label branding). Removing a pro app degrades gracefully — see <a href="#open-core">Open-core Architecture</a>.</div>
+      </div>
+    </div>
+
+    <div class="section" id="quickstart">
+      <div class="section-label">Getting Started</div>
+      <div class="section-title">Quick <span style="color:var(--mint)">Start</span></div>
+      <div class="section-desc">Run Jackil locally on SQLite in under a minute.</div>
+      <div class="code-block"><span class="code-label">bash</span><pre><span class="hl-comment"># clone and enter the project</span>
+git clone git@github.com:Susquehanna-Syntax/Jackil.git
+<span class="hl-cmd">cd</span> Jackil
+
+<span class="hl-comment"># create the virtualenv (Python 3.13)</span>
+python -m venv .venv
+<span class="hl-cmd">source</span> .venv/bin/activate
+pip install -r requirements.txt
+
+<span class="hl-comment"># SQLite dev mode — set USE_SQLITE=1 in .env</span>
+python manage.py migrate
+python manage.py seed_demo <span class="hl-flag">--fresh</span>
+python manage.py runserver 127.0.0.1:8000</pre></div>
+      <div class="prose">
+        <p>Open <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a> and sign in with a seeded account:</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Login</th><th>Password</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td><code>admin</code></td><td><code>admin12345</code></td><td>Admin — full settings &amp; console</td></tr>
+            <tr><td><code>aria</code></td><td><code>password123</code></td><td>Agent — triage &amp; reply</td></tr>
+            <tr><td><code>jordan</code></td><td><code>password123</code></td><td>Customer — portal only</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-tip">
+        <div class="callout-icon">✓</div>
+        <div><code>seed_demo --fresh</code> wipes existing tickets and reseeds departments, users, and demo tickets. Run it any time you want a clean slate.</div>
+      </div>
+    </div>
+
+    <div class="section" id="configuration">
+      <div class="section-label">Getting Started</div>
+      <div class="section-title">Environment <span style="color:var(--sky)">Configuration</span></div>
+      <div class="section-desc">Jackil reads settings from a <code>.env</code> file. SQLite for dev, Postgres for production.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Purpose</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>USE_SQLITE</code></td><td>Use SQLite instead of Postgres (dev)</td><td><code>1</code></td></tr>
+            <tr><td><code>SECRET_KEY</code></td><td>Django secret key</td><td><code>change-me</code></td></tr>
+            <tr><td><code>DEBUG</code></td><td>Debug mode (never on in prod)</td><td><code>0</code></td></tr>
+            <tr><td><code>ALLOWED_HOSTS</code></td><td>Comma-separated hostnames</td><td><code>help.acme.com</code></td></tr>
+            <tr><td><code>DATABASE_URL</code></td><td>Postgres DSN (prod)</td><td><code>postgres://…</code></td></tr>
+            <tr><td><code>MAX_ATTACHMENT_SIZE</code></td><td>Upload cap in bytes</td><td><code>26214400</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p>Two background jobs run as management commands (wire them to <code>cron</code> or a systemd timer in production):</p>
+        <ul>
+          <li><code>manage.py poll_inbox</code> — fetch new email and thread it into tickets.</li>
+          <li><code>manage.py check_sla</code> — evaluate SLA targets and fire breach escalations.</li>
+        </ul>
+        <p>Static files are served with <strong>WhiteNoise</strong>; run <code>manage.py collectstatic</code> before deploying.</p>
+      </div>
+    </div>
+
+    <div class="section" id="roles">
+      <div class="section-label">Core</div>
+      <div class="section-title">Roles &amp; <span style="color:var(--mint)">Accounts</span></div>
+      <div class="section-desc">Three roles gate what each user can see and do.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Role</th><th>Can do</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-lav">Admin</span></td><td>Everything agents can, plus the settings console: inboxes, SLA, automation, forms, API keys, branding, and user management.</td></tr>
+            <tr><td><span class="badge badge-mint">Agent</span></td><td>Triage all tickets, reply publicly, post internal notes, assign, change status/priority, use macros and saved views.</td></tr>
+            <tr><td><span class="badge badge-sky">Customer</span></td><td>Open tickets via the portal or email, see their own tickets and public replies, browse the knowledge base, rate resolved tickets.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-warn">
+        <div class="callout-icon">!</div>
+        <div>Internal notes are <strong>never</strong> visible to customers — the visibility check runs on every message and on search results. New agents created via <code>createsuperuser</code> are corrected to the admin role automatically.</div>
+      </div>
+    </div>
+
+    <div class="section" id="tickets">
+      <div class="section-label">Core</div>
+      <div class="section-title">Tickets &amp; <span style="color:var(--peach)">Conversations</span></div>
+      <div class="section-desc">The heart of Jackil — a threaded conversation with an audit trail.</div>
+      <div class="prose">
+        <p>A ticket carries a <strong>title</strong>, <strong>description</strong>, <strong>department</strong>, <strong>priority</strong>, <strong>status</strong>, assignee(s), and tags. Its timeline mixes three kinds of message:</p>
+        <ul>
+          <li><strong>Replies</strong> — public, delivered to the customer (and emailed out if the ticket arrived by email).</li>
+          <li><strong>Internal notes</strong> — agent-only, for coordination.</li>
+          <li><strong>System events</strong> — automatic audit entries (status changed, priority changed, assigned).</li>
+        </ul>
+      </div>
+      <div class="prose"><h3>Priorities &amp; statuses</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Priorities</th><th>Statuses</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-rose">Critical</span> <span class="badge badge-peach">High</span> <span class="badge badge-sky">Medium</span> <span class="badge badge-mint">Low</span></td>
+              <td>Open → In&nbsp;Progress → Pending → Resolved → Closed</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-tip">
+        <div class="callout-icon">✓</div>
+        <div>Ticket creation, replies, and status changes emit domain <strong>signals</strong>. Pro modules subscribe to those signals, so SLA timers, automation rules, and webhooks all fire without the core knowing they exist.</div>
+      </div>
+    </div>
+
+    <div class="section" id="saved-views">
+      <div class="section-label">Core</div>
+      <div class="section-title">Saved <span style="color:var(--lavender)">Views</span></div>
+      <div class="section-desc">Persist a named filter set on the ticket list and recall it in one click.</div>
+      <div class="prose">
+        <p>Agents filter the ticket list by status, priority, assignment, and search text. Any combination can be saved as a named <strong>view</strong> — a one-click pill above the list. Mark a view <strong>shared</strong> to make it available to the whole team; keep it private to yourself otherwise. You can delete your own views at any time.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-bar"><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-url">/tickets/?status=open&amp;priority=high</span></div>
+        <div class="mockup-body">
+          <div class="m-row" style="margin-bottom:10px;">
+            <span class="m-muted" style="font-weight:600;">Saved views</span>
+            <span class="m-badge m-badge-sky">Open · High</span>
+            <span class="m-badge m-badge-mint">Unassigned ★</span>
+            <span class="m-badge m-badge-peach">My queue</span>
+            <span style="margin-left:auto;"><span class="m-btn m-btn-outline">Name this view…</span> <span class="m-btn m-btn-mint">Save view</span></span>
+          </div>
+          <div class="m-card"><div class="m-row"><span class="m-badge m-badge-rose">Critical</span><span class="m-h3" style="margin:0;">Login page returns 500</span><span class="m-muted" style="margin-left:auto;">#1042</span></div></div>
+          <div class="m-card"><div class="m-row"><span class="m-badge m-badge-peach">High</span><span class="m-h3" style="margin:0;">VPN drops every few minutes</span><span class="m-muted" style="margin-left:auto;">#1039</span></div></div>
+        </div>
+      </div>
+      <div class="prose">
+        <p>Views store the raw encoded querystring (e.g. <code>status=open&amp;priority=high</code>), so a saved view keeps working even as new filters are added later. The <span style="color:var(--lavender)">★</span> marks a shared view.</p>
+      </div>
+    </div>
+
+    <div class="section" id="email">
+      <div class="section-label">Core</div>
+      <div class="section-title">Email <span style="color:var(--sky)">Inbox</span></div>
+      <div class="section-desc">Turn a monitored mailbox into tickets — no customer account required.</div>
+      <div class="prose">
+        <p>Configure one or more <strong>inboxes</strong> in the settings console with IMAP (inbound) and SMTP (outbound) credentials. The <code>poll_inbox</code> job fetches unread mail, matches it to an existing ticket by subject reference or opens a new one, and attaches any files. Agent replies are emailed back out through the same inbox.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-content"><strong>Add an inbox</strong> under Settings → Email Inboxes with host, port, and credentials.</div></div>
+        <div class="step"><div class="step-content"><strong>Schedule</strong> <code>manage.py poll_inbox</code> (e.g. every minute via cron).</div></div>
+        <div class="step"><div class="step-content"><strong>Reply</strong> from the ticket view — Jackil sends it out and records an outgoing-email event.</div></div>
+      </div>
+    </div>
+
+    <div class="section" id="kb">
+      <div class="section-label">Core</div>
+      <div class="section-title">Knowledge <span style="color:var(--peach)">Base</span></div>
+      <div class="section-desc">Self-service articles that deflect tickets before they are opened.</div>
+      <div class="prose">
+        <p>Admins author <strong>KB articles</strong> in the console; customers browse and search them from the portal under <code>/help/</code>. Good articles cut inbound volume for the most common questions and can be linked directly into replies.</p>
+      </div>
+    </div>
+
+    <div class="section" id="notifications">
+      <div class="section-label">Core</div>
+      <div class="section-title">Notifications &amp; <span style="color:var(--rose)">CSAT</span></div>
+      <div class="section-desc">Keep participants in the loop and measure how you did.</div>
+      <div class="prose">
+        <p>In-app <strong>notifications</strong> alert agents and customers to new replies on tickets they participate in, with an unread badge in the sidebar. When a ticket is resolved, the customer can leave a <strong>CSAT rating</strong> (1–5 stars) — surfaced in reporting so you can track satisfaction over time.</p>
+      </div>
+    </div>
+
+    <div class="section" id="sla">
+      <div class="section-label">Pro</div>
+      <div class="section-title">SLA &amp; <span style="color:var(--sky)">Escalation</span></div>
+      <div class="section-desc">Business-hours response and resolution targets with breach escalation.</div>
+      <div class="prose">
+        <p>Define <strong>SLA targets</strong> per priority against a <strong>business schedule</strong> (working days and hours). On ticket creation Jackil computes first-response and resolution due-times using only working minutes. The <code>check_sla</code> job flags breaches and drives escalation; the first agent reply marks first-response met.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Concept</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>SLATarget</code></td><td>Response &amp; resolution minutes for a priority.</td></tr>
+            <tr><td><code>BusinessSchedule</code></td><td>Working weekdays and hours the clock counts.</td></tr>
+            <tr><td>Breach flags</td><td><code>response_breached</code> / <code>resolution_breached</code> on the ticket.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="automation">
+      <div class="section-label">Pro</div>
+      <div class="section-title">Automation &amp; <span style="color:var(--mint)">Macros</span></div>
+      <div class="section-desc">Rules that react to ticket events, and canned responses for agents.</div>
+      <div class="prose">
+        <p><strong>Automation rules</strong> match conditions (fields on the ticket) against a trigger — <code>on_create</code>, <code>on_reply</code>, or <code>on_status_change</code> — and apply actions such as setting priority, assigning, or tagging. <strong>Macros</strong> are reusable canned replies an agent inserts into the composer; they can be personal or shared.</p>
+      </div>
+      <div class="code-block"><span class="code-label">rule</span><pre><span class="hl-keyword">WHEN</span> on_create
+<span class="hl-keyword">IF</span>   priority <span class="hl-cmd">==</span> <span class="hl-string">"critical"</span>
+<span class="hl-keyword">THEN</span> assign_to <span class="hl-cmd">=</span> <span class="hl-string">"on-call"</span>, add_tag <span class="hl-cmd">=</span> <span class="hl-string">"escalated"</span></pre></div>
+    </div>
+
+    <div class="section" id="customfields">
+      <div class="section-label">Pro</div>
+      <div class="section-title">Custom Fields &amp; <span style="color:var(--rose)">Forms</span></div>
+      <div class="section-desc">Capture the right details with typed fields on tailored request forms.</div>
+      <div class="prose">
+        <p>Define <strong>custom fields</strong> (text, choice, and more) and group them into <strong>request forms</strong> tied to a department. When a customer opens a ticket through a form, the field values are saved alongside it — so &ldquo;which laptop?&rdquo; or &ldquo;which building?&rdquo; is answered up front. Field keys are auto-generated and de-duplicated from the label.</p>
+      </div>
+    </div>
+
+    <div class="section" id="reporting">
+      <div class="section-label">Pro</div>
+      <div class="section-title">Reporting &amp; <span style="color:var(--peach)">Export</span></div>
+      <div class="section-desc">Volume, resolution, and satisfaction — plus a safe CSV export.</div>
+      <div class="prose">
+        <p>The reporting dashboard summarizes ticket volume, status distribution, and CSAT. Any ticket list can be exported to <strong>CSV</strong>. Exports are sanitized against formula injection — cells beginning with <code>=</code>, <code>+</code>, <code>-</code>, or <code>@</code> are neutralized so a spreadsheet can&rsquo;t execute them.</p>
+      </div>
+      <div class="callout callout-warn">
+        <div class="callout-icon">!</div>
+        <div>Any new export or search surface must reapply the same guards: <strong>CSV formula-injection sanitizing</strong> and <strong>internal-note exclusion</strong> for customer-visible results.</div>
+      </div>
+    </div>
+
+    <div class="section" id="api">
+      <div class="section-label">Pro</div>
+      <div class="section-title">REST <span style="color:var(--mint)">API</span> &amp; Webhooks</div>
+      <div class="section-desc">Token-authenticated endpoints for tickets, with outbound webhooks on events.</div>
+      <div class="prose">
+        <p>Create an <strong>API key</strong> in Settings → API. Authenticate with an <code>Authorization</code> header. Keys are bound to an agent/admin user; customer keys are rejected.</p>
+      </div>
+      <div class="code-block"><span class="code-label">http</span><pre><span class="hl-var">Authorization:</span> Api-Key <span class="hl-string">&lt;your-key&gt;</span></pre></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:70px;">Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><span class="api-method m-get">GET</span></td><td><code>/api/v1/tickets/</code></td><td>List tickets (paginated).</td></tr>
+            <tr><td><span class="api-method m-post">POST</span></td><td><code>/api/v1/tickets/</code></td><td>Create a ticket.</td></tr>
+            <tr><td><span class="api-method m-get">GET</span></td><td><code>/api/v1/tickets/{id}/</code></td><td>Retrieve one ticket.</td></tr>
+            <tr><td><span class="api-method m-patch">PATCH</span></td><td><code>/api/v1/tickets/{id}/</code></td><td>Update a ticket.</td></tr>
+            <tr><td><span class="api-method m-post">POST</span></td><td><code>/api/v1/tickets/{id}/messages/</code></td><td>Post a reply or note.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose"><h3>Pagination &amp; throttling</h3>
+        <p>List responses are paginated (<code>count</code> + <code>results</code>), default 25 per page. Clients may request up to <strong>100</strong> with <code>?page_size=</code>; the cap is enforced server-side. Requests are throttled per authenticated user and per anonymous IP to protect the instance.</p>
+      </div>
+      <div class="code-block"><span class="code-label">bash</span><pre>curl <span class="hl-flag">-H</span> <span class="hl-string">"Authorization: Api-Key &lt;key&gt;"</span> \
+     <span class="hl-string">"https://help.acme.com/api/v1/tickets/?page_size=50&amp;status=open"</span></pre></div>
+      <div class="prose"><h3>Webhooks</h3>
+        <p>Register a webhook URL in the console to receive a POST when a ticket event fires — <code>ticket.created</code> and <code>ticket.updated</code>. Payloads carry the event name and ticket data, so you can wire Jackil into Slack, PagerDuty, or your own systems.</p>
+      </div>
+    </div>
+
+    <div class="section" id="branding">
+      <div class="section-label">Enterprise</div>
+      <div class="section-title">White-label <span style="color:var(--coral)">Branding</span></div>
+      <div class="section-desc">Make Jackil yours — product name, tagline, and accent color.</div>
+      <div class="prose">
+        <p>Admins set the <strong>product name</strong>, <strong>tagline</strong>, and a single <strong>pastel accent</strong> (lavender, mint, peach, sky, rose, coral, or lemon) from the settings console. Branding is exposed to every template via a context processor, so it applies across the entire UI instantly.</p>
+      </div>
+    </div>
+
+    <div class="section" id="open-core">
+      <div class="section-label">Reference</div>
+      <div class="section-title">Open-core <span style="color:var(--lavender)">Architecture</span></div>
+      <div class="section-desc">The core never imports a pro app; pro apps subscribe to it.</div>
+      <div class="prose">
+        <p>Jackil is structured so the paid modules can live in private repositories while the core stays open. Three seams make this work:</p>
+        <ul>
+          <li><strong>Domain signals</strong> — the core <code>tickets</code> app emits <code>ticket_created</code>, <code>ticket_replied</code>, and <code>ticket_status_changed</code>. Pro apps connect receivers in their <code>AppConfig.ready()</code>.</li>
+          <li><strong>Feature registry</strong> — <code>config.features.feature_enabled(slug)</code> reports which pro apps are installed; templates read <code>enabled_features</code> to hide absent features.</li>
+          <li><strong>Guarded routes</strong> — root and console URLconfs, plus nav links, are gated by the registry, so a removed app leaves no broken links.</li>
+        </ul>
+        <p>Remove any pro app from <code>INSTALLED_APPS</code> and the system check, the test suite, and the rendered UI all keep working — the feature simply disappears. No runtime license checks are used; protection is by <strong>not shipping the code</strong>.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tier</th><th>Apps</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-mint">Core (open)</span></td><td>accounts, tickets, inbox, kb, notifications, console</td></tr>
+            <tr><td><span class="badge badge-lav">Pro</span></td><td>sla, automation, api + webhooks, reports, customfields</td></tr>
+            <tr><td><span class="badge badge-peach">Enterprise</span></td><td>white-label branding, (SSO/SAML, audit retention — roadmap)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="datamodel">
+      <div class="section-label">Reference</div>
+      <div class="section-title">Data <span style="color:var(--sky)">Model</span></div>
+      <div class="section-desc">The main entities and how they relate.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Model</th><th>App</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>User</code> / <code>Department</code></td><td>accounts</td><td>Role-based; users belong to departments.</td></tr>
+            <tr><td><code>Ticket</code></td><td>tickets</td><td>Title, status, priority, department, assignees, tags.</td></tr>
+            <tr><td><code>TicketMessage</code></td><td>tickets</td><td>Reply / note / system event / email, with visibility.</td></tr>
+            <tr><td><code>Attachment</code></td><td>tickets</td><td>Files on tickets or messages, size-capped.</td></tr>
+            <tr><td><code>SavedView</code></td><td>tickets</td><td>Named, optionally shared, filter querystring.</td></tr>
+            <tr><td><code>TicketRating</code></td><td>tickets</td><td>1–5 CSAT score on a resolved ticket.</td></tr>
+            <tr><td><code>Inbox</code></td><td>inbox</td><td>IMAP/SMTP mailbox config.</td></tr>
+            <tr><td><code>SLATarget</code> / <code>BusinessSchedule</code></td><td>sla</td><td>Per-priority targets against working hours.</td></tr>
+            <tr><td><code>AutomationRule</code> / <code>Macro</code></td><td>automation</td><td>Event-driven rules and canned replies.</td></tr>
+            <tr><td><code>CustomField</code> / <code>RequestForm</code></td><td>customfields</td><td>Typed fields grouped into request forms.</td></tr>
+            <tr><td><code>ApiKey</code> / <code>Webhook</code></td><td>api</td><td>Token auth and outbound event delivery.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-sqsy-logo"><span style="font-family:'Fraunces',serif; font-size:20px; color:var(--text-2);">J</span></div>
+      <div>Jackil — self-hosted helpdesk · Built by <a href="https://github.com/Susquehanna-Syntax" target="_blank" rel="noopener">Susquehanna Syntax</a></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (activeLink) activeLink.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(section => observer.observe(section));
+  navLinks.forEach(link => { link.addEventListener('click', () => { document.querySelector('.sidebar').classList.remove('open'); }); });
+</script>
+</body>
+</html>
