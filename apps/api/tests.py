@@ -69,6 +69,37 @@ class ApiKeyAuthTests(TestCase):
         self.assertIn("…", self.key.masked)
 
 
+class ApiHardeningTests(TestCase):
+    def setUp(self):
+        self.agent = User.objects.create_user("hagent", "h@x.com", "p", role="agent")
+        self.key = ApiKey.objects.create(name="h", user=self.agent)
+        self.customer = User.objects.create_user("hcust", "hc@x.com", "p", role="customer")
+        for i in range(5):
+            Ticket.objects.create(
+                title=f"T{i}", description="d", created_by=self.customer, priority="low"
+            )
+
+    def _auth(self):
+        return {"HTTP_AUTHORIZATION": f"Api-Key {self.key.key}"}
+
+    def test_page_size_query_param_honored(self):
+        r = self.client.get("/api/v1/tickets/?page_size=2", **self._auth())
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.json()["results"]), 2)
+
+    def test_page_size_cap_enforced(self):
+        from apps.api.pagination import StandardPagination
+
+        self.assertEqual(StandardPagination.max_page_size, 100)
+        self.assertEqual(StandardPagination.page_size_query_param, "page_size")
+
+    def test_throttle_settings_configured(self):
+        from django.conf import settings
+
+        self.assertIn("DEFAULT_THROTTLE_RATES", settings.REST_FRAMEWORK)
+        self.assertIn("user", settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"])
+
+
 class WebhookTests(TestCase):
     def setUp(self):
         self.customer = User.objects.create_user("cust", "c@x.com", "p", role="customer")

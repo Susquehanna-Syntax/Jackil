@@ -1,12 +1,6 @@
 from django.contrib import admin
 
-from .models import Attachment, Ticket, TicketComment, TicketMessage
-
-
-class TicketCommentInline(admin.TabularInline):
-    model = TicketComment
-    readonly_fields = ["author", "body", "created_at"]
-    extra = 0
+from .models import Attachment, Ticket, TicketMessage
 
 
 @admin.register(Ticket)
@@ -23,7 +17,6 @@ class TicketAdmin(admin.ModelAdmin):
     list_filter = ["status", "priority", "department"]
     search_fields = ["title", "description"]
     readonly_fields = ["created_at", "updated_at", "closed_at"]
-    inlines = [TicketCommentInline]
     actions = ["bulk_open", "bulk_in_progress", "bulk_close"]
 
     def bulk_open(self, request, queryset):
@@ -40,12 +33,6 @@ class TicketAdmin(admin.ModelAdmin):
         queryset.update(status="closed")
 
     bulk_close.short_description = "Set selected tickets to Closed"
-
-
-@admin.register(TicketComment)
-class TicketCommentAdmin(admin.ModelAdmin):
-    list_display = ["ticket", "author", "created_at"]
-    readonly_fields = ["ticket", "author", "body", "created_at"]
 
 
 @admin.register(TicketMessage)

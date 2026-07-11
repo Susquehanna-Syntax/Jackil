@@ -10,7 +10,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.accounts.models import Department, User
-from apps.tickets.models import Ticket, TicketComment
+from apps.tickets.models import Ticket
 
 DEPARTMENTS = [
     ("IT Support", "Hardware, software, accounts and access."),
@@ -104,7 +104,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options["fresh"]:
-            TicketComment.objects.all().delete()
             Ticket.objects.all().delete()
             self.stdout.write(self.style.WARNING("Cleared existing tickets."))
 
@@ -182,26 +181,10 @@ class Command(BaseCommand):
             if status in ("resolved", "closed"):
                 ticket.closed_at = timezone.now()
                 ticket.save()
-            # A couple of comments
-            for _ in range(random.randint(0, 3)):
-                TicketComment.objects.create(
-                    ticket=ticket,
-                    author=random.choice(agents + customers),
-                    body=random.choice(
-                        [
-                            "Taking a look at this now.",
-                            "Could you share a screenshot of the error?",
-                            "Thanks, that worked!",
-                            "Escalating to the network team.",
-                            "Any update on this?",
-                        ]
-                    ),
-                )
 
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seeded: {Department.objects.count()} departments, "
-                f"{User.objects.count()} users, {Ticket.objects.count()} tickets, "
-                f"{TicketComment.objects.count()} comments."
+                f"{User.objects.count()} users, {Ticket.objects.count()} tickets."
             )
         )

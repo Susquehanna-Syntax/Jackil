@@ -82,17 +82,6 @@ class Ticket(models.Model):
         return colors.get(self.priority, "lavender")
 
 
-class TicketComment(models.Model):
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name="comments")
-    author = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
-    body = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Comment by {self.author} on #{self.ticket.pk}"
-
-
 class TicketMessage(models.Model):
     KIND_CHOICES = [
         ("reply", "Reply"),  # public, visible to the customer
