@@ -87,80 +87,104 @@ class KBArticleForm(forms.ModelForm):
                 widget.attrs.setdefault("class", "form-input")
 
 
-from apps.automation.models import Macro  # noqa: E402
+def macro_form_class():
+    from apps.automation.models import Macro
+
+    class MacroForm(forms.ModelForm):
+        class Meta:
+            model = Macro
+            fields = ["name", "body", "is_shared"]
+            widgets = {"body": forms.Textarea(attrs={"rows": 6})}
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            for field in self.fields.values():
+                w = field.widget
+                if isinstance(w, forms.CheckboxInput):
+                    w.attrs.setdefault("class", "form-check")
+                elif isinstance(w, forms.Textarea):
+                    w.attrs.setdefault("class", "form-textarea")
+                else:
+                    w.attrs.setdefault("class", "form-input")
+
+    return MacroForm
 
 
-class MacroForm(forms.ModelForm):
-    class Meta:
-        model = Macro
-        fields = ["name", "body", "is_shared"]
-        widgets = {"body": forms.Textarea(attrs={"rows": 6})}
+def webhook_form_class():
+    from apps.api.models import Webhook
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            w = field.widget
-            if isinstance(w, forms.CheckboxInput):
-                w.attrs.setdefault("class", "form-check")
-            elif isinstance(w, forms.Textarea):
-                w.attrs.setdefault("class", "form-textarea")
-            else:
-                w.attrs.setdefault("class", "form-input")
+    class WebhookForm(forms.ModelForm):
+        class Meta:
+            model = Webhook
+            fields = ["name", "url", "event", "is_active"]
 
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            for field in self.fields.values():
+                w = field.widget
+                if isinstance(w, forms.CheckboxInput):
+                    w.attrs.setdefault("class", "form-check")
+                elif isinstance(w, forms.Select):
+                    w.attrs.setdefault("class", "form-select")
+                else:
+                    w.attrs.setdefault("class", "form-input")
 
-from apps.api.models import Webhook  # noqa: E402
-
-
-class WebhookForm(forms.ModelForm):
-    class Meta:
-        model = Webhook
-        fields = ["name", "url", "event", "is_active"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            w = field.widget
-            if isinstance(w, forms.CheckboxInput):
-                w.attrs.setdefault("class", "form-check")
-            elif isinstance(w, forms.Select):
-                w.attrs.setdefault("class", "form-select")
-            else:
-                w.attrs.setdefault("class", "form-input")
+    return WebhookForm
 
 
-from apps.customfields.models import CustomField, RequestForm  # noqa: E402
+def customfield_form_class():
+    from apps.customfields.models import CustomField
+
+    class CustomFieldForm(forms.ModelForm):
+        class Meta:
+            model = CustomField
+            fields = [
+                "label",
+                "field_type",
+                "choices",
+                "help_text",
+                "required",
+                "is_active",
+                "order",
+            ]
+            widgets = {"choices": forms.Textarea(attrs={"rows": 4})}
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            for field in self.fields.values():
+                w = field.widget
+                if isinstance(w, forms.CheckboxInput):
+                    w.attrs.setdefault("class", "form-check")
+                elif isinstance(w, forms.Textarea):
+                    w.attrs.setdefault("class", "form-textarea")
+                elif isinstance(w, forms.Select):
+                    w.attrs.setdefault("class", "form-select")
+                else:
+                    w.attrs.setdefault("class", "form-input")
+
+    return CustomFieldForm
 
 
-def _style(form):
-    for field in form.fields.values():
-        w = field.widget
-        if isinstance(w, forms.CheckboxInput):
-            w.attrs.setdefault("class", "form-check")
-        elif isinstance(w, forms.Textarea):
-            w.attrs.setdefault("class", "form-textarea")
-        elif isinstance(w, forms.Select):
-            w.attrs.setdefault("class", "form-select")
-        else:
-            w.attrs.setdefault("class", "form-input")
+def requestform_form_class():
+    from apps.customfields.models import RequestForm
 
+    class RequestFormForm(forms.ModelForm):
+        class Meta:
+            model = RequestForm
+            fields = ["name", "description", "intro", "department", "is_active", "order"]
+            widgets = {"intro": forms.Textarea(attrs={"rows": 3})}
 
-class CustomFieldForm(forms.ModelForm):
-    class Meta:
-        model = CustomField
-        fields = ["label", "field_type", "choices", "help_text", "required", "is_active", "order"]
-        widgets = {"choices": forms.Textarea(attrs={"rows": 4})}
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            for field in self.fields.values():
+                w = field.widget
+                if isinstance(w, forms.CheckboxInput):
+                    w.attrs.setdefault("class", "form-check")
+                elif isinstance(w, forms.Textarea):
+                    w.attrs.setdefault("class", "form-textarea")
+                elif isinstance(w, forms.Select):
+                    w.attrs.setdefault("class", "form-select")
+                else:
+                    w.attrs.setdefault("class", "form-input")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        _style(self)
-
-
-class RequestFormForm(forms.ModelForm):
-    class Meta:
-        model = RequestForm
-        fields = ["name", "description", "intro", "department", "is_active", "order"]
-        widgets = {"intro": forms.Textarea(attrs={"rows": 3})}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        _style(self)
+    return RequestFormForm

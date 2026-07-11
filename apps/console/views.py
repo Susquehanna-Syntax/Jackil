@@ -1,14 +1,11 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.automation.engine import ACTION_TYPES, CONDITION_FIELDS
-from apps.automation.models import AutomationRule, Macro
 from apps.inbox.models import Inbox
 from apps.kb.models import KBArticle
-from apps.sla.models import WEEKDAYS, BusinessSchedule, SLATarget
 
 from .decorators import admin_required
-from .forms import InboxForm, KBArticleForm, MacroForm
+from .forms import InboxForm, KBArticleForm
 
 
 @admin_required
@@ -87,6 +84,8 @@ def _enforce_single_default(inbox):
 
 @admin_required
 def sla_settings(request):
+    from apps.sla.models import WEEKDAYS, BusinessSchedule, SLATarget
+
     targets = list(SLATarget.objects.all())
     schedule = BusinessSchedule.active()
     if schedule is None:
@@ -173,6 +172,8 @@ def kb_delete(request, pk):
 
 @admin_required
 def automation_home(request):
+    from apps.automation.models import AutomationRule, Macro
+
     ctx = {
         "rules": AutomationRule.objects.all(),
         "macros": Macro.objects.all(),
@@ -188,10 +189,15 @@ def macro_create(request):
 
 @admin_required
 def macro_edit(request, pk):
+    from apps.automation.models import Macro
+
     return _macro_form(request, get_object_or_404(Macro, pk=pk))
 
 
 def _macro_form(request, macro):
+    from .forms import macro_form_class
+
+    MacroForm = macro_form_class()
     if request.method == "POST":
         form = MacroForm(request.POST, instance=macro)
         if form.is_valid():
@@ -210,6 +216,8 @@ def _macro_form(request, macro):
 
 @admin_required
 def macro_delete(request, pk):
+    from apps.automation.models import Macro
+
     macro = get_object_or_404(Macro, pk=pk)
     if request.method == "POST":
         macro.delete()
@@ -227,6 +235,8 @@ def rule_create(request):
 
 @admin_required
 def rule_edit(request, pk):
+    from apps.automation.models import AutomationRule
+
     return _rule_form(request, get_object_or_404(AutomationRule, pk=pk))
 
 
@@ -248,6 +258,9 @@ def _parse_rule_post(request):
 
 
 def _rule_form(request, rule):
+    from apps.automation.engine import ACTION_TYPES, CONDITION_FIELDS
+    from apps.automation.models import AutomationRule
+
     if request.method == "POST":
         conditions, actions = _parse_rule_post(request)
         name = request.POST.get("name", "").strip()
@@ -279,6 +292,8 @@ def _rule_form(request, rule):
 
 @admin_required
 def rule_delete(request, pk):
+    from apps.automation.models import AutomationRule
+
     rule = get_object_or_404(AutomationRule, pk=pk)
     if request.method == "POST":
         rule.delete()
@@ -336,12 +351,14 @@ def webhook_create(request):
 def webhook_edit(request, pk):
     from apps.api.models import Webhook
 
-    return _webhook_form(request, get_object_or_404(Webhook, pk=pk))
+    from .forms import webhook_form_class
+
+    WebhookForm = webhook_form_class()
+    webhook = get_object_or_404(Webhook, pk=pk)
+    return _webhook_form(request, webhook, WebhookForm)
 
 
-def _webhook_form(request, webhook):
-    from .forms import WebhookForm
-
+def _webhook_form(request, webhook, WebhookForm):
     if request.method == "POST":
         form = WebhookForm(request.POST, instance=webhook)
         if form.is_valid():
@@ -393,8 +410,9 @@ def field_edit(request, pk):
 
 
 def _field_form(request, field):
-    from .forms import CustomFieldForm
+    from .forms import customfield_form_class
 
+    CustomFieldForm = customfield_form_class()
     if request.method == "POST":
         form = CustomFieldForm(request.POST, instance=field)
         if form.is_valid():
@@ -433,8 +451,9 @@ def reqform_edit(request, pk):
 def _reqform_form(request, reqform):
     from apps.customfields.models import CustomField, RequestFormField
 
-    from .forms import RequestFormForm
+    from .forms import requestform_form_class
 
+    RequestFormForm = requestform_form_class()
     if request.method == "POST":
         form = RequestFormForm(request.POST, instance=reqform)
         if form.is_valid():
