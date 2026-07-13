@@ -141,7 +141,7 @@
     <div class="msg{% if m.kind == 'note' %} msg-note{% endif %}{% if m.is_email %} msg-email{% endif %} fade-in">
       <div class="msg-header">
         <span class="msg-author">
-          <span class="avatar-sm" style="background: var(--{% if m.author %}{{ m.author.avatar_color|default:'lavender' }}{% else %}s4{% endif %}); margin-right: 8px;">{% if m.author %}{{ m.author.avatar_initials }}</span>{% else %}@</span>{% endif %}
+          <span class="avatar-sm" style="background: var(--{% if m.author %}{{ m.author.avatar_color|default:'lavender' }}{% else %}s4{% endif %}); margin-right: 8px; overflow: hidden;">{% if m.author %}{% if m.author.avatar %}<img src="{{ m.author.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ m.author.avatar_initials }}{% endif %}{% else %}@{% endif %}</span>
           {{ m.author_display }}
           {% if m.kind == "note" %}<span class="msg-badge msg-badge-note">
             <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>

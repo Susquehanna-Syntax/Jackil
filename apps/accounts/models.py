@@ -20,6 +20,9 @@ class User(AbstractUser):
     department = models.CharField(max_length=100, blank=True, default="")
     phone = models.CharField(max_length=20, blank=True, default="")
     avatar_color = models.CharField(max_length=20, default="lavender")
+    avatar = models.TextField(
+        blank=True, default="", help_text="Base64-encoded profile image data URI"
+    )
     preferences = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

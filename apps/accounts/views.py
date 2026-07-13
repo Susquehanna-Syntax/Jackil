@@ -75,6 +75,36 @@ AVATAR_COLORS = ["lavender", "mint", "peach", "sky", "rose", "coral", "lemon"]
 
 
 @login_required
+def upload_avatar(request):
+    """Store an uploaded profile photo as a base64 data URI on the user, or
+    clear it. Kept in the DB (no media storage) to stay self-contained."""
+    if request.method != "POST":
+        return redirect("accounts:profile")
+    if request.POST.get("remove"):
+        request.user.avatar = ""
+        request.user.save(update_fields=["avatar"])
+        messages.success(request, "Profile photo removed.")
+        return redirect("accounts:profile")
+    file = request.FILES.get("avatar")
+    if not file:
+        return redirect("accounts:profile")
+    if not (file.content_type or "").startswith("image/"):
+        messages.error(request, "Please choose an image file.")
+        return redirect("accounts:profile")
+    if file.size and file.size > 2 * 1024 * 1024:
+        messages.error(request, "That image is too large (max 2 MB).")
+        return redirect("accounts:profile")
+
+    import base64
+
+    b64 = base64.b64encode(file.read()).decode("ascii")
+    request.user.avatar = f"data:{file.content_type};base64,{b64}"
+    request.user.save(update_fields=["avatar"])
+    messages.success(request, "Profile photo updated.")
+    return redirect("accounts:profile")
+
+
+@login_required
 def profile(request):
     user = request.user
     if request.method == "POST":

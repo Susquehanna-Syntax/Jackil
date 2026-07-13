@@ -12,6 +12,47 @@ from django.utils import timezone
 from apps.accounts.models import Department, User
 from apps.tickets.models import Ticket
 
+_AVATAR_COLORS = {
+    "lavender": (186, 168, 232),
+    "mint": (126, 221, 181),
+    "peach": (240, 184, 136),
+    "sky": (130, 196, 238),
+    "rose": (242, 160, 184),
+    "coral": (240, 144, 128),
+    "lemon": (226, 212, 120),
+}
+
+
+def _make_avatar(initial, color_name, size=200):
+    """A square PNG data URI — an initial on a pastel background (demo avatars)."""
+    import base64
+    import io
+
+    from PIL import Image, ImageDraw, ImageFont
+
+    bg = _AVATAR_COLORS.get(color_name, _AVATAR_COLORS["lavender"])
+    img = Image.new("RGB", (size, size), color=bg)
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(size * 0.5)
+        )
+    except OSError:
+        font = ImageFont.load_default()
+    text = (initial or "?").upper()[:1]
+    bbox = draw.textbbox((0, 0), text, font=font)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    draw.text(
+        ((size - tw) / 2 - bbox[0], (size - th) / 2 - bbox[1]),
+        text,
+        font=font,
+        fill=(28, 28, 33),
+    )
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+
 DEPARTMENTS = [
     ("IT Support", "Hardware, software, accounts and access."),
     ("Facilities", "Building, desks, badges and physical space."),
@@ -118,6 +159,7 @@ class Command(BaseCommand):
                 "is_staff": True,
                 "is_superuser": True,
                 "avatar_color": "lavender",
+                "avatar": _make_avatar("A", "lavender"),
                 "department": "IT Support",
             },
         )
@@ -125,6 +167,9 @@ class Command(BaseCommand):
             admin.set_password("admin12345")
             admin.save()
             self.stdout.write(self.style.SUCCESS("Created admin / admin12345"))
+        if not admin.avatar:
+            admin.avatar = _make_avatar("A", "lavender")
+            admin.save(update_fields=["avatar"])
 
         departments = {}
         for name, desc in DEPARTMENTS:
@@ -141,12 +186,16 @@ class Command(BaseCommand):
                     "last_name": last,
                     "role": "agent",
                     "avatar_color": color,
+                    "avatar": _make_avatar(first[0], color),
                     "department": "IT Support",
                 },
             )
             if created:
                 user.set_password("password123")
                 user.save()
+            if not user.avatar:
+                user.avatar = _make_avatar(first[0], color)
+                user.save(update_fields=["avatar"])
             agents.append(user)
 
         customers = []
@@ -159,11 +208,15 @@ class Command(BaseCommand):
                     "last_name": last,
                     "role": "customer",
                     "avatar_color": color,
+                    "avatar": _make_avatar(first[0], color),
                 },
             )
             if created:
                 user.set_password("password123")
                 user.save()
+            if not user.avatar:
+                user.avatar = _make_avatar(first[0], color)
+                user.save(update_fields=["avatar"])
             customers.append(user)
 
         dept_list = list(departments.values())
