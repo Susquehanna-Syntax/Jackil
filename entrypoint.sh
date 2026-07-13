@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-if [ "$DATABASE_URL" ]; then
-    python manage.py migrate --noinput
-fi
+# Prepare the app on boot: apply migrations and gather static files
+# (WhiteNoise serves them from STATIC_ROOT under gunicorn).
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
 
 exec "$@"
