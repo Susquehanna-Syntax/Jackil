@@ -10,24 +10,10 @@ from .forms import InboxForm, KBArticleForm
 
 @admin_required
 def settings_home(request):
-    from .models import SiteBranding
-
-    branding = SiteBranding.get()
-    if request.method == "POST":
-        branding.product_name = request.POST.get("product_name", "").strip() or "Jackil"
-        branding.tagline = request.POST.get("tagline", "").strip()
-        accent = request.POST.get("accent", branding.accent)
-        if accent in ("lavender", "mint", "peach", "sky", "rose", "coral", "lemon"):
-            branding.accent = accent
-        branding.save()
-        messages.success(request, "Branding updated.")
-        return redirect("console:settings_home")
     ctx = {
         "inbox_count": Inbox.objects.count(),
         "active_inbox_count": Inbox.objects.filter(active=True).count(),
         "default_inbox": Inbox.get_default(),
-        "branding": branding,
-        "accent_colors": ["lavender", "mint", "peach", "sky", "rose", "coral", "lemon"],
         "section": "home",
     }
     return render(request, "console/settings_home.html", ctx)

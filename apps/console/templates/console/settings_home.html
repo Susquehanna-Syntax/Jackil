@@ -1,24 +1,6 @@
 {% extends "console/settings_base.html" %}
 
 {% block settings_content %}
-<div class="section-heading">Branding</div>
-<form method="post" class="form-card" style="margin-bottom: 28px;">
-  {% csrf_token %}
-  <div class="form-grid-2">
-    <div class="form-group"><label class="form-label" for="pn">Product name</label><input type="text" name="product_name" id="pn" class="form-input" value="{{ branding.product_name }}"></div>
-    <div class="form-group"><label class="form-label" for="tg">Tagline</label><input type="text" name="tagline" id="tg" class="form-input" value="{{ branding.tagline }}"></div>
-  </div>
-  <div class="form-group" style="margin-top:14px;">
-    <label class="form-label">Accent color</label>
-    <div class="color-picker">
-      {% for c in accent_colors %}
-      <label class="color-swatch"><input type="radio" name="accent" value="{{ c }}" {% if branding.accent == c %}checked{% endif %}><span style="background: var(--{{ c }});"></span></label>
-      {% endfor %}
-    </div>
-  </div>
-  <div class="inbox-form-actions"><button type="submit" class="btn btn-filled-mint">Save branding</button></div>
-</form>
-
 <div class="section-heading">Overview</div>
 
 <div class="stat-grid" style="margin-bottom: 28px;">
