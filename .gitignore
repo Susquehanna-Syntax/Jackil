@@ -28,5 +28,4 @@ media/
 Thumbs.db
 
 # Docker (optional - remove if you want docker files in repo)
-# docker-compose.override.yml.rexymcp/
-.rexymcp/sessions/
+# docker-compose.override.yml
