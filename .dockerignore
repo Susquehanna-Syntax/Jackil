@@ -29,13 +29,6 @@ __pycache__/
 .idea/
 .vscode/
 
-# Agent/session tooling & dev docs (not needed at runtime)
+# Local tooling & dev docs (not needed at runtime)
 .claude/
-.remember/
-.rexymcp/
-aionly/
 docs/
-handoff.md
-recommendations.md
-REXYMCP.md
-rexymcp.toml
