@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from decouple import config
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "apps.accounts",
+    "apps.civilsso",
     "apps.tickets",
     "apps.inbox",
     "apps.console",
@@ -80,6 +82,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.notifications.context_processors.notifications",
                 "config.context_processors.features",
+                "apps.civilsso.context_processors.civil",
             ],
         },
     },
@@ -156,3 +159,8 @@ REST_FRAMEWORK = {
 }
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
+
+
+# Civil SSO (opt-in shared identity for the SQSY family). Unset = off.
+CIVIL_URL = os.environ.get("CIVIL_URL", "")
+CIVIL_APP_SLUG = os.environ.get("CIVIL_APP_SLUG", "jackil")
