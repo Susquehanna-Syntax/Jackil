@@ -11,7 +11,8 @@ class Command(BaseCommand):
         parser.add_argument("--dry-run", action="store_true")
 
     def handle(self, *args, **options):
-        qs = Ticket.objects.filter(status__in=["open", "in_progress", "pending"])
+        # Pending tickets have a paused SLA clock and must not breach.
+        qs = Ticket.objects.filter(status__in=["open", "in_progress"])
         breached = 0
         for ticket in qs:
             newly = check_and_flag_breaches(ticket)

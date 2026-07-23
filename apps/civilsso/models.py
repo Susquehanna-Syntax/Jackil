@@ -19,7 +19,8 @@ class CivilIdentity(models.Model):
     """
 
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         related_name="civil_identity",
     )
     civil_id = models.UUIDField(unique=True, db_index=True)
@@ -41,6 +42,9 @@ class CachedCivilKey(models.Model):
     fetched_from = models.URLField()
     fetched_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self) -> str:
+        return f"civil key from {self.fetched_from or '(unset)'}"
+
     @classmethod
     def current(cls) -> str:
         row = cls.objects.order_by("-fetched_at").first()
@@ -60,10 +64,10 @@ class CivilConfig(models.Model):
     app_slug = models.SlugField(max_length=50, blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self) -> str:
+        return f"civil:{self.url or '(unset)'} ({'on' if self.enabled else 'off'})"
+
     @classmethod
     def current(cls) -> "CivilConfig":
         row = cls.objects.first()
         return row if row is not None else cls.objects.create()
-
-    def __str__(self) -> str:
-        return f"civil:{self.url or '(unset)'} ({'on' if self.enabled else 'off'})"

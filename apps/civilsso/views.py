@@ -36,11 +36,13 @@ def login_start(request):
     nxt = request.GET.get("next", "")
     if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
         request.session[_NEXT_SESSION_KEY] = nxt
-    query = urlencode({
-        "app": client.app_slug(),
-        "redirect_uri": request.build_absolute_uri(reverse("civil-callback")),
-        "state": state,
-    })
+    query = urlencode(
+        {
+            "app": client.app_slug(),
+            "redirect_uri": request.build_absolute_uri(reverse("civil-callback")),
+            "state": state,
+        }
+    )
     return redirect(f"{client.civil_url()}/sso/authorize?{query}")
 
 
@@ -159,5 +161,6 @@ def civil_settings_page(request):
         return redirect_to_login(request.get_full_path())
     if not (user.is_staff or user.is_superuser):
         from django.http import HttpResponseForbidden
+
         return HttpResponseForbidden("Administrator access required.")
     return render(request, "civilsso/settings.html")

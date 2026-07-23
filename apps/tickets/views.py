@@ -270,7 +270,9 @@ def _handle_manage(request, ticket):
     ticket.due_at = new_due
 
     new_priority = request.POST.get("priority", ticket.priority)
-    if new_priority != ticket.priority:
+    priority_changed = new_priority != ticket.priority
+    old_priority = ticket.priority
+    if priority_changed:
         record_system_event(
             ticket,
             actor,
@@ -295,6 +297,16 @@ def _handle_manage(request, ticket):
             ticket.closed_at = None
 
     ticket.save()
+    if priority_changed:
+        from .events import ticket_priority_changed
+
+        ticket_priority_changed.send(
+            sender=Ticket,
+            ticket=ticket,
+            actor=actor,
+            old_priority=old_priority,
+            new_priority=new_priority,
+        )
     if status_changed:
         from .events import ticket_status_changed
 

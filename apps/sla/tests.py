@@ -246,6 +246,117 @@ class FirstAgentReplyTests(TestCase):
         # first_responded_at should remain the original (idempotent)
 
 
+class PauseResumeTests(TestCase):
+    def _paused_ticket(self, **kwargs):
+        now = timezone.now()
+        defaults = dict(
+            title="Pause test",
+            priority="high",
+            status="open",
+            created_by=_make_user(),
+            first_response_due=now + timedelta(hours=1),
+            resolution_due=now + timedelta(hours=4),
+            first_responded_at=None,
+        )
+        defaults.update(kwargs)
+        return Ticket.objects.create(**defaults)
+
+    def test_pause_freezes_clock_no_false_overdue(self):
+        from apps.sla.service import pause_sla, response_status
+
+        ticket = self._paused_ticket()
+        paused_at = ticket.first_response_due - timedelta(minutes=10)
+        pause_sla(ticket, when=paused_at)
+        self.assertIsNotNone(ticket.sla_paused_at)
+        # An hour past the due date, but the frozen clock keeps it "open".
+        later = ticket.first_response_due + timedelta(hours=1)
+        self.assertEqual(response_status(ticket, now=later), "open")
+
+    def test_resume_shifts_due_dates_and_banks_time(self):
+        from apps.sla.service import pause_sla, resume_sla
+
+        ticket = self._paused_ticket()
+        original_response_due = ticket.first_response_due
+        original_resolution_due = ticket.resolution_due
+        paused_at = timezone.now()
+        pause_sla(ticket, when=paused_at)
+        resume_at = paused_at + timedelta(hours=2)
+        resume_sla(ticket, when=resume_at)
+        self.assertIsNone(ticket.sla_paused_at)
+        self.assertEqual(ticket.sla_paused_seconds, 2 * 3600)
+        self.assertEqual(ticket.first_response_due, original_response_due + timedelta(hours=2))
+        self.assertEqual(ticket.resolution_due, original_resolution_due + timedelta(hours=2))
+
+    def test_resume_without_pause_is_noop(self):
+        from apps.sla.service import resume_sla
+
+        ticket = self._paused_ticket()
+        self.assertFalse(resume_sla(ticket))
+
+    def test_status_change_signal_pauses_and_resumes(self):
+        """open → pending pauses; pending → open resumes and banks the span."""
+        from apps.tickets.events import ticket_status_changed
+
+        ticket = self._paused_ticket()
+        original_resolution_due = ticket.resolution_due
+        ticket_status_changed.send(sender=Ticket, ticket=ticket, actor=None, new_status="pending")
+        ticket.refresh_from_db()
+        self.assertIsNotNone(ticket.sla_paused_at)
+        ticket_status_changed.send(sender=Ticket, ticket=ticket, actor=None, new_status="open")
+        ticket.refresh_from_db()
+        # The pause was released (span is ~0s in-test; real banking is covered
+        # by test_resume_shifts_due_dates_and_banks_time).
+        self.assertIsNone(ticket.sla_paused_at)
+        self.assertGreaterEqual(ticket.sla_paused_seconds, 0)
+        self.assertGreaterEqual(ticket.resolution_due, original_resolution_due)
+
+
+class PriorityRecalcTests(TestCase):
+    def test_priority_change_recomputes_due_dates(self):
+        from apps.sla.service import apply_sla
+
+        SLATarget.objects.update_or_create(
+            priority="low",
+            defaults={"response_minutes": 480, "resolution_minutes": 2880},
+        )
+        SLATarget.objects.update_or_create(
+            priority="critical",
+            defaults={"response_minutes": 30, "resolution_minutes": 120},
+        )
+        created = timezone.make_aware(datetime(2025, 1, 6, 10, 0))
+        ticket = Ticket.objects.create(
+            title="Recalc test", priority="low", status="open", created_by=_make_user()
+        )
+        Ticket.objects.filter(pk=ticket.pk).update(created_at=created)
+        ticket.refresh_from_db()
+        apply_sla(ticket)
+        low_due = ticket.first_response_due
+        # Escalate to critical → tighter target → sooner due date.
+        ticket.priority = "critical"
+        apply_sla(ticket)
+        self.assertLess(ticket.first_response_due, low_due)
+        self.assertEqual(ticket.first_response_due, created + timedelta(minutes=30))
+
+    def test_priority_recalc_keeps_banked_pause(self):
+        from apps.sla.service import apply_sla
+
+        SLATarget.objects.update_or_create(
+            priority="high",
+            defaults={"response_minutes": 120, "resolution_minutes": 480},
+        )
+        created = timezone.make_aware(datetime(2025, 1, 6, 10, 0))
+        ticket = Ticket.objects.create(
+            title="Bank test", priority="high", status="open", created_by=_make_user()
+        )
+        Ticket.objects.filter(pk=ticket.pk).update(created_at=created, sla_paused_seconds=3600)
+        ticket.refresh_from_db()
+        apply_sla(ticket)
+        # 120-min target + 1h banked pause = 3h after creation.
+        self.assertEqual(
+            ticket.first_response_due, created + timedelta(minutes=120) + timedelta(hours=1)
+        )
+
+
 class EscalationTests(TestCase):
     def test_escalate_bumps_priority_on_resolution_breach(self):
         from apps.sla.service import escalate
