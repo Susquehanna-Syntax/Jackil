@@ -10,3 +10,7 @@ ticket_replied = Signal()
 # Emitted after a ticket's status changes.
 # kwargs: ticket, actor, new_status
 ticket_status_changed = Signal()
+
+# Emitted after a ticket's priority changes.
+# kwargs: ticket, actor, old_priority, new_priority
+ticket_priority_changed = Signal()

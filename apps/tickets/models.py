@@ -51,6 +51,11 @@ class Ticket(models.Model):
     first_responded_at = models.DateTimeField(null=True, blank=True)
     response_breached = models.BooleanField(default=False)
     resolution_breached = models.BooleanField(default=False)
+    # SLA clock pausing (e.g. while Pending). sla_paused_at is set while the
+    # clock is frozen; sla_paused_seconds accumulates across pause cycles so
+    # due dates can be recomputed correctly after a priority change.
+    sla_paused_at = models.DateTimeField(null=True, blank=True)
+    sla_paused_seconds = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["-created_at"]

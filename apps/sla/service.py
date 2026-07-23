@@ -54,22 +54,80 @@ def add_working_minutes(start, minutes, schedule):
     return cursor
 
 
+# Ticket statuses during which the SLA clock is frozen.
+PAUSED_STATUSES = {"pending"}
+
+
 def applicable_target(ticket):
     return SLATarget.objects.filter(active=True, priority=ticket.priority).first()
 
 
 def apply_sla(ticket, save=True):
     """Compute and set first_response_due / resolution_due from the ticket's
-    priority target. No-op if there is no matching target."""
+    priority target. No-op if there is no matching target.
+
+    Any time already banked in ``sla_paused_seconds`` is added back so that a
+    priority change recomputes the targets without discarding earned pause
+    credit. Called on ticket creation and on every priority change."""
     target = applicable_target(ticket)
     if target is None:
         return False
     schedule = BusinessSchedule.active()
     base = ticket.created_at or timezone.now()
-    ticket.first_response_due = add_working_minutes(base, target.response_minutes, schedule)
-    ticket.resolution_due = add_working_minutes(base, target.resolution_minutes, schedule)
+    paused = timedelta(seconds=ticket.sla_paused_seconds or 0)
+    ticket.first_response_due = (
+        add_working_minutes(base, target.response_minutes, schedule) + paused
+    )
+    ticket.resolution_due = add_working_minutes(base, target.resolution_minutes, schedule) + paused
     if save:
         ticket.save(update_fields=["first_response_due", "resolution_due"])
+    return True
+
+
+def _effective_now(ticket, now):
+    """The clock reading to judge an open target against. While the ticket is
+    paused it is frozen at the instant the pause began, so a ticket sitting in
+    Pending never drifts into 'overdue'."""
+    if ticket.sla_paused_at is not None:
+        return min(now, ticket.sla_paused_at)
+    return now
+
+
+def pause_sla(ticket, when=None):
+    """Freeze the SLA clock (called when a ticket enters a paused status).
+    Idempotent and a no-op when the ticket has no SLA targets."""
+    if ticket.sla_paused_at is not None:
+        return False
+    if ticket.first_response_due is None and ticket.resolution_due is None:
+        return False
+    ticket.sla_paused_at = when or timezone.now()
+    ticket.save(update_fields=["sla_paused_at"])
+    return True
+
+
+def resume_sla(ticket, when=None):
+    """Resume a paused clock: push the still-open due dates forward by however
+    long the ticket was paused, and bank that time in sla_paused_seconds."""
+    if ticket.sla_paused_at is None:
+        return False
+    now = when or timezone.now()
+    delta = now - ticket.sla_paused_at
+    if delta.total_seconds() < 0:
+        delta = timedelta(0)
+    if ticket.first_response_due is not None and ticket.first_responded_at is None:
+        ticket.first_response_due += delta
+    if ticket.resolution_due is not None and ticket.status not in ("resolved", "closed"):
+        ticket.resolution_due += delta
+    ticket.sla_paused_seconds = (ticket.sla_paused_seconds or 0) + int(delta.total_seconds())
+    ticket.sla_paused_at = None
+    ticket.save(
+        update_fields=[
+            "first_response_due",
+            "resolution_due",
+            "sla_paused_seconds",
+            "sla_paused_at",
+        ]
+    )
     return True
 
 
@@ -88,7 +146,7 @@ def response_status(ticket, now=None):
         return "none"
     if ticket.first_responded_at is not None:
         return "met" if ticket.first_responded_at <= ticket.first_response_due else "breached"
-    now = now or timezone.now()
+    now = _effective_now(ticket, now or timezone.now())
     return "overdue" if now > ticket.first_response_due else "open"
 
 
@@ -97,7 +155,7 @@ def resolution_status(ticket, now=None):
         return "none"
     if ticket.status in ("resolved", "closed") and ticket.closed_at is not None:
         return "met" if ticket.closed_at <= ticket.resolution_due else "breached"
-    now = now or timezone.now()
+    now = _effective_now(ticket, now or timezone.now())
     return "overdue" if now > ticket.resolution_due else "open"
 
 
