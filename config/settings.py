@@ -9,6 +9,14 @@ SECRET_KEY = config("SECRET_KEY", default="django-insecure-dev-key-change-in-pro
 DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",")
 
+# Origins trusted for unsafe (POST) requests. Required when the app is reached
+# through a reverse proxy or an external hostname, otherwise Django rejects the
+# login/POST with "Origin checking failed". Comma-separated, scheme included,
+# e.g. CSRF_TRUSTED_ORIGINS=https://jackil-tail.kingdom.local,https://help.acme.com
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in config("CSRF_TRUSTED_ORIGINS", default="").split(",") if o.strip()
+]
+
 # Database — Postgres in production, SQLite for zero-dependency local dev.
 # Set USE_SQLITE=1 in your .env to develop without a Postgres server.
 USE_SQLITE = config("USE_SQLITE", default=False, cast=bool)

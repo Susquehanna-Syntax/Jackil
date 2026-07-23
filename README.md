@@ -80,6 +80,19 @@ Visit `http://localhost:8000`. Demo logins: `admin` / `admin12345` (admin),
 docker compose up --build
 ```
 
+### Behind a reverse proxy / external hostname
+
+When Jackil is reached through a proxy or a hostname other than `localhost`,
+set both env vars so Django accepts logins and other POSTs:
+
+```bash
+ALLOWED_HOSTS=jackil-tail.kingdom.local,help.acme.com
+CSRF_TRUSTED_ORIGINS=https://jackil-tail.kingdom.local,https://help.acme.com
+```
+
+`CSRF_TRUSTED_ORIGINS` must include the scheme. Without it, POSTs fail with
+`Forbidden (Origin checking failed … does not match any trusted origins.)`.
+
 ## Background jobs (cron)
 
 ```bash
