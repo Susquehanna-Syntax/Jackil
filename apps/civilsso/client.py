@@ -18,6 +18,7 @@ FETCH_TIMEOUT_SECONDS = 5
 
 def _db_config():
     from apps.civilsso.models import CivilConfig
+
     try:
         return CivilConfig.current()
     except Exception:  # noqa: BLE001 — pre-migration or DB down: env-only mode
@@ -29,7 +30,7 @@ def civil_url() -> str:
     if env:
         return env
     cfg = _db_config()
-    return (cfg.url.rstrip("/") if cfg and cfg.enabled and cfg.url else "")
+    return cfg.url.rstrip("/") if cfg and cfg.enabled and cfg.url else ""
 
 
 def app_slug() -> str:
@@ -75,8 +76,11 @@ def verify_sso_token(token: str) -> dict | None:
         return None
     try:
         return jwt.decode(
-            token, pem, algorithms=["EdDSA"],
-            audience=app_slug(), issuer="civil",
+            token,
+            pem,
+            algorithms=["EdDSA"],
+            audience=app_slug(),
+            issuer="civil",
         )
     except jwt.PyJWTError as exc:
         logger.warning("Civil SSO token rejected: %s", exc)
