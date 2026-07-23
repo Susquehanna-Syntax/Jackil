@@ -34,4 +34,19 @@
     <a href="{% url 'console:inbox_list' %}" class="btn btn-filled-lav">Manage inboxes</a>
   </div>
 </div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background: var(--mint);">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div>
+      <div class="card-title">Shared identity (Civil)</div>
+      <div class="card-desc">Opt in to one account across every SQSY app. Local login always keeps working.</div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <a href="{% url 'civil-settings-page' %}" class="btn btn-filled-lav">Civil SSO settings</a>
+  </div>
+</div>
 {% endblock %}
