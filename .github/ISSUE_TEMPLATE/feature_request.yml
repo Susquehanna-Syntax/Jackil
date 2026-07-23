@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest an improvement to Jackil
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One request per issue. Describe the problem before the solution — it
+        helps us find the best fix, which isn't always the one first imagined.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What are you trying to do, and what's missing or awkward today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Tickets
+        - SLA / escalation
+        - Inbox / email
+        - Knowledge base
+        - Automation / macros
+        - Custom fields / forms
+        - Reports & analytics
+        - REST API / webhooks
+        - Notifications
+        - Admin console / settings
+        - Civil SSO
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
