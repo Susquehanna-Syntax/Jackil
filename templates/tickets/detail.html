@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load sla_tags %}
+{% load links_tags sla_tags %}
 
 {% block title %}Ticket #{{ ticket.pk }} — Jackil{% endblock %}
 
@@ -103,6 +103,8 @@
     <a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-sky">Edit Ticket</a>
     {% endif %}
   </div>
+
+  {% links_panel "ticket" ticket.pk %}
 
   {% if rating %}
   <div class="csat-card rated">

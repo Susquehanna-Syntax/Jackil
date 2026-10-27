@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load links_tags %}
 
 {% block title %}{{ item.name }} — Jackil{% endblock %}
 
@@ -68,7 +69,7 @@
   </div>
 
   <div class="form-card fade-in d3" style="max-width: 720px;">
-    <div id="links-panel"></div>
+    {% links_panel "item" item.pk %}
   </div>
 </div>
 {% endblock %}
