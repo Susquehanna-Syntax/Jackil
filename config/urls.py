@@ -13,6 +13,7 @@ urlpatterns = [
     path("settings/", include("apps.console.urls", namespace="console")),
     path("help/", include("apps.kb.urls", namespace="kb")),
     path("notifications/", include("apps.notifications.urls", namespace="notifications")),
+    path("dashboards/api/", include("apps.dashboards.urls", namespace="dashboards")),
 ]
 
 if feature_enabled("api"):

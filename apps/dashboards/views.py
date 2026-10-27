@@ -1,0 +1,277 @@
+from django.db import IntegrityError, transaction
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
+from .models import Dashboard, DashboardWidget, starter_dashboard
+from .permissions import IsStaffRole
+from .widgets import GRID_COLUMNS, GRID_MAX_ROWS, WIDGET_REGISTRY
+
+
+def _serialize(dashboard, request_user):
+    """A dashboard plus its widgets, in the shape the API returns."""
+    return {
+        "id": str(dashboard.id),
+        "name": dashboard.name,
+        "is_default": dashboard.is_default,
+        "shared": dashboard.shared,
+        "owner": dashboard.owner.username,
+        "is_mine": dashboard.owner_id == request_user.id,
+        "widgets": [
+            {
+                "id": str(w.id),
+                "kind": w.kind,
+                "x": w.x,
+                "y": w.y,
+                "w": w.w,
+                "h": w.h,
+                "settings": w.settings,
+            }
+            for w in dashboard.widgets.all()
+        ],
+    }
+
+
+def _visible_dashboards(user):
+    """The caller's own dashboards, plus anything shared by anyone else."""
+    qs = Dashboard.objects.filter(owner=user)
+    if not qs.exists():
+        starter_dashboard(user)
+        qs = Dashboard.objects.filter(owner=user)
+    shared = Dashboard.objects.exclude(owner=user).filter(shared=True)
+    return list(qs) + list(shared)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsStaffRole])
+def dashboard_list(request):
+    """The caller's dashboards, plus any shared ones.
+
+    A user with none is created a starter dashboard first, so the list is
+    never empty.
+    """
+    if request.method == "GET":
+        return Response([_serialize(d, request.user) for d in _visible_dashboards(request.user)])
+
+    name = (request.data.get("name") or "").strip()
+    if not name:
+        return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
+    if len(name) > 120:
+        return Response({"error": "name is too long (max 120)"}, status=status.HTTP_400_BAD_REQUEST)
+    if Dashboard.objects.filter(owner=request.user, name=name).exists():
+        return Response(
+            {"error": f"You already have a dashboard named {name!r}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        board = Dashboard.objects.create(
+            owner=request.user,
+            name=name,
+            is_default=not Dashboard.objects.filter(owner=request.user).exists(),
+        )
+    except IntegrityError:
+        # The exists() check above is not a lock. A double-clicked Create wins
+        # it twice and the second insert still meets the constraint.
+        return Response(
+            {"error": f"You already have a dashboard named {name!r}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return Response(_serialize(board, request.user), status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET", "PATCH", "DELETE"])
+@permission_classes([IsStaffRole])
+def dashboard_detail(request, dashboard_id):
+    """One dashboard with its widgets.
+
+    A dashboard is visible to its owner, or to anyone when ``shared`` is true.
+    Editing is owner-only — a 404 for a stranger's dashboard, a 403 when a
+    non-owner writes to a shared one.
+    """
+    board = Dashboard.objects.filter(id=dashboard_id).first()
+    if board is None:
+        return Response({"error": "not found"}, status=status.HTTP_404_NOT_FOUND)
+    if board.owner_id != request.user.id and not board.shared:
+        return Response({"error": "not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        return Response(_serialize(board, request.user))
+
+    if board.owner_id != request.user.id:
+        return Response(
+            {"error": "only the owner may edit this dashboard"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    if request.method == "PATCH":
+        data = request.data
+        name = data.get("name")
+        if name is not None:
+            name = str(name).strip()
+            if not name:
+                return Response(
+                    {"error": "name must not be empty"}, status=status.HTTP_400_BAD_REQUEST
+                )
+            if len(name) > 120:
+                return Response(
+                    {"error": "name is too long (max 120)"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            clash = (
+                Dashboard.objects.filter(owner=request.user, name=name)
+                .exclude(pk=board.pk)
+                .exists()
+            )
+            if clash:
+                return Response(
+                    {"error": f"You already have a dashboard named {name!r}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            board.name = name
+        if "is_default" in data:
+            board.is_default = bool(data["is_default"])
+        board.save()
+        board.refresh_from_db()
+        return Response(_serialize(board, request.user))
+
+    # DELETE
+    board.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["PUT"])
+@permission_classes([IsStaffRole])
+def layout_update(request, dashboard_id):
+    """Replace every widget on a dashboard in one transaction.
+
+    Takes ``{"widgets": [{"kind", "x", "y", "w", "h", "settings"}, …]}``.
+    An unknown ``kind`` is a 400 naming it; ``w``/``h`` are clamped to the
+    registry's minimums and to the grid width.
+    """
+    board = Dashboard.objects.filter(id=dashboard_id).first()
+    if board is None or (board.owner_id != request.user.id and not board.shared):
+        return Response({"error": "not found"}, status=status.HTTP_404_NOT_FOUND)
+    if board.owner_id != request.user.id:
+        return Response(
+            {"error": "only the owner may edit this dashboard"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    widgets = request.data.get("widgets")
+    if not isinstance(widgets, list):
+        return Response({"error": "widgets must be a list"}, status=status.HTTP_400_BAD_REQUEST)
+
+    planned = []
+    for entry in widgets:
+        if not isinstance(entry, dict):
+            return Response(
+                {"error": "each widget must be an object"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        kind = entry.get("kind")
+        spec = WIDGET_REGISTRY.get(kind)
+        if spec is None:
+            return Response(
+                {"error": f"unknown widget kind: {kind!r}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            x = int(entry.get("x", 0))
+            y = int(entry.get("y", 0))
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "x and y must be integers"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if x < 0 or y < 0:
+            return Response(
+                {"error": "x and y must be non-negative"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Absent geometry is refused rather than defaulted. It used to fall
+        # back to the registry's *default* size, which is larger than the
+        # minimum — so a client that omitted w (Gridstack's save() drops it
+        # when the width equals the widget's minimum) silently had every
+        # minimum-sized widget grown to catalogue size on save, and the grid
+        # reflowed around it. The server cannot know the intended size, so the
+        # honest answer is to say the request is incomplete.
+        if entry.get("w") is None or entry.get("h") is None:
+            return Response(
+                {"error": "each widget must carry w and h; a widget with no size cannot be placed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            w = int(entry["w"])
+            h = int(entry["h"])
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "w and h must be integers"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        w = max(spec["min_w"], min(w, GRID_COLUMNS))
+        h = max(spec["min_h"], min(h, GRID_MAX_ROWS))
+        planned.append((entry.get("id"), kind, x, y, w, h, entry.get("settings")))
+
+    # Update in place rather than delete-and-recreate. Every save used to mint
+    # a new UUID for every widget on the board, so any state keyed by widget id
+    # was invalidated on each save — including the client's own lookup of kind
+    # and settings, whose miss dropped the widget from the next payload.
+    #
+    # Widgets the client did not send are gone, and only those are deleted.
+    with transaction.atomic():
+        existing = {str(w.id): w for w in board.widgets.all()}
+        kept: set[str] = set()
+
+        for widget_id, kind, x, y, w, h, settings in planned:
+            current = existing.get(str(widget_id)) if widget_id else None
+            if current is not None:
+                current.kind = kind
+                current.x, current.y, current.w, current.h = x, y, w, h
+                current.settings = settings
+                current.save()
+                kept.add(str(current.id))
+            else:
+                created = DashboardWidget.objects.create(
+                    dashboard=board, kind=kind, x=x, y=y, w=w, h=h, settings=settings
+                )
+                kept.add(str(created.id))
+
+        board.widgets.exclude(id__in=kept).delete()
+
+    board.refresh_from_db()
+    return Response(_serialize(board, request.user))
+
+
+@api_view(["POST"])
+@permission_classes([IsStaffRole])
+def dashboard_share(request, dashboard_id):
+    """Share a dashboard with everyone on the instance, or stop sharing it.
+
+    Body: ``{"shared": true}`` or ``{"shared": false}``.
+
+    Sharing is read-only for everyone but the owner — the existing ownership
+    rules in dashboard_detail and layout_update already enforce that, and this
+    endpoint deliberately does not relax them.
+    """
+    board = Dashboard.objects.filter(id=dashboard_id).first()
+    if board is None or (board.owner_id != request.user.id and not board.shared):
+        return Response({"error": "not found"}, status=status.HTTP_404_NOT_FOUND)
+    if board.owner_id != request.user.id:
+        return Response(
+            {"error": "only the owner may share this dashboard"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    board.shared = bool(request.data.get("shared"))
+    board.save(update_fields=["shared"])
+    return Response(_serialize(board, request.user))
+
+
+@api_view(["GET"])
+@permission_classes([IsStaffRole])
+def catalog(request):
+    """The widget registry, plus the grid width layouts are expressed against."""
+    from .widgets import settings_for
+
+    widgets = {
+        kind: {**spec, "settings": settings_for(kind)} for kind, spec in WIDGET_REGISTRY.items()
+    }
+    return Response({"widgets": widgets, "grid_columns": GRID_COLUMNS})
