@@ -1,19 +1,41 @@
 const THEMES = ['dark', 'light', 'river', 'ink'];
 const THEME_LABELS = { dark: 'Dark', light: 'Paper', river: 'River', ink: 'Ink' };
 
+function _resolvedTheme(mode) {
+  if (mode === 'system') {
+    return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  return THEMES.includes(mode) ? mode : 'dark';
+}
+
 function setTheme(mode) {
   if (mode !== 'system' && !THEMES.includes(mode)) mode = 'dark';
-  let resolved = mode;
-  if (resolved === 'system') {
-    resolved = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  } else if (!THEMES.includes(resolved)) {
-    resolved = 'dark';
-  }
+  const resolved = _resolvedTheme(mode);
   document.documentElement.setAttribute('data-theme', resolved);
   try { localStorage.setItem('sqsy-theme', mode); } catch (e) {}
   const toggle = document.getElementById('theme-toggle');
   if (toggle) toggle.dataset.tip = 'Theme: ' + THEME_LABELS[resolved];
+  document.querySelectorAll('[data-theme-set]').forEach((btn) => {
+    btn.setAttribute('aria-pressed', btn.dataset.themeSet === resolved ? 'true' : 'false');
+  });
+  const followSystem = document.getElementById('follow-system');
+  if (followSystem) followSystem.setAttribute('aria-checked', mode === 'system' ? 'true' : 'false');
   document.dispatchEvent(new CustomEvent('jackil:theme', { detail: { theme: resolved } }));
+}
+
+function storedThemeMode() {
+  try { return localStorage.getItem('sqsy-theme') || 'dark'; } catch (e) { return 'dark'; }
+}
+
+function setReduceMotion(on) {
+  document.documentElement.classList.toggle('rm-sim', on);
+  try {
+    if (on) localStorage.setItem('jackil-reduce-motion', '1');
+    else localStorage.removeItem('jackil-reduce-motion');
+  } catch (e) {}
+  document.querySelectorAll('[data-rm-toggle]').forEach((btn) => {
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
 }
 
 function toggleTheme() {
@@ -74,4 +96,30 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   bind(document.getElementById('sidebar-toggle'), toggleSidebar);
   bind(themeToggle, toggleTheme);
+
+  document.querySelectorAll('[data-theme-set]').forEach((btn) => {
+    btn.addEventListener('click', () => setTheme(btn.dataset.themeSet));
+  });
+
+  const followSystem = document.getElementById('follow-system');
+  if (followSystem) {
+    followSystem.addEventListener('click', () => {
+      const following = followSystem.getAttribute('aria-checked') === 'true';
+      setTheme(following ? _resolvedTheme(storedThemeMode()) : 'system');
+    });
+  }
+
+  document.querySelectorAll('[data-rm-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setReduceMotion(!document.documentElement.classList.contains('rm-sim'));
+    });
+  });
+
+  const mode = storedThemeMode();
+  setTheme(mode);
+  if (mode === 'system') {
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+      setTheme(storedThemeMode());
+    });
+  }
 });

@@ -16,6 +16,9 @@
           t = 'dark';
         }
         document.documentElement.setAttribute('data-theme', t);
+        if (localStorage.getItem('jackil-reduce-motion') === '1') {
+          document.documentElement.classList.add('rm-sim');
+        }
         if (localStorage.getItem('jackil-sidebar') === 'expanded') {
           document.documentElement.setAttribute('data-sidebar', 'expanded');
         }

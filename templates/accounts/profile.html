@@ -56,5 +56,30 @@
       <button type="submit" class="btn btn-mint">Save profile</button>
     </div>
   </form>
+
+  <div class="form-card" style="max-width: 640px; margin-top: 20px;" id="appearance">
+    <div class="form-card-title">Appearance</div>
+    <div class="form-card-hint">Your choice applies immediately and is remembered in this browser.</div>
+    <div class="theme-cards">
+      <button type="button" class="theme-card" data-theme-set="dark">
+        <div class="theme-prev" style="background:#1c1c21"><div class="tp-side" style="background:#2a2a31"></div><div class="tp-body"><div class="tp-line" style="background:#32323a;width:70%"></div><div class="tp-line" style="background:#2a2a31;width:45%"></div><div class="tp-chips"><i style="background:#7eddb5"></i><i style="background:#f2a0b8"></i><i style="background:#baa8e8"></i></div></div></div>
+        <div class="theme-name">Dark</div>
+      </button>
+      <button type="button" class="theme-card" data-theme-set="light">
+        <div class="theme-prev" style="background:#ede8bb"><div class="tp-side" style="background:#e4dfae"></div><div class="tp-body"><div class="tp-line" style="background:#f7f3d6;width:70%"></div><div class="tp-line" style="background:#d9d3a0;width:45%"></div><div class="tp-chips"><i style="background:#7eddb5"></i><i style="background:#f2a0b8"></i><i style="background:#baa8e8"></i></div></div></div>
+        <div class="theme-name">Paper</div>
+      </button>
+      <button type="button" class="theme-card" data-theme-set="river">
+        <div class="theme-prev" style="background:#141c2b"><div class="tp-side" style="background:#222d41"></div><div class="tp-body"><div class="tp-line" style="background:#2b374d;width:70%"></div><div class="tp-line" style="background:#222d41;width:45%"></div><div class="tp-chips"><i style="background:#7eddb5"></i><i style="background:#f2a0b8"></i><i style="background:#baa8e8"></i></div></div></div>
+        <div class="theme-name">River</div>
+      </button>
+      <button type="button" class="theme-card" data-theme-set="ink">
+        <div class="theme-prev" style="background:#100f0f"><div class="tp-side" style="background:#211f1e"></div><div class="tp-body"><div class="tp-line" style="background:#2a2827;width:70%"></div><div class="tp-line" style="background:#211f1e;width:45%"></div><div class="tp-chips"><i style="background:#7eddb5"></i><i style="background:#f2a0b8"></i><i style="background:#baa8e8"></i></div></div></div>
+        <div class="theme-name">Ink <span class="exp-tag">Experimental</span></div>
+      </button>
+    </div>
+    <div class="set-row"><div><b>Follow system</b><small>Switch between Dark and Paper with your operating system</small></div><button type="button" class="toggle" role="switch" aria-checked="false" id="follow-system" aria-label="Follow system"></button></div>
+    <div class="set-row"><div><b>Reduce motion</b><small>Collapse movement; colour and opacity changes still land</small></div><button type="button" class="toggle" role="switch" aria-checked="false" data-rm-toggle aria-label="Reduce motion"></button></div>
+  </div>
 </div>
 {% endblock %}
