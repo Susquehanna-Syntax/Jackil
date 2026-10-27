@@ -53,9 +53,6 @@ class ItemForm(forms.ModelForm):
         if self.instance.pk:
             self.initial["attributes_text"] = render_attributes(self.instance.attributes)
 
-    def clean_warranty_end(self):
-        return self.cleaned_data.get("warranty_end") or None
-
     def clean(self):
         cleaned = super().clean()
         try:
