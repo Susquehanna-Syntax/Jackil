@@ -2,7 +2,10 @@
    SUSQUEHANNA SYNTAX — Jackil Ticketing
    ═══════════════════════════════════════════ */
 
-/* ── Tokens ── */
+/* ═══════════════════════════════════════════
+   TOKENS — Dark (default). Mirrors Vigil's vigil.css :root exactly;
+   anything added here is marked NEW and is a candidate to port back.
+   ═══════════════════════════════════════════ */
 :root {
   --bg: #1c1c21;
   --s1: #232329;
@@ -14,6 +17,7 @@
   --text-2: #a09ca6;
   --text-3: #6e6b76;
 
+  /* Pastels — the surface and identity colours. */
   --rose: #f2a0b8;
   --lavender: #baa8e8;
   --mint: #7eddb5;
@@ -21,6 +25,52 @@
   --sky: #82c4ee;
   --lemon: #e2d478;
   --coral: #f09080;
+
+  /* NEW: accent used as text or a thin line. On a dark ground the pastel
+     itself is legible, so these alias it; Paper swaps in deeper inks. */
+  --rose-ink: var(--rose);
+  --lavender-ink: var(--lavender);
+  --mint-ink: var(--mint);
+  --peach-ink: var(--peach);
+  --sky-ink: var(--sky);
+  --lemon-ink: var(--lemon);
+  --coral-ink: var(--coral);
+
+  --rgb-rose: 242,160,184;
+  --rgb-lavender: 186,168,232;
+  --rgb-mint: 126,221,181;
+  --rgb-peach: 240,184,136;
+  --rgb-sky: 130,196,238;
+  --rgb-lemon: 226,212,120;
+  --rgb-coral: 240,144,128;
+  --rgb-grey: 110,107,118;
+
+  --tint-a: 0.15;
+  --tint-a-line: 0.34;
+  --tint-a-hover: 0.24;
+
+  /* Chart slots — validated for colour-vision deficiency. Status slots are
+     reserved for run states; outcome slots go in fixed order. */
+  --st-ok: #2aa198;
+  --st-failed: #e0633a;
+  --st-pending: #9a7be8;
+  --st-na: #8a8793;
+  --st-skipped: #77747f;
+  --oc-1: #3598db;
+  --oc-2: #c96f2c;
+  --oc-3: #8f73e0;
+  --oc-4: #a38c1c;
+
+  --brand: var(--coral);
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* NEW: theme-dependent chrome that Vigil currently hard-codes. */
+  --on-accent: #1c1c21;
+  --glass: rgba(28, 28, 33, 0.78);
+  --glass-edge: rgba(255, 255, 255, 0.04);
+  --wash: rgba(255, 255, 255, 0.06);
+  --scrim: rgba(0, 0, 0, 0.6);
+  --grid-line: rgba(255, 255, 255, 0.05);
 
   --r-sm: 10px;
   --r-md: 14px;
@@ -30,6 +80,106 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
   --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* NEW: modal motion, driven by the test bench below. */
+  --m-dur: 300ms;
+  --m-ease: var(--ease-out-expo);
+  --m-blur: 4px;
+
+  color-scheme: dark;
+}
+
+/* ── Paper (light). A warm #ede8bb ground instead of white: cards lift to a
+   paler cream, recesses sink to a deeper straw. Pastels stay pastel as
+   fills; text and lines switch to their -ink partners. ── */
+:root[data-theme="light"] {
+  --bg: #ede8bb;
+  --s1: #f7f3d6;
+  --s2: #e4dfae;
+  --s3: #d9d3a0;
+  --s4: #ccc592;
+  --border: #d3cd99;
+  --text-1: #23211a;
+  --text-2: #575340;
+  --text-3: #7c775a;
+
+  --rose-ink: #c0587a;
+  --lavender-ink: #7a62c4;
+  --mint-ink: #23845f;
+  --peach-ink: #b8733a;
+  --sky-ink: #3a86bd;
+  --lemon-ink: #8f7d14;
+  --coral-ink: #c2564a;
+
+  --rgb-grey: 124,119,90;
+  --tint-a: 0.30;
+  --tint-a-line: 0.60;
+  --tint-a-hover: 0.42;
+
+  --st-ok: #008f80;
+  --st-failed: #c4461f;
+  --st-pending: #7a5fd0;
+  --st-na: #8a8793;
+  --st-skipped: #a8a387;
+  --oc-1: #2a7fc0;
+  --oc-2: #b8621f;
+  --oc-3: #7a5fd0;
+  --oc-4: #8a7512;
+
+  --glass: rgba(237, 232, 187, 0.8);
+  --glass-edge: rgba(60, 52, 20, 0.08);
+  --wash: rgba(60, 52, 20, 0.07);
+  --scrim: rgba(58, 50, 18, 0.32);
+  --grid-line: rgba(60, 52, 20, 0.09);
+  color-scheme: light;
+}
+
+/* ── Ink (experimental). #100F0F, a warm near-black for OLED and dark rooms.
+   Surfaces step in smaller increments, so borders carry more of the
+   structure than they do in Dark. ── */
+:root[data-theme="ink"] {
+  --bg: #100f0f;
+  --s1: #191817;
+  --s2: #211f1e;
+  --s3: #2a2827;
+  --s4: #353231;
+  --border: #2e2c2a;
+  --text-1: #ece8e2;
+  --text-2: #a29d97;
+  --text-3: #6f6a65;
+  --rgb-grey: 111,106,101;
+  --tint-a: 0.13;
+  --tint-a-line: 0.30;
+  --tint-a-hover: 0.21;
+  --glass: rgba(16, 15, 15, 0.8);
+  --glass-edge: rgba(255, 255, 255, 0.05);
+  --wash: rgba(255, 255, 255, 0.05);
+  --scrim: rgba(0, 0, 0, 0.74);
+  --grid-line: rgba(255, 255, 255, 0.045);
+}
+
+/* ── River. A deep Susquehanna navy: the Dark recipe with the neutrals
+   pulled toward blue, so the pastels still pop. Chart slots reuse Dark's,
+   which validate on this surface too. ── */
+:root[data-theme="river"] {
+  --bg: #141c2b;
+  --s1: #1b2537;
+  --s2: #222d41;
+  --s3: #2b374d;
+  --s4: #354259;
+  --border: #2f3b52;
+  --text-1: #e8ecf3;
+  --text-2: #9ba6b9;
+  --text-3: #6c788d;
+  --rgb-grey: 108,120,141;
+  --tint-a: 0.15;
+  --tint-a-line: 0.34;
+  --tint-a-hover: 0.24;
+  --glass: rgba(20, 28, 43, 0.8);
+  --glass-edge: rgba(255, 255, 255, 0.05);
+  --wash: rgba(255, 255, 255, 0.06);
+  --scrim: rgba(5, 10, 20, 0.66);
+  --grid-line: rgba(255, 255, 255, 0.05);
 }
 
 /* ── Reset ── */
@@ -46,6 +196,7 @@ body {
   color: var(--text-1);
   min-height: 100vh;
   line-height: 1.5;
+  transition: background 0.4s var(--ease-out-expo), color 0.4s var(--ease-out-expo);
 }
 
 /* ── Layout ── */
@@ -68,10 +219,10 @@ body {
   align-items: center;
   padding: 20px 0;
   gap: 4px;
-  background: rgba(28, 28, 33, 0.78);
+  background: var(--glass);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
-  border-right: 1px solid rgba(255,255,255,0.04);
+  border-right: 1px solid var(--glass-edge);
 }
 
 .sidebar-logo {
@@ -85,7 +236,7 @@ body {
   font-family: 'Fraunces', serif;
   font-weight: 700;
   font-size: 17px;
-  color: var(--bg);
+  color: var(--on-accent);
   text-decoration: none;
   transition: transform 0.5s var(--ease-out-expo);
 }
@@ -104,14 +255,15 @@ body {
   transition: color 0.3s, background 0.3s var(--ease-out-expo), transform 0.4s var(--ease-out-expo);
 }
 .sidebar-icon:hover {
-  background: rgba(255,255,255,0.06);
+  background: var(--wash);
   color: var(--text-2);
   transform: scale(1.06);
+  color: var(--text-2);
 }
 .sidebar-icon:active { transform: scale(0.92); transition-duration: 0.1s; }
 .sidebar-icon.active {
   background: var(--mint);
-  color: var(--bg);
+  color: var(--on-accent);
 }
 .sidebar-icon.active:hover { transform: scale(1.06); }
 .sidebar-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -127,7 +279,7 @@ body {
   place-items: center;
   font-size: 13px;
   font-weight: 600;
-  color: var(--bg);
+  color: var(--on-accent);
   cursor: pointer;
   text-decoration: none;
   transition: transform 0.4s var(--ease-out-expo);
@@ -210,12 +362,12 @@ body {
 .btn:hover { transform: translateY(-2px); }
 .btn:active { transform: translateY(0) scale(0.96); transition-duration: 0.1s; }
 
-.btn-filled-lav { background: var(--lavender); color: var(--bg); }
-.btn-filled-mint { background: var(--mint); color: var(--bg); }
-.btn-filled-rose { background: var(--rose); color: var(--bg); }
-.btn-filled-coral { background: var(--coral); color: var(--bg); }
-.btn-filled-sky { background: var(--sky); color: var(--bg); }
-.btn-filled-peach { background: var(--peach); color: var(--bg); }
+.btn-filled-lav { background: var(--lavender); color: var(--on-accent); }
+.btn-filled-mint { background: var(--mint); color: var(--on-accent); }
+.btn-filled-rose { background: var(--rose); color: var(--on-accent); }
+.btn-filled-coral { background: var(--coral); color: var(--on-accent); }
+.btn-filled-sky { background: var(--sky); color: var(--on-accent); }
+.btn-filled-peach { background: var(--peach); color: var(--on-accent); }
 
 .btn-outline {
   background: none;
@@ -265,7 +417,7 @@ body {
   place-items: center;
   font-weight: 700;
   font-size: 16px;
-  color: var(--bg);
+  color: var(--on-accent);
 }
 
 .card-title {
@@ -634,7 +786,7 @@ body {
   place-items: center;
   font-size: 10px;
   font-weight: 700;
-  color: var(--bg);
+  color: var(--on-accent);
   flex-shrink: 0;
 }
 
@@ -829,7 +981,7 @@ body {
   place-items: center;
   font-size: 11px;
   font-weight: 700;
-  color: var(--bg);
+  color: var(--on-accent);
   flex-shrink: 0;
 }
 .modal-user-name {
@@ -934,7 +1086,7 @@ body {
     padding: 8px 12px;
     justify-content: center;
     border-right: none;
-    border-top: 1px solid rgba(255,255,255,0.04);
+    border-top: 1px solid var(--glass-edge);
   }
   .sidebar-logo { display: none; }
   .sidebar-spacer { display: none; }
@@ -1168,7 +1320,7 @@ body {
   background: var(--s2); border: 1.5px solid var(--border);
   font-size: 12.5px; font-weight: 600; color: var(--text-3); transition: all 0.2s;
 }
-.weekday-chip input:checked + span { background: var(--lavender); color: var(--bg); border-color: var(--lavender); }
+.weekday-chip input:checked + span { background: var(--lavender); color: var(--on-accent); border-color: var(--lavender); }
 
 /* ── SLA badges (M2 p04) ── */
 .sla-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -1283,3 +1435,41 @@ body {
 .color-swatch input { position: absolute; opacity: 0; }
 .color-swatch span { display: block; width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; transition: border-color 0.2s, transform 0.2s; }
 .color-swatch input:checked + span { border-color: var(--text-1); transform: scale(1.12); }
+
+/* ── Expandable sidebar (M1 p01) ── */
+.sidebar-label { display: none; }
+.sidebar-toggle svg { transition: transform 0.3s var(--ease-out-expo); }
+:root[data-sidebar="expanded"] .layout { grid-template-columns: 196px 1fr; }
+:root[data-sidebar="expanded"] .sidebar { width: 196px; align-items: stretch; padding: 20px 12px; overflow-y: auto; }
+:root[data-sidebar="expanded"] .sidebar-logo { margin-left: 2px; }
+:root[data-sidebar="expanded"] .sidebar-icon {
+  width: auto; height: 38px; display: flex; align-items: center; justify-content: flex-start;
+  gap: 12px; padding: 0 11px; flex: none; }
+:root[data-sidebar="expanded"] .sidebar-icon:hover { transform: none; }
+:root[data-sidebar="expanded"] .sidebar-icon svg { flex: none; }
+:root[data-sidebar="expanded"] .sidebar-label { display: block; font-size: 13px; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:root[data-sidebar="expanded"] .sidebar-icon[data-tip]:hover::after { display: none; }
+:root[data-sidebar="expanded"] .sidebar-toggle svg { transform: rotate(180deg); }
+:root[data-sidebar="expanded"] .sidebar-avatar { margin-left: 4px; }
+:root[data-sidebar="expanded"] .notif-badge { left: 26px; right: auto; }
+
+/* ── Phone: the sidebar becomes a bottom bar (M1 p01) ── */
+@media (max-width: 720px) {
+  .layout, :root[data-sidebar="expanded"] .layout { grid-template-columns: 1fr; }
+  .sidebar, :root[data-sidebar="expanded"] .sidebar {
+    top: auto; right: 0; bottom: 0; width: auto; height: 60px;
+    flex-direction: row; justify-content: space-around; align-items: center;
+    padding: 0 8px; border-right: none; border-top: 1px solid var(--glass-edge);
+    overflow-x: auto; overflow-y: hidden; }
+  .sidebar-logo, .sidebar-spacer, .sidebar-toggle { display: none; }
+  .sidebar-label, :root[data-sidebar="expanded"] .sidebar-label { display: none; }
+  .sidebar-icon[data-tip]:hover::after { display: none; }
+  .main { grid-column: 1; padding: 24px 16px 96px; }
+}
+
+/* ── Reduced motion (M1 p01) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
