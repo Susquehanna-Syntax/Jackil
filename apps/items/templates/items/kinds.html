@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Item Kinds — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'items:item_list' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to Items
+  </a>
+
+  <div class="page-title">Item Kinds</div>
+  <div style="font-size: 14px; color: var(--text-2); margin-bottom: 24px;">Categories Items can belong to.</div>
+
+  <div class="form-card fade-in d2" style="max-width: 720px;">
+    {% for kind in kinds %}
+    <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);">
+      <span class="pill tc-{{ kind.icon_color }}">{{ kind.name }}</span>
+      <span style="font-size:12px; color:var(--text-3);">{{ kind.items.count }} item{{ kind.items.count|pluralize }}</span>
+      {% if kind.items.count %}
+      <span style="margin-left:auto; font-size:12px; color:var(--text-3);">in use</span>
+      {% else %}
+      <form method="post" action="{% url 'items:kind_delete' kind.pk %}" style="margin-left:auto;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline btn-sm">Delete</button>
+      </form>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding: 20px 0;">
+      <h3>No kinds</h3>
+      <p>Add the first kind below.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <form method="post" class="form-card fade-in d3" style="max-width: 720px;">
+    {% csrf_token %}
+    <div class="form-card-title">Add a kind</div>
+    <div class="form-group">
+      <label class="form-label" for="{{ form.name.id_for_label }}">Name</label>
+      {{ form.name }}
+      {% for error in form.name.errors %}
+      <div class="message message-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="{{ form.icon_color.id_for_label }}">Colour</label>
+      {{ form.icon_color }}
+    </div>
+    <button type="submit" class="btn btn-lav">Add Kind</button>
+  </form>
+</div>
+{% endblock %}

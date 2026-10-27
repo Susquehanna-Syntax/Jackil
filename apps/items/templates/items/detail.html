@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'items:item_list' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to Items
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">{{ item.name }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        {{ item.kind.name }}{% if item.vendor %} &middot; {{ item.vendor }}{% endif %}
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      {% if can_edit %}
+      <a href="{% url 'items:item_edit' item.pk %}" class="btn btn-outline">Edit</a>
+      {% endif %}
+      {% if can_delete %}
+      <a href="{% url 'items:item_delete' item.pk %}" class="btn btn-outline">Delete</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="form-card fade-in d2" style="max-width: 720px;">
+    <div class="form-card-title">{{ item.kind.name }}</div>
+    <div class="form-card-hint">Details kept by hand in Jackil.</div>
+
+    <div style="display:grid; grid-template-columns: 140px 1fr; gap: 10px 18px; font-size: 13px;">
+      <div style="color: var(--text-3);">Owner</div>
+      <div>{% if item.owner %}{{ item.owner.get_full_name|default:item.owner.username }}{% else %}&mdash;{% endif %}</div>
+
+      <div style="color: var(--text-3);">Department</div>
+      <div>{{ item.department.name|default:"&mdash;" }}</div>
+
+      <div style="color: var(--text-3);">Vendor</div>
+      <div>{{ item.vendor|default:"&mdash;" }}</div>
+
+      <div style="color: var(--text-3);">Warranty end</div>
+      <div>{% if item.warranty_end %}{{ item.warranty_end|date:"M d, Y" }}{% else %}&mdash;{% endif %}</div>
+
+      <div style="color: var(--text-3);">Vigil host</div>
+      <div>{% if item.vigil_host_id %}{{ item.vigil_host_id }}{% else %}Not connected{% endif %}</div>
+
+      <div style="color: var(--text-3);">Notes</div>
+      <div>{{ item.notes|linebreaksbr|default:"&mdash;" }}</div>
+    </div>
+  </div>
+
+  <div class="form-card fade-in d2" style="max-width: 720px;">
+    <div class="form-card-title">Attributes</div>
+    {% if attributes %}
+    <div style="display:grid; grid-template-columns: 180px 1fr; gap: 8px 18px; font-size: 13px;">
+      {% for key, value in attributes %}
+      <div style="color: var(--text-3);">{{ key }}</div>
+      <div>{{ value }}</div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 20px 0;">
+      <h3>No attributes</h3>
+      <p>Add facts like Serial or Rack position when you edit this Item.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="form-card fade-in d3" style="max-width: 720px;">
+    <div id="links-panel"></div>
+  </div>
+</div>
+{% endblock %}

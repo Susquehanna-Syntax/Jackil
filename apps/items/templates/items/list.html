@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Items — Jackil{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in d1">
+  <div>
+    <div class="page-title">Items</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ items|length }} item{{ items|length|pluralize }}</div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    {% if can_manage_kinds %}
+    <a href="{% url 'items:kind_list' %}" class="btn btn-outline">Kinds</a>
+    {% endif %}
+    <a href="{% url 'items:item_create' %}" class="btn btn-lav">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Item
+    </a>
+  </div>
+</div>
+
+<form method="get" class="filter-bar fade-in d2">
+  <input type="text" class="form-input" placeholder="Search items..." name="q" value="{{ query }}">
+  <select class="form-select" name="kind">
+    <option value="">All Kinds</option>
+    {% for kind in kinds %}
+    <option value="{{ kind.slug }}" {% if kind_slug == kind.slug %}selected{% endif %}>{{ kind.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-outline">Filter</button>
+</form>
+
+{% if items %}
+<div class="ticket-list fade-in d3">
+  {% for item in items %}
+  <a href="{{ item.get_absolute_url }}" class="ticket-list-item">
+    <div class="ticket-list-content">
+      <div class="ticket-list-title">{{ item.name }}</div>
+      <div class="ticket-list-meta">
+        {% if item.owner %}{{ item.owner.get_full_name|default:item.owner.username }}{% else %}Unowned{% endif %}
+        &middot; {{ item.kind.name }}
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+      {% if item.vendor %}<span style="font-size:12px; color:var(--text-3);">{{ item.vendor }}</span>{% endif %}
+      <span class="pill tc-{{ item.kind.icon_color }}">{{ item.kind.name }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state fade-in d3">
+  <div class="empty-state-icon">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1.5"/><rect x="2" y="15" width="20" height="6" rx="1.5"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+  </div>
+  <h3>No items found</h3>
+  <p>Try adjusting your filters, or add the first Item.</p>
+</div>
+{% endif %}
+{% endblock %}
