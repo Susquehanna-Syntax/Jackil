@@ -93,7 +93,8 @@ const JackilLinks = {
       ? '<a href="' + escAttr(other.url) + '">' + escHtml(name) + '</a>'
       : '<span>' + escHtml(name) + '</span>';
     return '<span class="' + classes.join(' ') + '" data-link-id="' + escAttr(link.link_id) + '">'
-      + escHtml(link.label) + ' ' + titled
+      // The group heading already says the relation; the chip names the thing.
+      + titled
       + (other.status ? '<span class="link-chip-status">' + escHtml(other.status) + '</span>' : '')
       + '<button type="button" class="link-chip-remove" aria-label="'
       + escAttr('Remove link to ' + name) + '">&times;</button>'
@@ -214,7 +215,7 @@ const JackilLinks = {
       const meta = [escHtml(target.type), target.status ? escHtml(target.status) : '']
         .filter(Boolean)
         .join(' &middot; ');
-      return '<button type="button" class="links-result" data-type="' + escAttr(target.type)
+      return '<button type="button" class="links-result" data-links-result data-type="' + escAttr(target.type)
         + '" data-id="' + escAttr(target.id) + '">'
         + '<span>' + escHtml(target.label) + '</span>'
         + '<small>' + meta + '</small>'

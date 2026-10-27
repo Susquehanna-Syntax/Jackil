@@ -82,7 +82,7 @@ class LinksScriptTests(SimpleTestCase):
         # concatenates or interpolates a bare `label`.
         self.assertNotIn("${label}", script)
         self.assertNotIn("+ label", script)
-        self.assertIn("escHtml(link.label)", script)
+        self.assertIn("escHtml(label)", script)  # the group heading
 
     def test_panel_css_is_present(self):
         css = read("static", "css", "style.css")
@@ -97,6 +97,13 @@ class LinksScriptTests(SimpleTestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, shell)
                 self.assertIn(marker, script)
+
+    def test_result_rows_carry_the_marker_the_click_handler_looks_for(self):
+        # The dialog's click handler finds rows with closest('[data-links-result]');
+        # rows were once rendered without it, so picking a result did nothing.
+        script = read("static", "js", "jackil-links.js")
+        self.assertIn("closest('[data-links-result]')", script)
+        self.assertIn('class="links-result" data-links-result', script)
 
     def test_base_page_loads_the_script_after_the_modal(self):
         base = read("templates", "base.html")
