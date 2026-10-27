@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "apps.customfields",
     "apps.notifications",
     "apps.dashboards",
+    "apps.links",
 ]
 
 MIDDLEWARE = [
