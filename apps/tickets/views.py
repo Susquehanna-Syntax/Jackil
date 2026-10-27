@@ -12,6 +12,7 @@ from django.utils.dateparse import parse_datetime
 from apps.accounts.models import Department, User
 
 from . import permissions
+from .filters import filter_tickets
 from .models import Attachment, SavedView, Ticket
 from .services import AttachmentTooLarge, post_message, record_system_event
 
@@ -115,25 +116,8 @@ def ticket_list(request):
         "created_by", "assigned_to", "department"
     ).prefetch_related("assigned_users")
 
-    status = request.GET.get("status")
-    priority = request.GET.get("priority")
-    assigned = request.GET.get("assigned")
-    search = request.GET.get("search", "").strip()
-
-    if status:
-        tickets = tickets.filter(status=status)
-    if priority:
-        tickets = tickets.filter(priority=priority)
-    if assigned == "mine":
-        tickets = tickets.filter(assigned_to=request.user)
-    elif assigned == "unassigned":
-        tickets = tickets.filter(assigned_to__isnull=True)
-    if search:
-        tickets = tickets.filter(
-            Q(title__icontains=search)
-            | Q(description__icontains=search)
-            | Q(tags__icontains=search)
-        )
+    params = {key: request.GET.get(key, "") for key in ("status", "priority", "assigned", "search")}
+    tickets = filter_tickets(tickets, request.GET, request.user)
 
     tickets = tickets[:50]
 
@@ -144,10 +128,7 @@ def ticket_list(request):
 
     ctx = {
         "tickets": tickets,
-        "status": status,
-        "priority": priority,
-        "assigned": assigned,
-        "search": search,
+        **params,
         "saved_views": saved_views,
         "current_query": current_query,
     }

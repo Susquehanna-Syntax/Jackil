@@ -3,6 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from .contract import WIDGET_SCHEMA_VERSION
+from .data import widget_data
 from .models import Dashboard, DashboardWidget, starter_dashboard
 from .permissions import IsStaffRole
 from .widgets import GRID_COLUMNS, GRID_MAX_ROWS, WIDGET_REGISTRY
@@ -267,6 +269,22 @@ def dashboard_share(request, dashboard_id):
 
 @api_view(["GET"])
 @permission_classes([IsStaffRole])
+def widget_data_view(request, kind):
+    """One widget's data, in the shape its registry entry declares.
+
+    Settings come from the query string and go through clean_settings, so an
+    unknown key is ignored and an out-of-range number is clamped.
+    """
+    if kind not in WIDGET_REGISTRY:
+        return Response(
+            {"error": f"unknown widget kind: {kind!r}"}, status=status.HTTP_404_NOT_FOUND
+        )
+    raw = {key: request.query_params.get(key) for key in request.query_params}
+    return Response(widget_data(kind, raw, request.user))
+
+
+@api_view(["GET"])
+@permission_classes([IsStaffRole])
 def catalog(request):
     """The widget registry, plus the grid width layouts are expressed against."""
     from .widgets import settings_for
@@ -274,4 +292,10 @@ def catalog(request):
     widgets = {
         kind: {**spec, "settings": settings_for(kind)} for kind, spec in WIDGET_REGISTRY.items()
     }
-    return Response({"widgets": widgets, "grid_columns": GRID_COLUMNS})
+    return Response(
+        {
+            "widgets": widgets,
+            "grid_columns": GRID_COLUMNS,
+            "schema_version": WIDGET_SCHEMA_VERSION,
+        }
+    )

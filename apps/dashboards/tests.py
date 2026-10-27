@@ -5,8 +5,10 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
+from apps.dashboards.contract import WIDGET_SCHEMA_VERSION
 from apps.dashboards.models import Dashboard, DashboardWidget, starter_dashboard
 from apps.dashboards.widgets import GRID_COLUMNS, GRID_MAX_ROWS, GROUPS, SHAPES, WIDGET_REGISTRY
+from apps.tickets.models import Ticket
 
 
 def agent(username, **kwargs):
@@ -630,6 +632,51 @@ class RegistryShapeTests(TestCase):
         self.assertEqual(len(body["widgets"]), len(WIDGET_REGISTRY))
         for entry in body["widgets"].values():
             self.assertIn("group", entry, "a widget reaches the UI with no group")
+
+
+class WidgetDataEndpointTests(TestCase):
+    """GET /dashboards/api/widgets/<kind>/data/ — one envelope per widget."""
+
+    def setUp(self):
+        self.agent = agent("wagent")
+        self.customer = User.objects.create_user("wcust", "wc@x.com", "pw", role="customer")
+        self.client = APIClient()
+        self.client.force_authenticate(self.agent)
+
+    def test_returns_the_envelope(self):
+        resp = self.client.get(reverse("dashboards:widget-data", args=["stat_tile"]))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertEqual(body["shape"], "stat")
+        self.assertEqual(body["version"], 1)
+
+    def test_settings_come_from_the_query_string(self):
+        url = reverse("dashboards:widget-data", args=["stat_tile"])
+        data = self.client.get(f"{url}?stat=critical").json()["data"]
+        self.assertEqual(data["label"], "Critical")
+
+    def test_out_of_range_setting_is_clamped(self):
+        for i in range(60):
+            Ticket.objects.create(
+                title=f"Mine {i}", created_by=self.customer, assigned_to=self.agent
+            )
+        url = reverse("dashboards:widget-data", args=["my_work"])
+        body = self.client.get(f"{url}?limit=999").json()
+        self.assertEqual(len(body["data"]["items"]), 50)
+
+    def test_unknown_kind_is_404(self):
+        resp = self.client.get(reverse("dashboards:widget-data", args=["nope"]))
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.json(), {"error": "unknown widget kind: 'nope'"})
+
+    def test_customer_gets_403(self):
+        self.client.force_authenticate(self.customer)
+        resp = self.client.get(reverse("dashboards:widget-data", args=["stat_tile"]))
+        self.assertEqual(resp.status_code, 403)
+
+    def test_catalog_reports_schema_version(self):
+        resp = self.client.get(reverse("dashboards:dashboard-catalog"))
+        self.assertEqual(resp.json()["schema_version"], WIDGET_SCHEMA_VERSION)
 
 
 class CustomerAccessTests(TestCase):
