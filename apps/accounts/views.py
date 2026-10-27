@@ -115,14 +115,13 @@ def profile(request):
         color = request.POST.get("avatar_color", user.avatar_color)
         if color in AVATAR_COLORS:
             user.avatar_color = color
-        prefs = user.preferences or {}
-        prefs["show_needs_attention"] = request.POST.get("show_needs_attention") == "on"
-        user.preferences = prefs
         user.save()
         messages.success(request, "Profile updated.")
         return redirect("accounts:profile")
+    # Nothing reads the stored preferences any more: the profile form's only
+    # preference was the old fixed dashboard's "Needs Attention" toggle.
     return render(
         request,
         "accounts/profile.html",
-        {"avatar_colors": AVATAR_COLORS, "prefs": user.preferences or {}},
+        {"avatar_colors": AVATAR_COLORS},
     )

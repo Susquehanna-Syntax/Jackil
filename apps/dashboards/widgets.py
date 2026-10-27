@@ -10,7 +10,9 @@ gauge, series.
 
 Setting types the form generator knows how to render: ``choice`` — one of
 `options`; ``int`` — a bounded number; ``text`` — a short string; ``bool`` —
-a checkbox.
+a checkbox; ``saved_view`` — an int chosen from the operator's saved views, 0
+meaning "all open tickets". A type no field in the registry uses yet stays out
+of the form generator: it would be rendering for a caller that does not exist.
 """
 
 WIDGET_REGISTRY: dict[str, dict] = {
@@ -50,13 +52,7 @@ WIDGET_REGISTRY: dict[str, dict] = {
         "min_w": 3,
         "min_h": 3,
         "settings": {
-            "saved_view": {
-                "type": "int",
-                "label": "Saved view id (0 = all open)",
-                "min": 0,
-                "max": 2147483647,
-                "default": 0,
-            },
+            "saved_view": {"type": "saved_view", "label": "Saved view", "default": 0},
             "limit": {"type": "int", "label": "How many", "min": 1, "max": 50, "default": 10},
         },
     },
@@ -211,12 +207,12 @@ def clean_settings(kind: str, raw) -> dict:
         if name not in declared:
             continue
         field = declared[name]
-        if field["type"] == "int":
+        if field["type"] in ("int", "saved_view"):
             try:
                 value = int(value)
             except (TypeError, ValueError):
                 continue
-            lo, hi = field.get("min"), field.get("max")
+            lo, hi = field.get("min", 0), field.get("max")
             if lo is not None and value < lo:
                 value = lo
             if hi is not None and value > hi:

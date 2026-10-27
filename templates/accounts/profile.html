@@ -45,13 +45,6 @@
       </div>
     </div>
 
-    {% if user.role != "customer" %}
-    <div class="form-card">
-      <div class="form-card-title">Dashboard</div>
-      <label class="check-field"><input type="checkbox" name="show_needs_attention" class="form-check" {% if prefs.show_needs_attention|default_if_none:True %}checked{% endif %}> <span>Show the “Needs Attention” panel on the dashboard</span></label>
-    </div>
-    {% endif %}
-
     <div class="inbox-form-actions">
       <button type="submit" class="btn btn-mint">Save profile</button>
     </div>

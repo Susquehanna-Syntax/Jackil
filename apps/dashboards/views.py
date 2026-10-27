@@ -1,4 +1,5 @@
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -299,3 +300,20 @@ def catalog(request):
             "schema_version": WIDGET_SCHEMA_VERSION,
         }
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsStaffRole])
+def saved_view_options(request):
+    """Every saved view a ``saved_view`` setting may name, as ``[[id, name], …]``.
+
+    First entry is always the 0 pseudo-view — "All open tickets", which is
+    what a ticket-list widget shows with no view chosen. A view is offered
+    when the caller owns it or someone shared it; anything else does not
+    exist as far as this endpoint is concerned, so the picker cannot leak the
+    names of other people's private filters.
+    """
+    from apps.tickets.models import SavedView
+
+    views = SavedView.objects.filter(Q(owner=request.user) | Q(is_shared=True)).order_by("name")
+    return Response([[0, "All open tickets"]] + [[v.pk, v.name] for v in views])

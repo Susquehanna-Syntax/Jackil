@@ -1023,6 +1023,22 @@ body {
   gap: 10px;
 }
 
+/* ── Modal internals shared by every overlay ───────────────────────────────
+   .modal-body's padding is `8px 0` because the assign modal's user list draws
+   its own rows edge to edge. A dialog or a form inside it therefore has to
+   carry its own gutter, and each of these three says so on the element that
+   needs it rather than by changing the shared padding — which would take the
+   user list's rows off the edge they currently sit on. */
+
+/* Words between the heading and the footer of a prompt/confirm dialog. */
+.dialog-text { padding: 4px 24px; }
+.modal-body [data-dialog-value] { width: auto; margin: 0 24px; }
+/* The widget settings form, which is generated (see openWidgetSettings). Its
+   field spacing comes from the .form-group blocks it appends below. */
+#ws-body { padding: 0 24px 8px; }
+.ws-description { margin: 0 24px 12px; }
+#widget-settings .modal-footer { margin-top: 4px; }
+
 .modal-empty {
   text-align: center;
   padding: 40px 24px;
@@ -1886,3 +1902,12 @@ a.dash-card { text-decoration: none; }
 .dash-series-plot { flex: 1; min-height: 0; position: relative; }
 .dash-series-plot svg { position: absolute; inset: 0; display: block; }
 .dash-gauge-text { font-size: 17px; }
+
+/* ── Dashboard edit mode (M2 p04) ── */
+.dash-toolbar { flex-wrap: wrap; }
+.dash-toolbar-spacer { flex: 1; }
+.dash-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn-xs { padding: 4px 10px; font-size: 11px; border-radius: var(--r-sm); }
+.setting-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); margin: 10px 0; }
+#widget-settings .form-group { margin-bottom: 12px; }
+@media (max-width: 720px) { .dash-rail { width: 100vw; } }

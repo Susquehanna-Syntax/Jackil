@@ -12,6 +12,11 @@
  *
  * Every interpolated value goes through escHtml / escAttr: titles, names and
  * labels all carry ticket text entered by users.
+ *
+ * The file ends with the widget settings form — the dialog the Settings button
+ * on each card opens. It is generated from the same registry the rail is
+ * grouped by, so a widget added server-side gets a settings form without any
+ * JavaScript changing.
  */
 
 /* ── Shared helpers ────────────────────────────────────────────────────── */
@@ -242,4 +247,189 @@ async function paintWidget(body, widget) {
     body.innerHTML = `<div class="dash-failed"><span class="muted-note">Couldn't load `
       + `this widget: ${escHtml(e.message || 'Render failed')}</span></div>`;
   }
+}
+
+/* ── Widget settings form ──────────────────────────────────────────────── */
+
+/* One builder for every field type the registry declares (see
+   apps/dashboards/widgets.py), so the form a widget gets is exactly the schema
+   it ships. Saving writes onto widget.settings in memory and marks the layout
+   dirty; the values reach the server with the rest of the layout when edit
+   mode ends — see _dashSaveLayout in jackil-dashboards.js. */
+function _settingsField(name, field, value, options) {
+  const id = `ws-${name}`;
+  const label = `<label class="form-label" for="${escAttr(id)}">${escHtml(field.label || name)}</label>`;
+  const t = field.type;
+
+  if (t === 'bool') {
+    // The checkbox carries its own words, so there is no separate label
+    // element — and a .form-group margin would space it from its neighbours
+    // twice over.
+    return `<label class="setting-check">
+      <input type="checkbox" id="${escAttr(id)}" data-setting="${escAttr(name)}"
+             ${value ? 'checked' : ''}> ${escHtml(field.label || name)}</label>`;
+  }
+  if (t === 'int' || (t === 'saved_view' && !options.length)) {
+    // A saved view *is* an id, so the number box is an honest fallback for it:
+    // used when the options endpoint is unreachable and the picker has no list
+    // to draw. The bounds are not decoration either — clean_settings clamps to
+    // exactly these server-side, so a value outside them would be quietly
+    // rewritten on save and the form would lie about what it stored. Hence the
+    // explicit `!== undefined`: a declared min of 0 is a real bound, not an
+    // absent one.
+    const min = field.min !== undefined ? field.min : (t === 'saved_view' ? 0 : undefined);
+    return `<div class="form-group">${label}
+      <input type="number" class="form-input" id="${escAttr(id)}"
+             data-setting="${escAttr(name)}" value="${escAttr(value ?? field.default ?? 0)}"
+             ${min !== undefined ? `min="${escAttr(min)}"` : ''}
+             ${field.max !== undefined ? `max="${escAttr(field.max)}"` : ''}></div>`;
+  }
+  // Only a saved-view picker has an options list to be handed. A `choice`
+  // draws its own, and any other type drawing one would be drawing it for a
+  // widget with no source of them.
+  if (t === 'saved_view' && options.length) {
+    return `<div class="form-group">${label}
+      <select class="form-select" id="${escAttr(id)}" data-setting="${escAttr(name)}">
+        ${options.map(([v, text]) =>
+          `<option value="${escAttr(v)}"${String(v) === String(value) ? ' selected' : ''}>${escHtml(text)}</option>`).join('')}
+      </select></div>`;
+  }
+  if (t === 'choice') {
+    return `<div class="form-group">${label}
+      <select class="form-select" id="${escAttr(id)}" data-setting="${escAttr(name)}">
+        ${(field.options || []).map(o =>
+          `<option value="${escAttr(o)}"${String(o) === String(value) ? ' selected' : ''}>${escHtml(o)}</option>`).join('')}
+      </select></div>`;
+  }
+  return `<div class="form-group">${label}
+    <input type="text" class="form-input" id="${escAttr(id)}"
+           data-setting="${escAttr(name)}" value="${escAttr(value ?? '')}"
+           ${field.placeholder ? `placeholder="${escAttr(field.placeholder)}"` : ''}></div>`;
+}
+
+/* Saved views as [[id, name], …], the 0 "All open tickets" pseudo-view first.
+   Unreachable options come back empty rather than throwing: the field then
+   falls back to the number box above, which is still an honest way to set what
+   this control stores. */
+async function _settingsOptions(type) {
+  if (type !== 'saved_view') return [];
+  try {
+    return await apiJson('/dashboards/api/options/saved_view/');
+  } catch (e) {
+    return [];
+  }
+}
+
+function _settingsBody(widget, spec, lists) {
+  const schema = spec.settings || {};
+  if (!Object.keys(schema).length) {
+    // "Nothing to configure" is not "nothing to say": the widget's own
+    // description still explains what its card shows.
+    return `<p class="muted-note">${escHtml(spec.description || '')}</p>
+      <p class="muted-note">This widget has nothing to configure.</p>`;
+  }
+  const current = widget.settings || {};
+  return Object.entries(schema)
+    .map(([name, field]) => _settingsField(name, field, current[name], lists[field.type] || []))
+    .join('');
+}
+
+async function openWidgetSettings(widgetId) {
+  const widget = (DASH.current.widgets || []).find(w => String(w.id) === String(widgetId));
+  if (!widget) return;
+  const spec = (DASH.catalog.widgets || {})[widget.kind] || {};
+  const schema = spec.settings || {};
+
+  const el = _ensureWidgetSettingsModal();
+  // The widget's name and description change per call while the overlay is
+  // reused, so they are written here with textContent — the way JackilModal's
+  // own dialogs carry their words.
+  el.querySelector('.modal-title').textContent = spec.label || widget.kind;
+  const note = el.querySelector('[data-ws-description]');
+  note.textContent = spec.description || '';
+  note.hidden = !spec.description;
+
+  const body = el.querySelector('#ws-body');
+  if (Object.keys(schema).length) {
+    body.innerHTML = '<span class="muted-note">Loading…</span>';
+    // Each picker's options are fetched before the form is drawn, so a select
+    // is never painted empty and filled a moment later. One request per
+    // distinct type in the schema.
+    const types = [...new Set(Object.values(schema).map(f => f.type))];
+    const lists = {};
+    await Promise.all(types.map(async (t) => { lists[t] = await _settingsOptions(t); }));
+    body.innerHTML = _settingsBody(widget, spec, lists);
+  } else {
+    body.innerHTML = _settingsBody(widget, spec, {});
+  }
+  JackilModal.open('widget-settings');
+
+  // Settings belong to the widget whose button was pressed, so the handler is
+  // replaced on every open — a stale closure would write into the previous
+  // widget's settings and repaint the wrong card.
+  el.querySelector('#ws-save').onclick = () => {
+    const next = {};
+    for (const [name, field] of Object.entries(schema)) {
+      const input = el.querySelector(`[data-setting="${CSS.escape(name)}"]`);
+      if (!input) continue;
+      if (field.type === 'bool') next[name] = input.checked;
+      else if (field.type === 'int' || field.type === 'saved_view') {
+        next[name] = parseInt(input.value, 10);
+      } else next[name] = input.value;
+    }
+    widget.settings = next;
+    DASH.dirty = true;
+    JackilModal.close();
+    // The title lives in the card's header and paintWidget repaints only
+    // bodies, so without this a renamed tile keeps its old name on screen until
+    // a reload — and giving a headless stat tile a title has to bring its
+    // header back, which is what that class hides.
+    const shell = document.querySelector(`[data-widget-body="${CSS.escape(String(widget.id))}"]`)
+      ?.closest('.dash-widget');
+    const custom = (next.title || '').trim();
+    if (shell && custom) shell.classList.remove('dash-widget-headless');
+    const heading = shell && shell.querySelector('.dash-widget-title');
+    if (heading) heading.textContent = custom || spec.label || widget.kind;
+    // Repaint just this widget, so the change is visible without a round trip.
+    _repaintWidget(widget);
+    showToast('Widget updated — saved when you leave edit mode', 'success');
+  };
+}
+
+function _repaintWidget(widget) {
+  const body = document.querySelector(`[data-widget-body="${CSS.escape(String(widget.id))}"]`);
+  if (!body) return;
+  paintWidget(body, widget);
+}
+
+/* Built once and reused, for the reason JackilModal gives in its own comment:
+   an overlay already on the modal stack cannot have its node replaced from
+   under it, which is what rebuilding per call would do when one widget's Save
+   opens another widget's form. */
+function _ensureWidgetSettingsModal() {
+  const existing = document.getElementById('widget-settings');
+  if (existing) return existing;
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay" id="widget-settings" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ws-title">
+      <div class="modal-header">
+        <div class="modal-title" id="ws-title"></div>
+        <button type="button" class="modal-close" id="ws-x" aria-label="Close">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-note ws-description" data-ws-description></p>
+        <div id="ws-body"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="ws-cancel">Cancel</button>
+        <button type="button" class="btn btn-mint" id="ws-save">Save</button>
+      </div>
+    </div>
+  </div>`);
+  const el = document.getElementById('widget-settings');
+  const dismiss = () => JackilModal.close();
+  el.querySelector('#ws-x').onclick = dismiss;
+  el.querySelector('#ws-cancel').onclick = dismiss;
+  return el;
 }

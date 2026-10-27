@@ -1,5 +1,7 @@
 """Dashboards — starter layout, ownership, layout replacement, settings hygiene."""
 
+import json
+
 from django.test import TestCase
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
@@ -7,8 +9,15 @@ from rest_framework.test import APIClient
 from apps.accounts.models import User
 from apps.dashboards.contract import WIDGET_SCHEMA_VERSION
 from apps.dashboards.models import Dashboard, DashboardWidget, starter_dashboard
-from apps.dashboards.widgets import GRID_COLUMNS, GRID_MAX_ROWS, GROUPS, SHAPES, WIDGET_REGISTRY
-from apps.tickets.models import Ticket
+from apps.dashboards.widgets import (
+    GRID_COLUMNS,
+    GRID_MAX_ROWS,
+    GROUPS,
+    SHAPES,
+    WIDGET_REGISTRY,
+    clean_settings,
+)
+from apps.tickets.models import SavedView, Ticket
 
 
 def agent(username, **kwargs):
@@ -579,7 +588,7 @@ class RegistryShapeTests(TestCase):
     """The rail and the settings form are generated from the registry, so a
     malformed entry is a broken screen rather than an exception."""
 
-    SETTING_TYPES = {"choice", "int", "text", "bool"}
+    SETTING_TYPES = {"choice", "int", "text", "bool", "saved_view"}
 
     def test_every_widget_declares_the_fields_the_ui_reads(self):
         for kind, spec in WIDGET_REGISTRY.items():
@@ -712,3 +721,142 @@ class CustomerAccessTests(TestCase):
         client = APIClient()
         resp = client.get(reverse("dashboards:dashboard-list"))
         self.assertIn(resp.status_code, (401, 403))
+
+
+class SavedViewOptionsTests(TestCase):
+    """GET /dashboards/api/options/saved_view/ — what the ticket-list widget's
+    picker may offer. The list is both a convenience and an access boundary: it
+    must not name someone else's private filter."""
+
+    def setUp(self):
+        self.alice = agent("sv-alice")
+        self.bob = agent("sv-bob")
+        self.customer = User.objects.create_user("sv-cust", "svc@x.com", "pw", role="customer")
+        self.client = APIClient()
+        self.url = reverse("dashboards:dashboard-options-saved-view")
+
+    def _login(self, user):
+        self.client.force_authenticate(user)
+
+    def test_lists_own_and_shared_views_with_all_open_first(self):
+        self._login(self.alice)
+        SavedView.objects.create(name="Zeta", owner=self.alice)
+        shared = SavedView.objects.create(name="Alpha shared", owner=self.bob, is_shared=True)
+        mine = SavedView.objects.create(name="Yankee", owner=self.alice)
+        body = self.client.get(self.url).json()
+        # The 0 pseudo-view is not a row in the database and it is always first:
+        # it is what "show me every open ticket" stores, so the form can render
+        # a widget that never had a view chosen without inventing an option.
+        self.assertEqual(body[0], [0, "All open tickets"])
+        zeta = SavedView.objects.get(name="Zeta")
+        self.assertEqual(
+            body[1:], [[shared.pk, "Alpha shared"], [mine.pk, "Yankee"], [zeta.pk, "Zeta"]]
+        )
+
+    def test_excludes_someone_elses_private_view(self):
+        SavedView.objects.create(name="Bob's private list", owner=self.bob)
+        self._login(self.alice)
+        body = self.client.get(self.url).json()
+        self.assertEqual(body, [[0, "All open tickets"]])
+
+    def test_customer_gets_403(self):
+        self._login(self.customer)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+
+class SavedViewSettingTests(TestCase):
+    """The ``saved_view`` settings type stores an id, so it is cleaned as a
+    non-negative int: the picker's 0 pseudo-view must survive, and a value no
+    one could have chosen must not reach the widget's data query."""
+
+    def setUp(self):
+        self.user = agent("sv-clean")
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.board = starter_dashboard(self.user)
+
+    def _clean_saved_view(self, raw):
+        # clean_settings is what DashboardWidget.save runs on every write, and
+        # it is where a `saved_view` becomes an int — so the boundary is tested
+        # at the boundary. Going through the layout endpoint instead does not
+        # reach it with what you sent: DRF's MergeDict.put mutates a copy of
+        # the form data (QueryDict._insert) before swapping it in as
+        # request.data, and JSONParser builds a *shared* nested dict straight
+        # out of json.loads — so a nested settings dict handed to the PUT is
+        # silently discarded and every widget lands back on its defaults. A
+        # whole board saved that way loses all of its settings, which is why
+        # the browser path sends top-level fields instead.
+        return clean_settings("ticket_list", {"saved_view": raw})["saved_view"]
+
+    def test_a_negative_saved_view_clamps_to_the_all_open_pseudo_view(self):
+        # The registry declares no `min` for saved_view: an id below zero names
+        # nothing, so 0 is the floor for every field of this type.
+        self.assertEqual(self._clean_saved_view("-3"), 0)
+
+    def test_a_numeric_string_saved_view_is_stored_as_an_int(self):
+        self.assertEqual(self._clean_saved_view("7"), 7)
+
+    def test_a_garbage_saved_view_falls_back_to_the_default(self):
+        # The field is dropped rather than coerced, which lands it on the
+        # registry default — also 0, "all open tickets", never a negative id no
+        # SavedView row can ever have.
+        self.assertEqual(self._clean_saved_view("x"), 0)
+
+
+class LayoutSettingsRoundTripTests(TestCase):
+    """What an actual PUT /layout/ stores, including how the body is sent.
+
+    The browser sends ``body: JSON.stringify({widgets})``, which arrives as one
+    flat JSON document; a raw form-data PUT carrying a *nested* settings dict
+    does not — DRF's MergeDict.put mutates a copy of the form data before
+    installing it, so that dict is parsed and then discarded. Pinning both here
+    keeps the difference from being mistaken for a server bug.
+    """
+
+    def setUp(self):
+        self.user = agent("sv-roundtrip")
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.board = starter_dashboard(self.user)
+
+    def _row(self):
+        return DashboardWidget.objects.get(dashboard=self.board, kind="ticket_list")
+
+    def test_settings_reach_the_row_on_a_json_body_as_the_browser_sends_it(self):
+        resp = self._put_layout({"saved_view": "7", "limit": "5"}, body="json")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(self._row().settings["saved_view"], 7)
+        self.assertEqual(self._row().settings["limit"], 5)
+
+    def test_settings_reach_the_row_on_the_test_clients_json_encoding(self):
+        resp = self._put_layout({"saved_view": "7"}, body="json-format")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(self._row().settings["saved_view"], 7)
+
+    def test_a_form_data_layout_put_is_refused_rather_than_emptied(self):
+        """The one way to send a layout that does not arrive.
+
+        ``format="multipart"`` reaches the view as a dict of dotted keys, so the
+        list check refuses it with 400 and the board keeps every widget — rather
+        than the 200-with-every-setting-reset outcome a nested form field used
+        to produce (DRF's MergeDict.put mutates a copy of the form data before
+        installing it, so the nested settings never made it into request.data at
+        all). The browser cannot hit either: apiJson sends ``JSON.stringify``.
+        """
+        resp = self._put_layout({"saved_view": "7"}, body="multipart")
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json()["error"], "widgets must be a list")
+        self.assertEqual(self.board.widgets.count(), 8)
+
+    def _put_layout(self, settings, body):
+        widget = {"kind": "ticket_list", "x": 0, "y": 0, "w": 6, "h": 4, "settings": settings}
+        url = reverse("dashboards:dashboard-layout", [self.board.id])
+        if body == "json":
+            return self.client.put(
+                url,
+                data=json.dumps({"widgets": [widget]}),
+                content_type="application/json",
+            )
+        if body == "json-format":
+            return self.client.put(url, {"widgets": [widget]}, format="json")
+        return self.client.put(url, {"widgets": [widget]}, format=body)
