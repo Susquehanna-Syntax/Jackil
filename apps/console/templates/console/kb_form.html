@@ -22,7 +22,7 @@
 
   <div class="inbox-form-actions">
     {% if article %}
-    <a href="{% url 'console:kb_delete' article.pk %}" class="btn btn-ghost" style="color: var(--coral);">Delete</a>
+    <a href="{% url 'console:kb_delete' article.pk %}" class="btn btn-ghost" style="color: var(--coral-ink);">Delete</a>
     {% if article.is_published and article.is_public %}
     <a href="{% url 'kb:article_detail' article.slug %}" class="btn btn-outline" target="_blank">View in Help Center</a>
     {% endif %}

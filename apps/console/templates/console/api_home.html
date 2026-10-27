@@ -35,7 +35,7 @@
     </div>
     <div class="inbox-row-meta">
       <form method="post" action="{% url 'console:key_delete' k.pk %}" onsubmit="return confirm('Revoke this API key?');">
-        {% csrf_token %}<button type="submit" class="btn btn-outline btn-sm" style="color: var(--coral);">Revoke</button>
+        {% csrf_token %}<button type="submit" class="btn btn-outline btn-sm" style="color: var(--coral-ink);">Revoke</button>
       </form>
     </div>
   </div>

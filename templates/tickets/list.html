@@ -48,7 +48,7 @@
   <span style="font-size:12px; color:var(--text-3); font-weight:600; letter-spacing:0.3px;">Saved views</span>
   {% for view in saved_views %}
     <span style="display:inline-flex; align-items:center; gap:4px;">
-      <a href="?{{ view.query }}" class="tag" style="text-decoration:none; cursor:pointer;">{{ view.name }}{% if view.is_shared %} <span style="color:var(--lavender);">★</span>{% endif %}</a>
+      <a href="?{{ view.query }}" class="tag" style="text-decoration:none; cursor:pointer;">{{ view.name }}{% if view.is_shared %} <span style="color:var(--lavender-ink);">★</span>{% endif %}</a>
       {% if view.owner_id == request.user.id %}
       <form method="post" action="{% url 'tickets:saved_view_delete' view.pk %}" style="display:inline; line-height:1;">
         {% csrf_token %}

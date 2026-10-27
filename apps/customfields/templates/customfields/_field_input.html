@@ -1,5 +1,5 @@
 <div class="form-group">
-  <label class="form-label" for="cf_{{ field.key }}">{{ field.label }}{% if field.required %} <span style="color: var(--coral);">*</span>{% endif %}</label>
+  <label class="form-label" for="cf_{{ field.key }}">{{ field.label }}{% if field.required %} <span style="color: var(--coral-ink);">*</span>{% endif %}</label>
   {% if field.field_type == "textarea" %}
   <textarea name="cf_{{ field.key }}" id="cf_{{ field.key }}" class="form-textarea" {% if field.required %}required{% endif %}>{{ value|default:'' }}</textarea>
   {% elif field.field_type == "dropdown" %}

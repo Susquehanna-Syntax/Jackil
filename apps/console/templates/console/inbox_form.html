@@ -62,7 +62,7 @@
 
   <div class="inbox-form-actions">
     {% if inbox %}
-    <a href="{% url 'console:inbox_delete' inbox.pk %}" class="btn btn-ghost" style="color: var(--coral);">Delete inbox</a>
+    <a href="{% url 'console:inbox_delete' inbox.pk %}" class="btn btn-ghost" style="color: var(--coral-ink);">Delete inbox</a>
     {% endif %}
     <a href="{% url 'console:inbox_list' %}" class="btn btn-outline">Cancel</a>
     <button type="submit" class="btn btn-mint">

@@ -10,7 +10,7 @@
     <div class="form-card">
       <div class="form-card-title">Profile photo</div>
       <div style="display:flex; align-items:center; gap:18px;">
-        <span style="width:72px; height:72px; border-radius:18px; display:grid; place-items:center; overflow:hidden; flex-shrink:0; background: var(--{{ user.avatar_color|default:'lavender' }}); color: var(--bg); font-size:24px; font-weight:600;">{% if user.avatar %}<img src="{{ user.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.avatar_initials }}{% endif %}</span>
+        <span style="width:72px; height:72px; border-radius:18px; display:grid; place-items:center; overflow:hidden; flex-shrink:0; background: var(--{{ user.avatar_color|default:'lavender' }}); color: var(--on-accent); font-size:24px; font-weight:600;">{% if user.avatar %}<img src="{{ user.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.avatar_initials }}{% endif %}</span>
         <div style="display:flex; flex-direction:column; gap:10px;">
           <input type="file" name="avatar" accept="image/*" class="form-input" style="padding:6px 8px;">
           <div style="display:flex; gap:8px;">

@@ -18,7 +18,7 @@
   <div class="inbox-form-actions">
     {% if webhook %}
     <form method="post" action="{% url 'console:webhook_delete' webhook.pk %}" onsubmit="return confirm('Delete this webhook?');" style="display:inline;">
-      {% csrf_token %}<button type="submit" class="btn btn-ghost" style="color: var(--coral);">Delete</button>
+      {% csrf_token %}<button type="submit" class="btn btn-ghost" style="color: var(--coral-ink);">Delete</button>
     </form>
     {% endif %}
     <a href="{% url 'console:api_home' %}" class="btn btn-outline">Cancel</a>
