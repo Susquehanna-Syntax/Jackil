@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard — Jackil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/vendor/gridstack.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">Dashboard <span>Overview</span></div>
+  <div class="hero-sub">Track and manage all IT tickets across your department.</div>
+</div>
+
+<div class="dash-root fade-in d2" id="dash-root">
+  <span class="muted-note">Loading your dashboard&hellip;</span>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/vendor/gridstack-all.js' %}"></script>
+<script src="{% static 'js/jackil-widgets.js' %}"></script>
+<script src="{% static 'js/jackil-dashboards.js' %}"></script>
+{% endblock %}

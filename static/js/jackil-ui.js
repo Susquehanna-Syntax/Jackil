@@ -1,6 +1,55 @@
 const THEMES = ['dark', 'light', 'river', 'ink'];
 const THEME_LABELS = { dark: 'Dark', light: 'Paper', river: 'River', ink: 'Ink' };
 
+function getCsrf() {
+  const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+
+function escAttr(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function apiJson(url, opts) {
+  const resp = await fetch(url, {
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+    ...opts,
+  });
+  const body = resp.status === 204 ? {} : await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    const err = new Error(body.detail || body.error || 'Request failed');
+    err.status = resp.status;
+    err.body = body;
+    throw err;
+  }
+  return body;
+}
+
+function showToast(message, type) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    container.setAttribute('aria-live', 'polite');
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + (type || '');
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
 function _resolvedTheme(mode) {
   if (mode === 'system') {
     return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';

@@ -1,9 +1,8 @@
-from datetime import timedelta
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import FileResponse, Http404, JsonResponse
+from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -27,59 +26,8 @@ def dashboard(request):
 
 @login_required
 def dashboard_auth(request):
-    total = Ticket.objects.count()
-    open_tickets = Ticket.objects.filter(status="open")
-    my_open = open_tickets.filter(assigned_to=request.user).count()
-    open_total = open_tickets.count()
-    in_progress = Ticket.objects.filter(status="in_progress").count()
-    resolved = Ticket.objects.filter(status="resolved").count()
-    closed = Ticket.objects.filter(status="closed").count()
-    critical = Ticket.objects.filter(
-        priority="critical", status__in=["open", "in_progress"]
-    ).count()
-    recent = Ticket.objects.select_related(
-        "created_by", "assigned_to", "department"
-    ).prefetch_related("assigned_users")[:8]
-    my_tickets = (
-        Ticket.objects.filter(assigned_to=request.user)
-        .select_related("created_by", "assigned_to", "department")
-        .prefetch_related("assigned_users")[:5]
-    )
-    today = timezone.now().date()
-    week_ago = today - timedelta(days=7)
-    this_week = Ticket.objects.filter(created_at__date__gte=week_ago).count()
-
-    now = timezone.now()
-    open_states = ["open", "in_progress", "pending"]
-    overdue_tickets = (
-        Ticket.objects.filter(status__in=open_states, resolution_due__lt=now)
-        .select_related("created_by", "assigned_to")
-        .order_by("resolution_due")[:6]
-    )
-    sla_overdue = Ticket.objects.filter(status__in=open_states, resolution_due__lt=now).count()
-    sla_breached = (
-        Ticket.objects.filter(status__in=open_states)
-        .filter(Q(response_breached=True) | Q(resolution_breached=True))
-        .count()
-    )
-
-    ctx = {
-        "total": total,
-        "my_open": my_open,
-        "open_total": open_total,
-        "in_progress": in_progress,
-        "resolved": resolved,
-        "closed": closed,
-        "critical": critical,
-        "recent": recent,
-        "my_tickets": my_tickets,
-        "this_week": this_week,
-        "overdue_tickets": overdue_tickets,
-        "sla_overdue": sla_overdue,
-        "sla_breached": sla_breached,
-        "show_needs_attention": (request.user.preferences or {}).get("show_needs_attention", True),
-    }
-    return render(request, "tickets/dashboard.html", ctx)
+    get_token(request)
+    return render(request, "dashboards/dashboard.html")
 
 
 @login_required
