@@ -3,7 +3,7 @@
 {% block settings_content %}
 <div class="settings-section-head">
   <div class="section-heading" style="margin-bottom: 0;">Email Inboxes</div>
-  <a href="{% url 'console:inbox_create' %}" class="btn btn-filled-lav">
+  <a href="{% url 'console:inbox_create' %}" class="btn btn-lav">
     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add Inbox
   </a>
@@ -46,7 +46,7 @@
   </div>
   <h3>No inboxes yet</h3>
   <p>Add an inbox so Jackil can send and receive email on your tickets.</p>
-  <a href="{% url 'console:inbox_create' %}" class="btn btn-filled-lav">Add your first inbox</a>
+  <a href="{% url 'console:inbox_create' %}" class="btn btn-lav">Add your first inbox</a>
 </div>
 {% endif %}
 {% endblock %}

@@ -20,7 +20,7 @@
   <div class="inbox-form-actions">
     {% if field %}<form method="post" action="{% url 'console:field_delete' field.pk %}" style="display:inline;" onsubmit="return confirm('Delete field?');">{% csrf_token %}<button class="btn btn-ghost" style="color:var(--coral);">Delete</button></form>{% endif %}
     <a href="{% url 'console:field_list' %}" class="btn btn-outline">Cancel</a>
-    <button type="submit" class="btn btn-filled-mint">Save field</button>
+    <button type="submit" class="btn btn-mint">Save field</button>
   </div>
 </form>
 {% endblock %}

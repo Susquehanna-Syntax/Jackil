@@ -8,7 +8,7 @@
   <form method="post" class="inbox-form-actions" style="margin-top: 20px;">
     {% csrf_token %}
     <a href="{% url 'console:kb_edit' article.pk %}" class="btn btn-outline">Cancel</a>
-    <button type="submit" class="btn btn-filled-coral">Delete article</button>
+    <button type="submit" class="btn btn-coral">Delete article</button>
   </form>
 </div>
 {% endblock %}

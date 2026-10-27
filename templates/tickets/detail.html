@@ -100,7 +100,7 @@
 
   <div class="ticket-detail-actions">
     {% if can_edit %}
-    <a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-filled-sky">Edit Ticket</a>
+    <a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-sky">Edit Ticket</a>
     {% endif %}
   </div>
 
@@ -118,7 +118,7 @@
     </div>
     <input type="hidden" name="score" id="csat_score" value="">
     <input type="text" name="comment" class="form-input" placeholder="Add a comment (optional)" style="margin-top:12px;">
-    <button type="submit" class="btn btn-filled-mint" style="margin-top:12px;">Submit rating</button>
+    <button type="submit" class="btn btn-mint" style="margin-top:12px;">Submit rating</button>
   </form>
   {% endif %}
 </div>
@@ -208,7 +208,7 @@
       </div>
       {% endif %}
       <span class="composer-filenames" id="composer_filenames"></span>
-      <button type="submit" class="btn btn-filled-lav composer-send" id="composer_send">Send Reply</button>
+      <button type="submit" class="btn btn-lav composer-send" id="composer_send">Send Reply</button>
     </div>
   </form>
 </div>
@@ -217,7 +217,7 @@
 <div class="divider"></div>
 
 <div class="ticket-detail-actions" style="margin-bottom: 32px;">
-  <button type="button" class="btn btn-filled-lav" id="manage_trigger">
+  <button type="button" class="btn btn-lav" id="manage_trigger">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     Manage Ticket
   </button>
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <input type="hidden" name="assigned_users" id="assigned_users_input" value="">
     <div class="modal-footer">
       <button class="btn btn-outline" id="manage_cancel" type="button">Cancel</button>
-      <button class="btn btn-filled-mint" type="submit">
+      <button class="btn btn-mint" type="submit">
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
         Save Changes
       </button>
@@ -302,7 +302,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const modal = document.getElementById('manage_modal');
   const trigger = document.getElementById('assign_trigger');
   const manageTrigger = document.getElementById('manage_trigger');
   const closeBtn = document.getElementById('manage_close');
@@ -315,20 +314,20 @@ document.addEventListener('DOMContentLoaded', function() {
   let selectedIds = new Set();
   let allUsers = [];
 
-  function openModal() {
+  function openManage(triggerEl) {
     selectedIds.clear();
     {% for u in ticket.assigned_users.all %}
     selectedIds.add({{ u.pk }});
     {% endfor %}
     updateTags();
-    modal.classList.add('active');
     searchInput.value = '';
+    JackilModal.open('manage_modal', triggerEl || document.activeElement);
     searchInput.focus();
     fetchUsers('');
   }
 
-  function closeModal() {
-    modal.classList.remove('active');
+  function closeManage() {
+    JackilModal.close();
   }
 
   function updateTags() {
@@ -409,10 +408,10 @@ document.addEventListener('DOMContentLoaded', function() {
     renderResults();
   }
 
-  if (trigger) trigger.addEventListener('click', openModal);
-  if (manageTrigger) manageTrigger.addEventListener('click', openModal);
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
-  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if (trigger) trigger.addEventListener('click', (e) => openManage(e.currentTarget));
+  if (manageTrigger) manageTrigger.addEventListener('click', (e) => openManage(e.currentTarget));
+  if (closeBtn) closeBtn.addEventListener('click', closeManage);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeManage);
 
   searchInput.addEventListener('input', function() {
     fetchUsers(searchInput.value);
@@ -429,12 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const removeBtn = e.target.closest('.modal-selected-tag-remove');
     if (removeBtn) {
       toggleUser(parseInt(removeBtn.dataset.id));
-    }
-  });
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.classList.contains('active')) {
-      closeModal();
     }
   });
 
@@ -455,8 +448,8 @@ document.addEventListener('DOMContentLoaded', function() {
         composer.classList.toggle('note-mode', isNote);
         input.placeholder = isNote ? 'Write an internal note (only staff can see this)…' : 'Write a reply…';
         send.textContent = isNote ? 'Add Note' : 'Send Reply';
-        send.classList.toggle('btn-filled-lav', !isNote);
-        send.classList.toggle('btn-filled-peach', isNote);
+        send.classList.toggle('btn-lav', !isNote);
+        send.classList.toggle('btn-peach', isNote);
       });
     });
     const fileInput = document.getElementById('composer_files');

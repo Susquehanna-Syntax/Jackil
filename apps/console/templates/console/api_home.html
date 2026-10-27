@@ -13,7 +13,7 @@
   <form method="post" action="{% url 'console:key_create' %}" style="display:flex; gap:8px;">
     {% csrf_token %}
     <input type="text" name="name" placeholder="Key name" class="form-input" style="width: 160px;">
-    <button type="submit" class="btn btn-filled-lav">New Key</button>
+    <button type="submit" class="btn btn-lav">New Key</button>
   </form>
 </div>
 <p style="color: var(--text-3); font-size: 13px; margin: 4px 0 16px;">
@@ -51,7 +51,7 @@
 
 <div class="settings-section-head">
   <div class="section-heading" style="margin-bottom: 0;">Webhooks</div>
-  <a href="{% url 'console:webhook_create' %}" class="btn btn-filled-peach">
+  <a href="{% url 'console:webhook_create' %}" class="btn btn-peach">
     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     New Webhook
   </a>

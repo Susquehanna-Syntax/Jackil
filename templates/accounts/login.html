@@ -31,7 +31,7 @@
         <input type="password" name="password" id="id_password" class="form-input" placeholder="Enter your password" required>
       </div>
 
-      <button type="submit" class="btn btn-filled-lav" style="width: 100%; justify-content: center; display: flex;">Sign In</button>
+      <button type="submit" class="btn btn-lav" style="width: 100%; justify-content: center; display: flex;">Sign In</button>
     </form>
     {% if civil_enabled %}
     {% if request.GET.civil == "failed" %}<div class="flash flash-error">Civil sign-in didn't complete — use your local account or try again.</div>{% endif %}

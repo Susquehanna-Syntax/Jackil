@@ -29,7 +29,7 @@
   <div class="inbox-form-actions">
     {% if reqform %}<form method="post" action="{% url 'console:reqform_delete' reqform.pk %}" style="display:inline;" onsubmit="return confirm('Delete form?');">{% csrf_token %}<button class="btn btn-ghost" style="color:var(--coral);">Delete</button></form>{% endif %}
     <a href="{% url 'console:field_list' %}" class="btn btn-outline">Cancel</a>
-    <button type="submit" class="btn btn-filled-mint">Save form</button>
+    <button type="submit" class="btn btn-mint">Save form</button>
   </div>
 </form>
 {% endblock %}

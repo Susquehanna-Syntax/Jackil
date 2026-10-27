@@ -3,7 +3,7 @@
 {% block settings_content %}
 <div class="settings-section-head">
   <div class="section-heading" style="margin-bottom: 0;">Knowledge Base</div>
-  <a href="{% url 'console:kb_create' %}" class="btn btn-filled-lav">
+  <a href="{% url 'console:kb_create' %}" class="btn btn-lav">
     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     New Article
   </a>
@@ -40,7 +40,7 @@
   <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
   <h3>No articles yet</h3>
   <p>Write your first knowledge base article to help customers self-serve.</p>
-  <a href="{% url 'console:kb_create' %}" class="btn btn-filled-lav">New Article</a>
+  <a href="{% url 'console:kb_create' %}" class="btn btn-lav">New Article</a>
 </div>
 {% endif %}
 {% endblock %}
