@@ -1670,7 +1670,6 @@ html.rm-sim *, html.rm-sim *::before, html.rm-sim *::after {
 .pill-on  { background: rgba(var(--rgb-mint), var(--tint-a)); color: var(--mint-ink); }
 .pill-off { background: var(--s3); color: var(--text-3); }
 
-/* Held-back hosts, in the playbook failures modal. One block per host: who,
 
 .dash-root { margin-bottom: 22px; }
 .dash-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
@@ -1804,7 +1803,7 @@ html.rm-sim *, html.rm-sim *::before, html.rm-sim *::after {
 }
 .dash-flash { animation: dashFlash 1.6s var(--ease-out-expo) both; border-radius: var(--r-md); }
 
-/* Host cards inside a widget. The page's own grid is sized for a full-width
+/* Host cards inside a widget (Vigil only; Jackil has none). */
 
 .dash-rail {
   position: fixed; top: 0; right: 0; bottom: 0;
