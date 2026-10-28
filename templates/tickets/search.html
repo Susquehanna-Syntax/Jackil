@@ -8,7 +8,7 @@
 
   <form method="get" class="kb-search" style="margin-bottom: 8px;">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" name="q" value="{{ query }}" placeholder="Search tickets and help articles…" autofocus>
+    <input type="text" name="q" value="{{ query }}" placeholder="Search tickets and the wiki…" autofocus>
     <button type="submit" class="btn btn-lav">Search</button>
   </form>
 </div>
@@ -32,13 +32,13 @@
 </div>
 {% endif %}
 
-{% if articles %}
-<div class="section-label" style="margin-top: 28px;">Help articles</div>
+{% if pages %}
+<div class="section-label" style="margin-top: 28px;">{% if request.user.role == 'customer' %}Help Center{% else %}Wiki{% endif %}</div>
 <div class="kb-article-list">
-  {% for a in articles %}
-  <a href="{% url 'kb:article_detail' a.slug %}" class="kb-article-row">
-    <div class="kb-article-row-title">{{ a.title }}</div>
-    <div class="kb-article-row-summary">{{ a.summary|default:a.body|truncatewords:20 }}</div>
+  {% for page in pages %}
+  <a href="{% if request.user.role == 'customer' %}{% url 'help:article' page.slug %}{% else %}{% url 'wiki:page_detail' page.slug %}{% endif %}" class="kb-article-row">
+    <div class="kb-article-row-title">{{ page.title }}</div>
+    <div class="kb-article-row-summary">{{ page.summary|default:page.body|truncatewords:20 }}</div>
   </a>
   {% endfor %}
 </div>

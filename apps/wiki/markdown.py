@@ -247,7 +247,8 @@ def _page_urls(titles: set[str], *, staff: bool) -> dict[str, str]:
     for title in titles:
         slug = exact.get(title) or folded.get(title.casefold())
         if slug is not None:
-            urls[title] = reverse("wiki:page_detail", args=[slug])
+            # Customers cannot open /wiki/; a published page is theirs at the help center.
+            urls[title] = reverse("wiki:page_detail" if staff else "help:article", args=[slug])
     return urls
 
 

@@ -60,7 +60,7 @@ class WikiAccessTest(TestCase):
         self.assertIn("/wiki/", body)
 
         self.client.force_login(self.customer)
-        body = self.client.get(reverse("kb:help_home")).content.decode()
+        body = self.client.get(reverse("help:home")).content.decode()
         self.assertNotIn('data-tip="Wiki"', body)
 
 
@@ -121,12 +121,13 @@ class PageSaveTest(TestCase):
         self.assertFalse(Page.objects.filter(space=self.space).exists())
 
     def test_an_overlong_body_is_refused(self):
+        before = Page.objects.count()  # the KB import migration seeds pages
         self.client.force_login(self.agent)
         response = self.post_page(body="x" * 1_000_001)
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "1,000,000", status_code=200)
-        self.assertFalse(Page.objects.exists())
+        self.assertEqual(Page.objects.count(), before)
 
     def test_new_page_from_template_starts_with_its_body(self):
         template = PageTemplate.objects.get(name="Runbook")

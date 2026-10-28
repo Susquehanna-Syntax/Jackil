@@ -518,7 +518,7 @@ def activity_log(request):
 def global_search(request):
     query = request.GET.get("q", "").strip()
     tickets = []
-    articles = []
+    pages = []
     if query:
         tq = Ticket.objects.select_related("created_by", "assigned_to")
         # Customers only match on public message bodies (never internal notes),
@@ -535,15 +535,20 @@ def global_search(request):
             | message_match
         ).distinct()[:25]
 
-        from apps.kb.service import public_only_for, search_articles
+        from apps.wiki.models import Page
 
-        articles = search_articles(query, public_only=public_only_for(request.user))[:10]
+        pq = Q(title__icontains=query) | Q(summary__icontains=query) | Q(body__icontains=query)
+        # Staff search the whole wiki; customers only what the help center shows.
+        if request.user.role == "customer":
+            pages = Page.objects.filter(is_published_to_help_center=True).filter(pq)[:10]
+        else:
+            pages = Page.objects.filter(pq)[:10]
 
     ctx = {
         "query": query,
         "tickets": tickets,
-        "articles": articles,
-        "result_count": len(tickets) + len(articles),
+        "pages": pages,
+        "result_count": len(tickets) + len(pages),
     }
     return render(request, "tickets/search.html", ctx)
 

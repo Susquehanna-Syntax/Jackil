@@ -2,10 +2,9 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.inbox.models import Inbox
-from apps.kb.models import KBArticle
 
 from .decorators import admin_required
-from .forms import InboxForm, KBArticleForm
+from .forms import InboxForm
 
 
 @admin_required
@@ -107,50 +106,6 @@ def sla_settings(request):
         "section": "sla",
     }
     return render(request, "console/sla_settings.html", ctx)
-
-
-@admin_required
-def kb_list(request):
-    ctx = {"articles": KBArticle.objects.select_related("category", "author"), "section": "kb"}
-    return render(request, "console/kb_list.html", ctx)
-
-
-@admin_required
-def kb_create(request):
-    return _kb_form(request, None)
-
-
-@admin_required
-def kb_edit(request, pk):
-    return _kb_form(request, get_object_or_404(KBArticle, pk=pk))
-
-
-def _kb_form(request, article):
-    if request.method == "POST":
-        form = KBArticleForm(request.POST, instance=article)
-        if form.is_valid():
-            obj = form.save(commit=False)
-            if obj.author_id is None:
-                obj.author = request.user
-            obj.save()
-            messages.success(request, f"Article “{obj.title}” saved.")
-            return redirect("console:kb_list")
-    else:
-        form = KBArticleForm(instance=article)
-    return render(
-        request, "console/kb_form.html", {"form": form, "article": article, "section": "kb"}
-    )
-
-
-@admin_required
-def kb_delete(request, pk):
-    article = get_object_or_404(KBArticle, pk=pk)
-    if request.method == "POST":
-        title = article.title
-        article.delete()
-        messages.success(request, f"Article “{title}” deleted.")
-        return redirect("console:kb_list")
-    return render(request, "console/kb_confirm_delete.html", {"article": article, "section": "kb"})
 
 
 # ── Automation: rules + macros ──────────────────────────────────────────────

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page.title }} — Help Center{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/vendor/katex/katex.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="fade-in d1 kb-article-page">
+  <a href="{% url 'help:home' %}" class="btn btn-ghost" style="margin-bottom: 20px;">&larr; Help Center</a>
+
+  <div class="wiki-breadcrumbs">
+    <a href="{% url 'help:home' %}">Help Center</a>
+    {% for ancestor in ancestors %}
+    &rsaquo; <a href="{% url 'help:article' ancestor.slug %}">{{ ancestor.title }}</a>
+    {% endfor %}
+    &rsaquo; {{ page.title }}
+  </div>
+
+  <h1 class="kb-article-title">{{ page.title }}</h1>
+  <div class="kb-article-meta">
+    {% if page.author %}By {{ page.author.get_full_name|default:page.author.username }} · {% endif %}
+    Updated {{ page.updated_at|date:"M d, Y" }} · {{ page.views }} view{{ page.views|pluralize }}
+  </div>
+
+  <article class="markdown-body" data-markdown>{{ html }}</article>
+
+  {% if children %}
+  <div class="divider"></div>
+  <div class="section-heading">In this section</div>
+  <div class="kb-article-list">
+    {% for child in children %}
+    <a href="{% url 'help:article' child.slug %}" class="kb-article-row">
+      <div class="kb-article-row-title">{{ child.title }}</div>
+      <div class="kb-article-row-summary">{{ child.summary|default:child.body|truncatewords:18 }}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="kb-article-cta">
+    Didn't find what you needed?
+    <a href="{% url 'tickets:ticket_create' %}" class="btn btn-lav">Open a ticket</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/vendor/katex/katex.min.js' %}"></script>
+<script src="{% static 'js/jackil-math.js' %}"></script>
+{% endblock %}

@@ -23,9 +23,9 @@
         SLA Policies
       </a>
       {% endif %}
-      <a href="{% url 'console:kb_list' %}" class="settings-nav-item tc-mint{% if section == 'kb' %} active{% endif %}">
+      <a href="{% url 'wiki:home' %}" class="settings-nav-item tc-mint">
         <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-        Knowledge Base
+        Wiki
       </a>
       {% if 'automation' in enabled_features %}
       <a href="{% url 'console:automation_home' %}" class="settings-nav-item tc-lemon{% if section == 'automation' %} active{% endif %}">
