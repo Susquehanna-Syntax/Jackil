@@ -77,6 +77,14 @@ class VelocityTests(CostTestCase):
         self.closed_sprint("S3", {aria: 30})
         self.assertEqual(cost.velocity(aria), Decimal("20"))
 
+    def test_velocity_averages_only_the_last_three_sprints(self):
+        aria = make_user("aria")
+        self.closed_sprint("S1", {aria: 90}, offset_days=10)
+        self.closed_sprint("S2", {aria: 3}, offset_days=20)
+        self.closed_sprint("S3", {aria: 6}, offset_days=30)
+        self.closed_sprint("S4", {aria: 9}, offset_days=40)
+        self.assertEqual(cost.velocity(aria), Decimal("6"))
+
     def test_velocity_counts_only_that_persons_completed_work(self):
         aria = make_user("aria")
         boa = make_user("boa")

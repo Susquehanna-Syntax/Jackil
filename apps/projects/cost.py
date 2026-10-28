@@ -22,7 +22,7 @@ def velocity(user, project=None, as_of=None):
     """
     if user is None:
         return None
-    sprints = list(_completed_sprints(user, project=project, as_of=as_of))
+    sprints = list(_completed_sprints(user, project=project, as_of=as_of))[:HISTORY_SPRINTS]
     if len(sprints) < HISTORY_SPRINTS:
         return None
     total = sum(_points_in(sprint, user) for sprint in sprints)
