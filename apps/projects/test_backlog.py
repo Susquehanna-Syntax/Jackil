@@ -99,7 +99,18 @@ class BacklogDataTests(BacklogTest):
         self.assertEqual(active_row["points"], 3)
         self.assertEqual(
             set(active_row["issues"][0]),
-            {"id", "key", "title", "type", "points", "assignee", "column", "rank"},
+            {
+                "id",
+                "key",
+                "title",
+                "type",
+                "points",
+                "assignee",
+                "assignee_name",
+                "column",
+                "rank",
+                "url",
+            },
         )
         self.assertEqual([row["key"] for row in body["backlog"]], ["NET-2"])
 

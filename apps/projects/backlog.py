@@ -16,6 +16,7 @@ from django.urls import reverse
 
 from . import cost, permissions, service
 from .models import Issue, Project, Sprint
+from .views import display_name, issue_url
 
 #: Two ranks this close together cannot be split again by a midpoint.
 RANK_EPSILON = 1e-6
@@ -50,7 +51,7 @@ def backlog_data(request, key):
     project = get_object_or_404(Project, key=key.upper())
     sprints = _sprint_rows(project)
     by_sprint = {}
-    for issue in Issue.objects.filter(project=project).select_related("project"):
+    for issue in Issue.objects.filter(project=project).select_related("project", "assignee"):
         by_sprint.setdefault(issue.sprint_id, []).append(issue)
     return JsonResponse(
         {
@@ -58,7 +59,9 @@ def backlog_data(request, key):
                 _sprint_json(sprint, sorted(by_sprint.get(sprint.id, []), key=_display_order))
                 for sprint in sprints
             ],
-            "backlog": [_issue_row(issue) for issue in by_sprint.get(None, [])],
+            "backlog": [
+                _issue_row(issue) for issue in sorted(by_sprint.get(None, []), key=_display_order)
+            ],
             "people": _people(project, _planning_sprint(project, sprints)),
         }
     )
@@ -89,6 +92,8 @@ def _issue_row(issue):
         "type": issue.type,
         "points": issue.story_points,
         "assignee": issue.assignee_id,
+        "assignee_name": display_name(issue.assignee) if issue.assignee_id else "",
+        "url": issue_url(issue),
         "column": issue.column_id,
         "rank": issue.rank,
     }
