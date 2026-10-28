@@ -142,10 +142,30 @@ def ticket_detail(request, pk):
         "can_post_internal": permissions.can_post_internal(request.user),
         "agents": agents,
         "rating": rating,
+        "suggestions": _suggestions(ticket, request.user, request),
         "can_rate": request.user.id == ticket.created_by_id
         and ticket.status in ("resolved", "closed"),
     }
     return render(request, "tickets/detail.html", ctx)
+
+
+def _suggestions(ticket, user, request=None):
+    """Articles to read while answering this ticket; empty for a customer.
+
+    A published page carries the absolute help-center URL a reply may quote.
+    An internal page has none: the customer could not open it, so it is shown
+    for the agent to read and never offered as a link.
+    """
+    from django.urls import reverse
+
+    from apps.wiki.service import suggest_pages
+
+    pages = suggest_pages(ticket, user)
+    for page in pages:
+        page.permalink = None
+        if request is not None and page.is_published_to_help_center:
+            page.permalink = request.build_absolute_uri(reverse("help:article", args=[page.slug]))
+    return pages
 
 
 def _handle_message(request, ticket):

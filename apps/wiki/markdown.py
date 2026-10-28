@@ -59,6 +59,13 @@ _PLACEHOLDERS = re.compile(f"{_CHIP_PLACEHOLDER.pattern}|{_WIKILINK_PLACEHOLDER.
 _PASSED_CHIP = re.compile(r'<span class="dl-chip">(?P<text>[^<]*)</span>')
 _PASSED_WIKILINK = re.compile(r'<a class="wikilink"[^>]*>(?P<text>[^<]*)</a>')
 
+#: Text to blank before extracting references: a chip written inside code is
+#: documentation, not a link. The fence's indentation bound is markdown-it's.
+_FENCED_BLOCK = re.compile(
+    r"^[ \t]{0,3}(`{3,}|~{3,}).*?\1[ \t]*(?:\r?\n|$)", re.DOTALL | re.MULTILINE
+)
+_CODE_SPAN = re.compile(r"`[^`\n]*`")
+
 _TONES = {"ok": "tc-mint", "warn": "tc-lemon", "bad": "tc-rose", "info": "tc-sky"}
 
 _ALLOWED_TAGS = nh3.ALLOWED_TAGS | {
@@ -145,6 +152,41 @@ def render(md: str, *, user, links: bool = True):
     return mark_safe(clean)
 
 
+def extract_links(body: str) -> set[tuple[str, str]]:
+    """The ``(type, id)`` pairs a body's Dynamic Link chips name, code excluded.
+
+    Fenced code blocks and inline code spans are stripped first: a chip written
+    inside code is documentation, not a link.
+    """
+    targets: set[tuple[str, str]] = set()
+    for match in _WIKI.finditer(_without_code(body or "")):
+        kind, object_id = _split_dynamic_target(match.group(1).strip())
+        if kind is not None:
+            targets.add((kind, object_id))
+    return targets
+
+
+def extract_titles(body: str) -> set[str]:
+    """The page titles a body's wikilinks name, code excluded.
+
+    An aliased ``[[Onboarding|getting started]]`` asks for the page
+    "Onboarding" — the alias is what the reader sees, not what is wanted.
+    ``[[type:id]]`` chips are not titles: the renderer turns those into Dynamic
+    Link chips, so they belong to ``extract_links`` and nothing else.
+    """
+    titles: set[str] = set()
+    for match in _WIKI.finditer(_without_code(body or "")):
+        target = match.group(1).strip()
+        if _split_dynamic_target(target)[0] is None:
+            titles.add(target)
+    return titles
+
+
+def extract_references(body: str) -> tuple[set[str], set[tuple[str, str]]]:
+    """What one page body points at: page titles, and Dynamic Link targets."""
+    return extract_titles(body), extract_links(body)
+
+
 def _parser():
     md = MarkdownIt("commonmark", {"html": False, "highlight": _highlight})
     md.use(gfm_plugin, dollarmath=True)
@@ -191,6 +233,16 @@ def _render_wikilink(self, tokens, idx, options, env):
         '<span class="dl-chip" '
         f'data-dl-type="{escape(kind)}" data-dl-id="{escape(object_id)}">{escape(text)}</span>'
     )
+
+
+def _without_code(md: str) -> str:
+    """The body with fenced code blocks and inline code spans blanked out.
+
+    A wikilink written inside code is documentation, not a reference, so every
+    extractor in this app runs on this text. markdown-it starts a fence with up
+    to three spaces of indentation, which is where the bound comes from.
+    """
+    return _CODE_SPAN.sub(" ", _FENCED_BLOCK.sub(" ", md or ""))
 
 
 def _split_dynamic_target(target: str) -> tuple[str | None, str]:

@@ -12,6 +12,7 @@
   </div>
   <div style="display:flex; gap:8px;">
     {% if can_manage_spaces %}
+    <a href="{% url 'wiki:template_list' %}" class="btn btn-outline">Templates</a>
     <a href="{% url 'wiki:space_create' %}" class="btn btn-outline">New Space</a>
     {% endif %}
     <a href="{% url 'wiki:page_new' %}" class="btn btn-lav">

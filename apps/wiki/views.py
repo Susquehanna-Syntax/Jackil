@@ -21,7 +21,7 @@ from apps.wiki.files import INLINE_IMAGE_TYPES, SAFE_HEADERS, sniff_image
 
 from .markdown import render as render_markdown
 from .models import Page, PageAttachment, PageTemplate, Space
-from .service import save_version
+from .service import backlinks_for, save_page_links, save_version
 
 #: The colours a space icon may take — the same set Items offers.
 SPACE_COLOURS = ["lavender", "sky", "mint", "peach", "lemon", "rose", "coral"]
@@ -160,6 +160,7 @@ def page_detail(request, slug):
         "attachments": page.attachments.all(),
         "can_delete": _is_admin(request),
         "tree": _tree(page.space, current=page),
+        "backlinks": backlinks_for(page),
     }
     return render(request, "wiki/page_detail.html", ctx)
 
@@ -244,6 +245,7 @@ def page_new(request):
         page.updated_by = request.user
         page.save()
         save_version(page, request.user, summary=(request.POST.get("summary") or "").strip())
+        save_page_links(page, request.user)
         messages.success(request, f"Page “{page.title}” created.")
         return redirect(page.get_absolute_url())
 
@@ -296,6 +298,7 @@ def page_edit(request, slug):
         if page.parent_id != was_parent and not summary:
             summary = "Moved"
         save_version(page, request.user, summary=summary)
+        save_page_links(page, request.user)
         messages.success(request, f"Page “{page.title}” saved.")
         return redirect(page.get_absolute_url())
 
@@ -388,6 +391,7 @@ def page_restore(request, slug, number):
         page.updated_by = request.user
         page.save()
         save_version(page, request.user, summary=f"Restored version {version.number}")
+        save_page_links(page, request.user)
         messages.success(request, f"Version {version.number} restored.")
     return redirect(page.get_absolute_url())
 
@@ -445,6 +449,109 @@ def page_delete(request, slug):
         "wiki/page_confirm_delete.html",
         {"page": page, "descendant_count": len(page.descendant_ids())},
     )
+
+
+@login_required
+def template_list(request):
+    _templates_admin_or_403(request)
+    return render(
+        request,
+        "wiki/template_list.html",
+        {"templates_listed": PageTemplate.objects.all()},
+    )
+
+
+@login_required
+def template_create(request):
+    _templates_admin_or_403(request)
+    if request.method == "POST":
+        template = PageTemplate()
+        errors = _read_template_post(request, template)
+        if errors:
+            return render(
+                request,
+                "wiki/template_form.html",
+                {"editing": template, "errors": errors, "submit_label": "Create Template"},
+            )
+        template.save()
+        messages.success(request, f"Template “{template.name}” created.")
+        return redirect("wiki:template_list")
+    return render(
+        request,
+        "wiki/template_form.html",
+        {"editing": PageTemplate(), "errors": {}, "submit_label": "Create Template"},
+    )
+
+
+@login_required
+def template_edit(request, pk):
+    _templates_admin_or_403(request)
+    template = get_object_or_404(PageTemplate, pk=pk)
+    if request.method == "POST":
+        errors = _read_template_post(request, template)
+        if errors:
+            return render(
+                request,
+                "wiki/template_form.html",
+                {"editing": template, "errors": errors, "submit_label": "Save Changes"},
+            )
+        template.save()
+        messages.success(request, f"Template “{template.name}” saved.")
+        return redirect("wiki:template_list")
+    return render(
+        request,
+        "wiki/template_form.html",
+        {"editing": template, "errors": {}, "submit_label": "Save Changes"},
+    )
+
+
+@login_required
+def template_delete(request, pk):
+    _templates_admin_or_403(request)
+    template = get_object_or_404(PageTemplate, pk=pk)
+    if template.is_builtin:
+        # A built-in is editable but never deletable: the wiki offers it because
+        # it is useful to everyone, not because one admin kept it.
+        messages.error(request, f"“{template.name}” is a built-in template and can't be deleted.")
+        return redirect("wiki:template_list")
+    if request.method == "POST":
+        name = template.name
+        template.delete()
+        messages.success(request, f"Template “{name}” deleted.")
+        return redirect("wiki:template_list")
+    return render(request, "wiki/template_confirm_delete.html", {"editing": template})
+
+
+def _templates_admin_or_403(request):
+    """Page templates shape every page anyone starts; that is an admin's call."""
+    _staff_or_403(request)
+    if not _is_admin(request):
+        raise PermissionDenied
+
+
+def _read_template_post(request, template) -> dict[str, str]:
+    """Apply the posted template form and report what refused."""
+    errors: dict[str, str] = {}
+    name = (request.POST.get("name") or "").strip()
+    body = request.POST.get("body") or ""
+
+    if not name:
+        errors["name"] = "A template needs a name."
+    elif len(name) > 120:
+        errors["name"] = "Template names are limited to 120 characters."
+    elif PageTemplate.objects.exclude(pk=template.pk).filter(name=name).exists():
+        errors["name"] = "There is already a template with that name."
+    if not body.strip():
+        errors["body"] = "A template needs a body — it is what a new page starts as."
+    elif len(body) > MAX_BODY:
+        errors["body"] = f"Bodies are limited to {MAX_BODY:,} characters."
+
+    if errors:
+        return errors
+    template.name = name
+    template.description = (request.POST.get("description") or "").strip()[:200]
+    template.body = body
+    return {}
 
 
 @login_required

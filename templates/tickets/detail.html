@@ -106,6 +106,27 @@
 
   {% links_panel "ticket" ticket.pk %}
 
+  {% if suggestions %}
+  <div class="form-card suggested-articles">
+    <div class="form-card-title">Suggested articles</div>
+    <div class="form-card-hint">Pages in the wiki that look like this ticket.</div>
+    {% for page in suggestions %}
+    <div class="suggested-article">
+      <a href="{{ page.get_absolute_url }}" class="suggested-article-title">{{ page.title }}</a>
+      <div class="suggested-article-summary">{{ page.summary|default:page.body|truncatewords:18 }}</div>
+      {% if page.permalink %}
+      <button type="button" class="btn btn-outline btn-sm insert-article-link"
+              data-insert-article
+              data-article-title="{{ page.title }}"
+              data-article-url="{{ page.permalink }}">Insert link</button>
+      {% else %}
+      <span class="tag tc-lav">Internal</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% if rating %}
   <div class="csat-card rated">
     <div class="csat-stars">{% for i in "12345" %}<span class="csat-star{% if forloop.counter <= rating.score %} on{% endif %}">★</span>{% endfor %}</div>
@@ -239,6 +260,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+</script>
+{% endif %}
+
+{% if suggestions %}
+<script>
+/* ---- Suggested articles: "Insert link" writes a Markdown link into the reply.
+   A textarea holds plain text, so nothing is HTML-escaped here; only the
+   brackets that would end the link text early are. ---- */
+(function () {
+  const composer = document.getElementById('composer');
+  const input = composer ? composer.querySelector('.composer-input') : null;
+
+  function mdLinkText(value) {
+    return String(value).replace(/([\\\[\]])/g, '\\$1');
+  }
+
+  document.querySelectorAll('[data-insert-article]').forEach(function (card) {
+    const title = mdLinkText(card.getAttribute('data-article-title') || '');
+    const url = card.getAttribute('data-article-url') || '';
+    card.addEventListener('click', function () {
+      if (!input) return;
+      const link = `[${title}](${url})`;
+      const caret = input.selectionEnd === null ? input.value.length : input.selectionEnd;
+      const before = input.value.slice(0, caret);
+      const after = input.value.slice(caret);
+      const glue = before.length && !/\s$/.test(before) ? ' ' : '';
+      input.value = before + glue + link + after;
+      input.focus();
+      const end = before.length + glue.length + link.length;
+      input.setSelectionRange(end, end);
+    });
+  });
+})();
 </script>
 {% endif %}
 {% endblock %}

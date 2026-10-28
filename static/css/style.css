@@ -1991,3 +1991,15 @@ a.dash-card { text-decoration: none; }
 .markdown-body .nb, .markdown-body .nf { color: var(--sky-ink); }
 .markdown-body .c, .markdown-body .c1, .markdown-body .cm { color: var(--text-3); font-style: italic; }
 .markdown-body .m, .markdown-body .mi, .markdown-body .mf { color: var(--peach-ink); }
+
+/* ── Wiki backlinks, templates admin, suggested articles (M4 p05) ── */
+.wiki-backlinks { list-style: none; margin-top: 8px; }
+.wiki-backlinks li { padding: 4px 0; font-size: 13.5px; }
+.wiki-builtin-pill { font-size: 11px; font-weight: 600; color: var(--lavender-ink);
+  background: rgba(var(--rgb-lavender), var(--tint-a)); padding: 2px 9px; border-radius: 10px; }
+.suggested-articles { max-width: 720px; }
+.suggested-article { padding-top: 12px; border-top: 1px solid var(--border); margin-top: 10px; }
+.suggested-article:first-of-type { border-top: none; margin-top: 4px; }
+.suggested-article-title { font-weight: 600; color: var(--lavender-ink); text-decoration: none; }
+.suggested-article-title:hover { text-decoration: underline; }
+.suggested-article-summary { font-size: 12.5px; color: var(--text-3); margin: 4px 0 8px; }

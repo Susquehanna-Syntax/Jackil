@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load links_tags static %}
 
 {% block title %}{{ page.title }} — Wiki — Jackil{% endblock %}
 
@@ -49,7 +49,20 @@
     <div style="min-width:0;">
       <article class="markdown-body" data-markdown>{{ html }}</article>
 
-      <div id="wiki-links"></div>
+      <section class="form-card" style="margin-top: 28px;">
+        <div class="form-card-title">Linked from</div>
+        {% if backlinks %}
+        <ul class="wiki-backlinks">
+          {% for backlink in backlinks %}
+          <li><a href="{{ backlink.get_absolute_url }}">{{ backlink.title }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="form-card-hint">No pages link here yet.</div>
+        {% endif %}
+      </section>
+
+      {% links_panel "page" page.pk %}
 
       <div class="form-card" style="margin-top: 28px;">
         <div class="form-card-title">Children</div>

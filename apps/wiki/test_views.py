@@ -343,7 +343,7 @@ class PageViewTest(TestCase):
         self.assertContains(response, "Ops")
         self.assertContains(response, child.get_absolute_url())
         self.assertContains(response, reverse("wiki:page_history", args=[self.page.slug]))
-        self.assertContains(response, 'id="wiki-links"')
+        self.assertContains(response, "Linked from")
 
     def test_view_count_increments(self):
         self.client.force_login(self.agent)
