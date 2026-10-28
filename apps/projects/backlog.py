@@ -18,9 +18,6 @@ from . import cost, permissions, service
 from .models import Issue, Project, Sprint
 from .views import display_name, issue_url
 
-#: Two ranks this close together cannot be split again by a midpoint.
-RANK_EPSILON = 1e-6
-
 
 @login_required
 def backlog_page(request, key):
@@ -29,7 +26,7 @@ def backlog_page(request, key):
         raise PermissionDenied
     project = get_object_or_404(Project, key=key.upper())
     if project.method != "scrum":
-        return redirect("projects:project_detail", key=project.key)
+        return redirect("projects:board", key=project.key)
     return render(
         request,
         "projects/backlog.html",
@@ -129,7 +126,7 @@ def backlog_rank(request, key):
         with transaction.atomic():
             if moved:
                 service.set_sprint(request.user, issue, target)
-            _rank_above(project, issue, before, target)
+            service.rank_between(issue, _list_rows(project, target), before)
     except ValidationError as exc:
         return JsonResponse({"error": _message(exc)}, status=400)
     return JsonResponse({"ok": True})
@@ -298,37 +295,6 @@ def _velocity_of(user):
     return None if value is None else float(value)
 
 
-def _rank_above(project, issue, before, target):
-    """Rank the issue just above `before`, or last in the list when it is None."""
-    siblings = [row for row in _list_rows(project, target) if row["id"] != issue.id]
-    if before is None:
-        issue.rank = (siblings[-1]["rank"] if siblings else 0.0) + 1.0
-        issue.save(update_fields=["rank"])
-        return
-
-    index = next((i for i, row in enumerate(siblings) if row["id"] == before.id), len(siblings))
-    above = siblings[index]["rank"] if index < len(siblings) else None
-    below = siblings[index - 1]["rank"] if index > 0 else None
-    if above is None:
-        issue.rank = (below if below is not None else 0.0) + 1.0
-    elif below is None:
-        issue.rank = above - 1.0
-    else:
-        issue.rank = (below + above) / 2.0
-
-    if _crowded(below, above):
-        _renumber(project, target, issue, before)
-        return
-    issue.save(update_fields=["rank"])
-
-
-def _crowded(below, above):
-    """True when two neighbours are so close that no midpoint is left between them."""
-    if below is None or above is None:
-        return False
-    return above - below < RANK_EPSILON
-
-
 def _list_rows(project, target):
     """The list being ranked in — a sprint, or the backlog — in display order."""
     issues = Issue.objects.filter(project=project)
@@ -336,18 +302,7 @@ def _list_rows(project, target):
         issues = issues.filter(sprint=target)
     else:
         issues = issues.filter(sprint__isnull=True)
-    return list(issues.order_by("rank", "number").values("id", "rank"))
-
-
-def _renumber(project, target, issue, before) -> None:
-    """Spread a crowded list over 1, 2, 3 … keeping the moved issue in place."""
-    siblings = [row for row in _list_rows(project, target) if row["id"] != issue.id]
-    index = len(siblings)
-    if before is not None:
-        index = next((i for i, row in enumerate(siblings) if row["id"] == before.id), len(siblings))
-    ordered = siblings[:index] + [{"id": issue.id}] + siblings[index:]
-    for position, row in enumerate(ordered, start=1):
-        Issue.objects.filter(pk=row["id"]).update(rank=float(position))
+    return list(issues.order_by("rank", "number"))
 
 
 def _target_sprint(project, sprint_id):

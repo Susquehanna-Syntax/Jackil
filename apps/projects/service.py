@@ -2,12 +2,16 @@
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Case, When
 from django.utils import timezone
 
 from . import cost
 from .models import Column, Issue, IssueEvent, Project, Sprint
 
 DEFAULT_COLUMNS = [("To do", "todo"), ("In progress", "in_progress"), ("Done", "done")]
+
+#: Two ranks this close together cannot be split again by a midpoint.
+RANK_EPSILON = 1e-6
 
 
 def is_staff(user) -> bool:
@@ -109,6 +113,47 @@ def _unfreeze(issue) -> None:
             "frozen_cost",
             "frozen_hours_per_point",
         ]
+    )
+
+
+def rank_between(issue, siblings, before) -> None:
+    """Rank `issue` just above `before` in `siblings`, or last when None.
+
+    `siblings` is the target list in display order (rank, number), without
+    `issue`. Midpoint of the neighbours; when they are closer than
+    RANK_EPSILON, renumber the whole list 1, 2, 3 … with `issue` in place.
+    Saves the rank(s).
+    """
+    if before is None:
+        issue.rank = (siblings[-1].rank if siblings else 0.0) + 1.0
+        issue.save(update_fields=["rank"])
+        return
+
+    index = next(i for i, row in enumerate(siblings) if row.pk == before.pk)
+    above = siblings[index].rank
+    below = siblings[index - 1].rank if index > 0 else None
+    if below is None:
+        issue.rank = above - 1.0
+        issue.save(update_fields=["rank"])
+        return
+
+    issue.rank = (below + above) / 2.0
+    if above - below < RANK_EPSILON:
+        _renumber(siblings, issue, index)
+        return
+    issue.save(update_fields=["rank"])
+
+
+def _renumber(siblings, issue, index) -> None:
+    """Spread a crowded list over 1, 2, 3 … with the moved issue in place."""
+    ordered = siblings[:index] + [issue] + siblings[index:]
+    Issue.objects.filter(pk__in=[row.pk for row in ordered]).update(
+        rank=Case(
+            *[
+                When(pk=row.pk, then=float(position))
+                for position, row in enumerate(ordered, start=1)
+            ]
+        )
     )
 
 

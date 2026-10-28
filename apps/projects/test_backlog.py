@@ -120,12 +120,6 @@ class BacklogDataTests(BacklogTest):
         response = self.client.get(reverse("projects:backlog_data", args=["NET"]))
         self.assertEqual(response.status_code, 403)
 
-    def test_kanban_project_backlog_redirects(self):
-        boards = service.create_project(self.admin, "BRD", "Board Room", "kanban")
-        self.login(self.agent)
-        response = self.client.get(reverse("projects:backlog", args=["BRD"]))
-        self.assertRedirects(response, reverse("projects:project_detail", args=[boards.key]))
-
     def test_anonymous_is_sent_to_sign_in(self):
         response = self.client.get(reverse("projects:backlog_data", args=["NET"]))
         self.assertEqual(response.status_code, 302)

@@ -1,6 +1,6 @@
 from django.urls import path, register_converter
 
-from . import backlog, converters, views
+from . import backlog, board, converters, views
 
 register_converter(converters.ProjectKeyConverter, "projkey")
 register_converter(converters.IssueRefConverter, "issueref")
@@ -19,6 +19,9 @@ urlpatterns = [
     path("<projkey:key>/settings/", views.project_settings, name="project_settings"),
     path("<projkey:key>/new/", views.issue_create, name="issue_create"),
     path("<projkey:key>/backlog/", backlog.backlog_page, name="backlog"),
+    path("<projkey:key>/board/", board.board_page, name="board"),
+    path("<projkey:key>/board/data/", board.board_data, name="board_data"),
+    path("<projkey:key>/board/move/", board.board_move, name="board_move"),
     path("<projkey:key>/backlog/data/", backlog.backlog_data, name="backlog_data"),
     path("<projkey:key>/backlog/rank/", backlog.backlog_rank, name="backlog_rank"),
     path("<projkey:key>/sprints/", backlog.sprint_create, name="sprint_create"),
