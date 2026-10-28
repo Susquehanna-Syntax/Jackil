@@ -729,11 +729,24 @@ class Command(BaseCommand):
     def _links(self, admin, items, pages, mail_ticket_id):
         """Dynamic Links, skipping a link whose end is missing.
 
-        Links that involve a ticket are matched by relation and the kind of
-        thing on the other end, because a run without ``--fresh`` appends
-        another copy of every ticket and moves its pk; ``add_link``'s own
-        duplicate check catches the rest, since Item and page pks are stable.
+        A link that has a ticket on one end is matched by relation and the kind
+        of thing on the other end, because a run without ``--fresh`` appends
+        another copy of every ticket and moves its pk; ``_linked`` recognises
+        those. Item and page pks are stable, so re-seeding them lands on
+        ``add_link``'s own duplicate check instead.
         """
+
+        def _linked(source, target, relation):
+            if "ticket" not in (source[0], target[0]):
+                return False
+            forward = DynamicLink.objects.filter(
+                source_type=source[0], target_type=target[0], relation=relation
+            )
+            backward = DynamicLink.objects.filter(
+                source_type=target[0], target_type=source[0], relation=relation
+            )
+            return (forward | backward).exists()
+
         mail_item = items.get("Mail server")
         vpn_ticket = _ticket("VPN")
         wanted = [
@@ -750,16 +763,12 @@ class Command(BaseCommand):
                 "documented_in",
             ),
         ]
-        ticket_relations = set(
-            DynamicLink.objects.values_list("source_type", "target_type", "relation")
-        )
 
         created = 0
         for source, target, relation in wanted:
             if source[1] is None or target[1] is None:
                 continue
-            pair = (source[0], target[0], relation)
-            if "ticket" in (source[0], target[0]) and pair in ticket_relations:
+            if _linked(source, target, relation):
                 continue
             try:
                 add_link(admin, source, target, relation)
