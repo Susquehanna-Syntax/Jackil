@@ -83,9 +83,8 @@ def _rows(users, posted):
                 "name": display_name(user),
                 "form": RateForm(posted, prefix=f"u{user.pk}", initial=initial),
                 "hours_per_point": cost.hours_per_point(user),
-                # cost.hours_per_point already falls back when velocity is
-                # missing or zero, or sprint_hours is unset.
-                "is_default": velocity is None or velocity == 0,
+                # The same fallback cost.hours_per_point takes.
+                "is_default": not velocity or rate is None or rate.sprint_hours is None,
             }
         )
     return rows

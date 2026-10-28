@@ -2123,5 +2123,10 @@ a.dash-card { text-decoration: none; }
 /* ── Rates page (M5 p05c) ──────────────────────────────────────────────── */
 .rt-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 18px; align-items: start; }
 .rt-layout .form-card { margin-bottom: 0; }
-.rt-table .form-input { max-width: 160px; }
+.rt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rt-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-3); font-weight: 600; padding: 0 10px 10px; }
+.rt-table td { padding: 8px 10px; border-top: 1px solid var(--s2); vertical-align: middle; color: var(--text-1); }
+.rt-table th:first-child, .rt-table td:first-child { padding-left: 0; }
+.rt-table .form-input { max-width: 160px; min-width: 80px; }
+.rt-layout + .btn, .rt-table + .btn { margin-top: 14px; }
 @media (max-width: 900px) { .rt-layout { grid-template-columns: 1fr; } }
