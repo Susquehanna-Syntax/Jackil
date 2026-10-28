@@ -176,3 +176,37 @@ class RendererTest(TestCase):
 
     def test_empty_body_renders_empty(self):
         self.assertEqual(self.render(""), "")
+
+
+class ReaderScopedPageLinkTests(TestCase):
+    """A customer's render must not reveal internal pages or offer to create one."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = User.objects.create_user("scope-agent", "sa@x.com", "pw", role="agent")
+        cls.customer = User.objects.create_user("scope-cust", "sc@x.com", "pw", role="customer")
+        space = Space.objects.create(name="Scope")
+        cls.internal = Page.objects.create(space=space, title="Firewall rules")
+        cls.public = Page.objects.create(
+            space=space, title="Reset your password", is_published_to_help_center=True
+        )
+
+    def test_customer_does_not_get_a_link_to_an_internal_page(self):
+        html = str(render("See [[Firewall rules]].", user=self.customer))
+        self.assertNotIn(self.internal.slug, html)
+        self.assertNotIn("<a", html)
+        self.assertIn("Firewall rules", html)
+
+    def test_customer_is_not_offered_a_new_page(self):
+        html = str(render("See [[No such page]].", user=self.customer))
+        self.assertNotIn(reverse("wiki:page_new"), html)
+        self.assertNotIn("<a", html)
+
+    def test_customer_still_gets_links_to_published_pages(self):
+        html = str(render("See [[Reset your password]].", user=self.customer))
+        self.assertIn(self.public.slug, html)
+
+    def test_staff_link_to_internal_pages_and_are_offered_new_ones(self):
+        html = str(render("[[Firewall rules]] and [[No such page]]", user=self.agent))
+        self.assertIn(self.internal.slug, html)
+        self.assertIn(reverse("wiki:page_new"), html)

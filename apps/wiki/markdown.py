@@ -132,8 +132,11 @@ def render(md: str, *, user, links: bool = True):
         # where it points, even for an object they could open themselves.
         from apps.links.service import can_see_links
 
-        targets = _chip_targets(chips, user) if can_see_links(user) else {}
-        clean = _resolve_links(clean, _page_urls(titles), aliased, targets)
+        staff = can_see_links(user)
+        targets = _chip_targets(chips, user) if staff else {}
+        clean = _resolve_links(
+            clean, _page_urls(titles, staff=staff), aliased, targets, offer_new=staff
+        )
     else:
         clean = _flatten_links(clean)
 
@@ -225,15 +228,18 @@ def _wanted_titles(html: str) -> tuple[set[str], set[str]]:
     return titles, aliased
 
 
-def _page_urls(titles: set[str]) -> dict[str, str]:
-    """Where each wikilink title points. A title no page answers to is absent."""
+def _page_urls(titles: set[str], *, staff: bool) -> dict[str, str]:
+    """Where each wikilink title points, for this reader. A title no page the
+    reader may see answers to is absent: a customer's render must not reveal
+    that an internal page exists, or its slug."""
     if not titles:
         return {}
     from apps.wiki.models import Page
 
+    pages = Page.objects.all() if staff else Page.objects.filter(is_published_to_help_center=True)
     exact: dict[str, str] = {}
     folded: dict[str, str] = {}
-    for slug, title in Page.objects.values_list("slug", "title"):
+    for slug, title in pages.values_list("slug", "title"):
         exact.setdefault(title, slug)
         folded.setdefault(title.casefold(), slug)
 
@@ -264,7 +270,9 @@ def _chip_targets(chips, user) -> dict[tuple[str, str], object]:
     return targets
 
 
-def _resolve_links(html: str, urls: dict[str, str], aliased: set[str], chips) -> str:
+def _resolve_links(
+    html: str, urls: dict[str, str], aliased: set[str], chips, *, offer_new: bool
+) -> str:
     """Chips first, then pages. A chip's text is its object's label and identifies
     it; a wikilink's text is the writer's, so it resolves only when that text is
     the title the link was given and is an ordinary word otherwise."""
@@ -282,6 +290,8 @@ def _resolve_links(html: str, urls: dict[str, str], aliased: set[str], chips) ->
         title = _unescaped(text)
         if title in urls:
             return f'<a class="wikilink" href="{escape(urls[title])}">{text}</a>'
+        if not offer_new:  # only staff may create pages, so only staff are offered one
+            return text
         new_page = f"{reverse('wiki:page_new')}?title={quote(title)}"
         return (
             f'<a class="wikilink broken" href="{escape(new_page)}" '
