@@ -2,13 +2,17 @@
 
 One function per registry kind, keyed in ``DATA``; ``widget_data`` is the
 entry point the API view calls. Each returns the *inner* payload — the
-envelope and its validation are the contract's job. The project widgets reach
-into ``apps.projects`` lazily, so importing dashboards never imports projects.
+envelope and its validation are the contract's job — except
+``report_chart``, which hands back the report card's own finished envelope.
+The project widgets reach into ``apps.projects`` lazily, so importing
+dashboards never imports projects; ditto the reports widget and
+``apps.reports``.
 """
 
 from datetime import datetime, time, timedelta
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Count, Q
 from django.db.models.functions import TruncDate
 from django.http import QueryDict
@@ -322,6 +326,59 @@ def project_cost(settings, user):
     return payload
 
 
+# ── Reports ───────────────────────────────────────────────────────────────
+
+#: What the tile says when it has nothing to draw — a whole envelope each, so
+#: the failure renders as an ordinary muted stat.
+REPORT_REMOVED = {
+    "version": 1,
+    "shape": "stat",
+    "data": {"value": 0, "label": "This report was removed", "tone": "muted"},
+}
+PICK_A_CARD = {
+    "version": 1,
+    "shape": "stat",
+    "data": {
+        "value": 0,
+        "label": "Pick a report card in this widget's settings.",
+        "tone": "muted",
+    },
+}
+
+
+def report_chart(settings, user):
+    """The whole envelope for one saved report's card, from the reports compute.
+
+    Unlike every other widget this returns an envelope, not an inner payload:
+    ``compute`` builds and validates the card as it goes, and its shape is the
+    card's own rather than anything the registry can say up front — so a
+    missing report or a removed card must answer with an envelope too. The
+    title rides along at the top level so the dashboard can name the tile.
+    """
+    from apps.reports.compute import compute, visible_reports
+    from apps.reports.widgets import REPORT_WIDGETS
+
+    ref = settings.get("card", "")
+    if not ref:
+        return dict(PICK_A_CARD)
+    report_id, _, index_str = ref.partition(":")
+    try:
+        index = int(index_str)
+    except ValueError:
+        return dict(REPORT_REMOVED)
+    try:
+        report = visible_reports(user).get(id=report_id)
+    except (ValueError, ObjectDoesNotExist):
+        return dict(REPORT_REMOVED)
+    try:
+        payload = compute(report, index, user)
+    except (IndexError, ValueError, PermissionDenied):
+        return dict(REPORT_REMOVED)
+    card = report.widgets[index]
+    payload["title"] = card.get("title") or REPORT_WIDGETS[card["kind"]]["title"]
+    return payload
+
+
 DATA = {
     "stat_tile": stat_tile,
     "ticket_list": ticket_list,
@@ -336,6 +393,7 @@ DATA = {
     "team_load": team_load,
     "my_issues": my_issues,
     "project_cost": project_cost,
+    "report_chart": report_chart,
 }
 
 
@@ -343,4 +401,6 @@ def widget_data(kind: str, raw_settings, user) -> dict:
     """The versioned envelope for one widget. ``KeyError`` on unknown kind."""
     settings = clean_settings(kind, raw_settings)
     data = DATA[kind](settings, user)
+    if kind == "report_chart":
+        return data
     return envelope(WIDGET_REGISTRY[kind]["shape"], data)

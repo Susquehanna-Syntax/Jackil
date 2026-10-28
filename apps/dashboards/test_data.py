@@ -88,6 +88,10 @@ class WidgetDataTests(TestCase):
 
     def test_every_registry_kind_returns_a_valid_envelope(self):
         for kind, spec in WIDGET_REGISTRY.items():
+            # report_chart's shape is the card's own, not the registry's; it is
+            # covered against real cards in test_report_chart.
+            if kind == "report_chart":
+                continue
             payload = widget_data(kind, {}, self.agent)
             self.assertEqual(payload["version"], 1, kind)
             self.assertEqual(payload["shape"], spec["shape"], kind)

@@ -12,9 +12,11 @@ Setting types the form generator knows how to render: ``choice`` — one of
 `options`; ``int`` — a bounded number; ``text`` — a short string; ``bool`` —
 a checkbox; ``saved_view`` — an int chosen from the operator's saved views, 0
 meaning "all open tickets"; ``project`` — a project key chosen from the
-non-archived projects, "" meaning "none picked yet". A type no field in the
-registry uses yet stays out of the form generator: it would be rendering for a
-caller that does not exist.
+non-archived projects, "" meaning "none picked yet"; ``report_card`` — a
+``"<report uuid>:<card index>"`` chosen from the reports the operator can
+see, "" meaning "none picked yet". A type no field in the registry uses yet
+stays out of the form generator: it would be rendering for a caller that does
+not exist.
 """
 
 WIDGET_REGISTRY: dict[str, dict] = {
@@ -207,6 +209,21 @@ WIDGET_REGISTRY: dict[str, dict] = {
             "project": {"type": "project", "label": "Project", "default": ""},
         },
     },
+    # The registry's shape is the default only: the real one comes from the
+    # report card's own envelope, which widget_data passes through untouched.
+    "report_chart": {
+        "group": "work",
+        "shape": "series",
+        "label": "Report chart",
+        "description": "One card from a saved report.",
+        "w": 6,
+        "h": 4,
+        "min_w": 3,
+        "min_h": 3,
+        "settings": {
+            "card": {"type": "report_card", "label": "Report card", "default": ""},
+        },
+    },
 }
 
 SHAPES = ("stat", "list", "table", "gauge", "series")
@@ -278,6 +295,8 @@ def clean_settings(kind: str, raw) -> dict:
             value = bool(value)
         elif field["type"] == "project":
             value = str(value).strip().upper()[:10]
+        elif field["type"] == "report_card":
+            value = str(value).strip()[:60]
         else:
             value = str(value)[:200]
         cleaned[name] = value

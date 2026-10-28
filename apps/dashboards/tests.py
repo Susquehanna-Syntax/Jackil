@@ -588,7 +588,7 @@ class RegistryShapeTests(TestCase):
     """The rail and the settings form are generated from the registry, so a
     malformed entry is a broken screen rather than an exception."""
 
-    SETTING_TYPES = {"choice", "int", "text", "bool", "saved_view", "project"}
+    SETTING_TYPES = {"choice", "int", "text", "bool", "saved_view", "project", "report_card"}
 
     def test_every_widget_declares_the_fields_the_ui_reads(self):
         for kind, spec in WIDGET_REGISTRY.items():

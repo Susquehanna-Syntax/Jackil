@@ -332,3 +332,24 @@ def project_options(request):
 
     projects = Project.objects.filter(is_archived=False).order_by("key")
     return Response([["", "Pick a project"]] + [[p.key, f"{p.key} — {p.name}"] for p in projects])
+
+
+@api_view(["GET"])
+@permission_classes([IsStaffRole])
+def report_card_options(request):
+    """Every card a ``report_card`` setting may name, as ``[[id, "Report — Card"], …]``.
+
+    First entry is always the "" pseudo-choice — "Pick a report card". A card
+    is addressed as ``"<report uuid>:<index>"``, which is what the widget's
+    setting stores; a report the caller cannot see does not exist here, so the
+    picker cannot leak the names of other people's private reports.
+    """
+    from apps.reports.compute import visible_reports
+    from apps.reports.widgets import REPORT_WIDGETS
+
+    options = []
+    for report in visible_reports(request.user).order_by("name"):
+        for i, card in enumerate(report.widgets):
+            title = card.get("title") or REPORT_WIDGETS[card["kind"]]["title"]
+            options.append([f"{report.id}:{i}", f"{report.name} — {title}"])
+    return Response([["", "Pick a report card"]] + options)

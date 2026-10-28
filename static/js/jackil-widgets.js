@@ -274,6 +274,14 @@ async function paintWidget(body, widget) {
   } catch (e) {
     body.innerHTML = `<div class="dash-failed"><span class="muted-note">Couldn't load `
       + `this widget: ${escHtml(e.message || 'Render failed')}</span></div>`;
+    return;
+  }
+  // A report card carries its own title, which names the tile when the
+  // operator hasn't typed one; a typed title always wins.
+  if (payload.title && !(widget.settings || {}).title) {
+    const item = body.closest('.grid-stack-item');
+    const heading = item && item.querySelector('.dash-widget-title');
+    if (heading) heading.textContent = payload.title;
   }
 }
 
@@ -312,10 +320,10 @@ function _settingsField(name, field, value, options) {
              ${min !== undefined ? `min="${escAttr(min)}"` : ''}
              ${field.max !== undefined ? `max="${escAttr(field.max)}"` : ''}></div>`;
   }
-  // Only a saved-view or project picker has an options list to be handed. A
-  // `choice` draws its own, and any other type drawing one would be drawing it
-  // for a widget with no source of them.
-  if ((t === 'saved_view' || t === 'project') && options.length) {
+  // Only a saved-view, project or report-card picker has an options list to be
+  // handed. A `choice` draws its own, and any other type drawing one would be
+  // drawing it for a widget with no source of them.
+  if ((t === 'saved_view' || t === 'project' || t === 'report_card') && options.length) {
     return `<div class="form-group">${label}
       <select class="form-select" id="${escAttr(id)}" data-setting="${escAttr(name)}">
         ${options.map(([v, text]) =>
@@ -343,6 +351,7 @@ async function _settingsOptions(type) {
   const SOURCES = {
     saved_view: '/dashboards/api/options/saved_view/',
     project: '/dashboards/api/options/project/',
+    report_card: '/dashboards/api/options/report_card/',
   };
   const url = SOURCES[type];
   if (!url) return [];
