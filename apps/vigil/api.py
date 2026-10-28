@@ -124,4 +124,25 @@ def vigil_widgets(request):
 def vigil_widget(request, kind: str):
     if not _offerable(kind):
         return Response({"error": "Unknown widget"}, status=404)
-    return Response(widget_data(kind, request.query_params.dict(), request.user))
+    envelope = widget_data(kind, request.query_params.dict(), request.user)
+    return Response(_absolute_hrefs(envelope, request))
+
+
+def _absolute_hrefs(value, request):
+    """Every ``href`` in a widget payload as a full Jackil URL.
+
+    The payload is drawn inside Vigil, where a bare ``/tickets/`` would open
+    Vigil's own page rather than Jackil's.
+    """
+    if isinstance(value, dict):
+        return {
+            key: (
+                request.build_absolute_uri(item)
+                if key == "href" and isinstance(item, str) and item.startswith("/")
+                else _absolute_hrefs(item, request)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_absolute_hrefs(item, request) for item in value]
+    return value

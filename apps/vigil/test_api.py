@@ -176,3 +176,10 @@ class WidgetCatalogTests(VigilApiTests):
 class MountTests(VigilApiTests):
     def test_links_url_is_mounted_outside_the_api_feature(self):
         self.assertEqual(reverse("vigil_api:vigil-links"), "/api/v1/vigil/links/")
+
+
+class WidgetHrefTests(VigilApiTests):
+    def test_widget_links_point_at_jackil_not_vigil(self):
+        response = self.client.get("/api/v1/vigil/widgets/stat_tile/?stat=open", **self._auth())
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["data"]["href"].startswith("http://testserver/"))
