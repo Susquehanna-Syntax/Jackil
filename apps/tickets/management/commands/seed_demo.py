@@ -650,9 +650,10 @@ class Command(BaseCommand):
                 ticket.save()
 
         items = self._items(departments)
-        # Chipped into the runbook body and linked below, so it is resolved
-        # once and shared: a second lookup could pick a different copy of the
-        # ticket if the caller did not pass --fresh.
+        # Resolved once and shared: this ticket is chipped into the runbook body
+        # and is one end of a link, so _wiki and _links must mean the same row.
+        # Each _ticket() call takes the newest match, and a run without --fresh
+        # leaves older copies of every ticket in the table.
         mail_ticket = _ticket("mail server down")
         pages = self._wiki(admin, _pk(mail_ticket))
         links = self._links(admin, items, pages, _pk(mail_ticket))
