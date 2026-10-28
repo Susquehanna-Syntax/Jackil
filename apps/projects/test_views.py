@@ -502,7 +502,7 @@ class SidebarTests(ViewTest):
             with self.subTest(role=user.role):
                 self.login(user)
                 response = self.client.get(
-                    reverse("projects:project_list") if expected else reverse("kb:help_home")
+                    reverse("projects:project_list") if expected else reverse("help:home")
                 )
                 body = response.content.decode()
                 if expected:
