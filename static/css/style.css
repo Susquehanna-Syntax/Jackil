@@ -1117,16 +1117,21 @@ body {
   padding: 16px 18px;
   background: var(--s1);
   border-radius: var(--r-md);
-  border-left: 3px solid transparent;
+  border: 1px solid transparent;
   transition: background 0.2s;
 }
 .msg:hover { background: var(--s2); }
+/* Internal notes and email are told apart by a whole tint, never a stripe. */
 .msg-note {
   background: rgba(var(--rgb-peach), var(--tint-a));
-  border-left-color: var(--peach-ink);
+  border-color: rgba(var(--rgb-peach), var(--tint-a-line));
 }
 .msg-note:hover { background: rgba(var(--rgb-peach), var(--tint-a-hover)); }
-.msg-email { border-left-color: var(--sky-ink); }
+.msg-email {
+  background: rgba(var(--rgb-sky), var(--tint-a));
+  border-color: rgba(var(--rgb-sky), var(--tint-a-line));
+}
+.msg-email:hover { background: rgba(var(--rgb-sky), var(--tint-a-hover)); }
 
 .msg-header {
   display: flex;
