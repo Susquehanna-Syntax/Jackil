@@ -20,6 +20,9 @@
         {% if report.shared %}Shared{% else %}Private{% endif %}
       </div>
     </div>
+    {% if report.owner_id == request.user.id %}
+    <a href="{% url 'reports:report_edit' report.id %}" class="btn btn-outline">Edit report</a>
+    {% endif %}
   </div>
 
   <div class="rv-grid fade-in d2" data-report="{{ report.id }}">

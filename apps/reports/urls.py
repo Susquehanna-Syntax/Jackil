@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import api, views
+from . import api, builder, views
 
 app_name = "reports"
 
@@ -13,5 +13,6 @@ urlpatterns = [
     path("api/<uuid:report_id>/", api.report_detail, name="api_detail"),
     path("api/<uuid:report_id>/data/<int:index>/", api.report_data, name="report_data"),
     path("api/<uuid:report_id>/data/<int:index>.csv", api.report_data_csv, name="report_data_csv"),
+    path("<uuid:report_id>/edit/", builder.report_edit, name="report_edit"),
     path("<uuid:report_id>/", views.report_page, name="report_page"),
 ]

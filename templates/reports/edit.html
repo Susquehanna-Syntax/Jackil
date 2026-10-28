@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Edit report — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'reports:report_page' report.id %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to the report
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Edit report</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        Cards, sources and sharing for {{ report.name }}. Only you can change it.
+      </div>
+    </div>
+  </div>
+
+  {% if errors %}
+  <div class="message message-error" style="margin-bottom: 18px;">
+    {% for error in errors %}
+    <div>{{ error }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="rb-layout fade-in d2">
+      <div class="form-card">
+        <div class="form-card-title">Cards</div>
+        <div class="form-card-hint">
+          Order them with the number on each row, change a card or its chart, and save.
+        </div>
+
+        <input type="hidden" name="card_count" value="{{ cards|length }}">
+        {% for card in cards %}
+        <div class="rb-card">
+          <input class="form-input" type="number" name="card-{{ card.index }}-order"
+                 value="{{ card.order }}" min="1" step="1" title="Order">
+          <select class="form-select" name="card-{{ card.index }}-kind">
+            {% for group in card.kind_options %}
+            <optgroup label="{{ group.group }}">
+              {% for kind in group.kinds %}
+              <option value="{{ kind.kind }}" {% if kind.kind == card.kind %}selected{% endif %}>
+                {{ kind.title }}
+              </option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+          <select class="form-select" name="card-{{ card.index }}-chart">
+            {% for chart in card.charts %}
+            <option value="{{ chart }}" {% if chart == card.chart %}selected{% endif %}>{{ chart }}</option>
+            {% endfor %}
+          </select>
+          <input class="form-input" type="text" name="card-{{ card.index }}-title"
+                 value="{{ card.title }}" placeholder="{{ card.registry_title }}">
+          <input class="form-input" type="number" name="card-{{ card.index }}-w"
+                 value="{{ card.w }}" min="1" max="12" step="1" title="Width">
+          <input class="form-input" type="number" name="card-{{ card.index }}-h"
+                 value="{{ card.h }}" min="1" max="24" step="1" title="Height">
+          <label style="font-size: 12px; color: var(--text-2); display: inline-flex; gap: 4px; align-items: center; white-space: nowrap;">
+            <input type="checkbox" class="form-check" name="card-{{ card.index }}-remove"> Remove
+          </label>
+          <div class="rb-labels">
+            <input class="form-input" type="text" name="card-{{ card.index }}-x_label"
+                   value="{{ card.x_label }}" placeholder="{{ card.x_label_placeholder }}">
+            <input class="form-input" type="text" name="card-{{ card.index }}-y_label"
+                   value="{{ card.y_label }}" placeholder="{{ card.y_label_placeholder }}">
+          </div>
+        </div>
+        <div class="form-card-hint">{{ card.how }}</div>
+        {% empty %}
+        <div class="empty-state">
+          <h3>No cards yet.</h3>
+        </div>
+        {% endfor %}
+
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label" for="add_kind">Add a card</label>
+          <select class="form-select" id="add_kind" name="add_kind">
+            <option value=""></option>
+            {% for group in add_options %}
+            <optgroup label="{{ group.group }}">
+              {% for kind in group.kinds %}
+              <option value="{{ kind.kind }}" {% if kind.kind == add_kind %}selected{% endif %}>
+                {{ kind.title }}
+              </option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+          <div class="form-card-hint" style="margin: 6px 0 0;">Pick one and save to add it.</div>
+        </div>
+      </div>
+
+      <div class="rb-side">
+        <div class="form-card">
+          <div class="form-card-title">Report</div>
+          <div class="form-group">
+            <label class="form-label" for="id_name">Name</label>
+            <input class="form-input" type="text" id="id_name" name="name" value="{{ name }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="id_description">Description</label>
+            <textarea class="form-textarea" id="id_description" name="description" rows="3">{{ description }}</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="id_range">Range</label>
+            <select class="form-select" id="id_range" name="range_days">
+              {% for days in ranges %}
+              <option value="{{ days }}" {% if days|stringformat:"s" == range_days|stringformat:"s" %}selected{% endif %}>
+                Last {{ days }} days
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <label style="font-size: 12.5px; color: var(--text-2); display: inline-flex; gap: 6px; align-items: center;">
+            <input type="checkbox" class="form-check" name="shared" {% if shared %}checked{% endif %}>
+            Share with every agent and admin
+          </label>
+        </div>
+
+        <div class="form-card">
+          <div class="form-card-title">Sources</div>
+          <div class="form-group">
+            <div class="form-label">Departments</div>
+            <div class="form-card-hint">None ticked means all of them.</div>
+            <div class="rb-checks">
+              {% for row in departments %}
+              <label style="font-size: 12.5px; color: var(--text-2); display: inline-flex; gap: 6px; align-items: center;">
+                <input type="checkbox" class="form-check" name="departments" value="{{ row.id }}"
+                       {% if row.checked %}checked{% endif %}> {{ row.name }}
+              </label>
+              {% empty %}
+              <div class="form-card-hint" style="margin: 0;">None yet.</div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Projects</div>
+            <div class="form-card-hint">None ticked means all of them.</div>
+            <div class="rb-checks">
+              {% for row in projects %}
+              <label style="font-size: 12.5px; color: var(--text-2); display: inline-flex; gap: 6px; align-items: center;">
+                <input type="checkbox" class="form-check" name="projects" value="{{ row.id }}"
+                       {% if row.checked %}checked{% endif %}> {{ row.name }}
+              </label>
+              {% empty %}
+              <div class="form-card-hint" style="margin: 0;">None yet.</div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Saved views</div>
+            <div class="form-card-hint">None ticked means all of them.</div>
+            <div class="rb-checks">
+              {% for row in saved_views %}
+              <label style="font-size: 12.5px; color: var(--text-2); display: inline-flex; gap: 6px; align-items: center;">
+                <input type="checkbox" class="form-check" name="saved_views" value="{{ row.id }}"
+                       {% if row.checked %}checked{% endif %}> {{ row.name }}
+              </label>
+              {% empty %}
+              <div class="form-card-hint" style="margin: 0;">None yet.</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rb-actions">
+      <button type="submit" class="btn btn-lav" name="action" value="save">Save report</button>
+      <button type="submit" class="btn btn-rose" name="action" value="delete"
+              onclick="return confirm('Delete this report? This cannot be undone.');">
+        Delete report
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
