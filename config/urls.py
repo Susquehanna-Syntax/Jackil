@@ -18,6 +18,7 @@ urlpatterns = [
     path("links/", include("apps.links.urls", namespace="links")),
     path("wiki/", include("apps.wiki.urls", namespace="wiki")),
     path("projects/", include("apps.projects.urls", namespace="projects")),
+    path("api/v1/vigil/", include(("apps.vigil.api_urls", "vigil_api"))),
 ]
 
 if feature_enabled("api"):
