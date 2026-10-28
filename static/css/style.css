@@ -2110,3 +2110,10 @@ a.dash-card { text-decoration: none; }
 .bd-avatar { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #1c1c22; flex-shrink: 0; }
 .bd-empty { min-height: 60px; display: flex; align-items: center; justify-content: center; font-size: 12.5px; color: var(--text-3); border: 1px dashed var(--border); border-radius: var(--r-sm); }
 @media (max-width: 600px) { .bd-col { flex-basis: 85vw; } }
+
+/* ── Project reports (M5 p05b) ─────────────────────────────────────────── */
+.rp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
+.rp-grid .form-card { margin-bottom: 0; }
+.rp-wide { grid-column: 1 / -1; }
+.rp-body { min-height: 220px; }
+.rp-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }

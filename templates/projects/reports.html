@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ project.key }} Reports — Projects — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'projects:project_detail' project.key %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to {{ project.key }}
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">{{ project.name }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        <span class="issue-key">{{ project.key }}</span> &middot; Reports
+      </div>
+    </div>
+  </div>
+
+  <div class="rp-grid fade-in d2">
+    <div class="form-card">
+      <div class="form-card-title">Burndown</div>
+      <div class="form-card-hint">Points still open, day by day, against the ideal line.</div>
+      {% if sprints %}
+      <div class="rp-tools">
+        <select class="form-select" id="rp-sprint">
+          {% for sprint in sprints %}
+          <option value="{{ sprint.id }}">
+            {{ sprint.name }}{% if sprint.state == "active" %} &middot; active{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% else %}
+      <div class="form-card-hint">Start a sprint with dates to see its burndown.</div>
+      {% endif %}
+      <div class="rp-body"
+           data-report="burndown"
+           data-url="{% url 'projects:reports_data' project.key 'burndown' %}"></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Velocity</div>
+      <div class="form-card-hint">Committed against completed, last six closed sprints.</div>
+      <div class="rp-body"
+           data-report="velocity"
+           data-url="{% url 'projects:reports_data' project.key 'velocity' %}"></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Cumulative flow</div>
+      <div class="form-card-hint">How many issues sat in each column category, day by day.</div>
+      <div class="rp-tools">
+        <select class="form-select" id="rp-days">
+          <option value="14">14 days</option>
+          <option value="30" selected>30 days</option>
+          <option value="90">90 days</option>
+        </select>
+      </div>
+      <div class="rp-body"
+           data-report="flow"
+           data-url="{% url 'projects:reports_data' project.key 'flow' %}"></div>
+    </div>
+
+    {% if can_see_cost %}
+    <div class="form-card rp-wide">
+      <div class="form-card-title">Cost</div>
+      <div class="rp-tools">
+        <select class="form-select" id="rp-by">
+          {% for value, label in groupings %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <a id="rp-csv"
+           class="btn btn-outline"
+           href="{% url 'projects:reports_cost_csv' project.key %}?by={{ groupings.0.0 }}">Download CSV</a>
+      </div>
+      <div class="form-card-hint">Amounts in {{ currency }}.</div>
+      <div class="rp-body"
+           data-report="cost"
+           data-url="{% url 'projects:reports_data' project.key 'cost' %}"></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/jackil-widgets.js' %}"></script>
+<script src="{% static 'js/jackil-reports.js' %}"></script>
+{% endblock %}

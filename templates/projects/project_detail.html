@@ -19,6 +19,7 @@
     </div>
     <div style="display:flex; gap:8px;">
       <a href="{% url 'projects:board' project.key %}" class="btn btn-outline">Board</a>
+      <a href="{% url 'projects:reports' project.key %}" class="btn btn-outline">Reports</a>
       {% if project.method == "scrum" %}<a href="{% url 'projects:backlog' project.key %}" class="btn btn-outline">Backlog</a>{% endif %}
       {% if can_admin %}
       <a href="{% url 'projects:project_settings' project.key %}" class="btn btn-outline">Settings</a>
