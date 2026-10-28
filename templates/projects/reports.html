@@ -66,6 +66,7 @@
     {% if can_see_cost %}
     <div class="form-card rp-wide">
       <div class="form-card-title">Cost</div>
+      <div class="form-card-hint">Amounts in {{ currency }}.</div>
       <div class="rp-tools">
         <select class="form-select" id="rp-by">
           {% for value, label in groupings %}
@@ -76,7 +77,6 @@
            class="btn btn-outline"
            href="{% url 'projects:reports_cost_csv' project.key %}?by={{ groupings.0.0 }}">Download CSV</a>
       </div>
-      <div class="form-card-hint">Amounts in {{ currency }}.</div>
       <div class="rp-body"
            data-report="cost"
            data-url="{% url 'projects:reports_data' project.key 'cost' %}"></div>

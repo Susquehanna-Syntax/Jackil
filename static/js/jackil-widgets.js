@@ -177,11 +177,15 @@ function _seriesSvg(data, W, H) {
   }
 
   // As many x labels as fit, evenly spaced, first and last always shown.
-  const fit = Math.max(2, Math.floor(plotW / 56));
+  // A label's width follows its length (an ISO date needs ~70px), and a label
+  // too close to the always-shown last one gives way to it.
+  const longest = labels.reduce((n, l) => Math.max(n, String(l).length), 0);
+  const fit = Math.max(2, Math.floor(plotW / Math.max(56, longest * 6.5 + 12)) - 1);
   const every = Math.max(1, Math.ceil(labels.length / fit));
+  const last = labels.length - 1;
   labels.forEach((label, i) => {
-    if (i % every !== 0 && i !== labels.length - 1) return;
-    const anchor = data.kind === 'bar' ? 'middle' : (i === 0 ? 'start' : (i === labels.length - 1 ? 'end' : 'middle'));
+    if (i !== last && (i % every !== 0 || last - i < every)) return;
+    const anchor = data.kind === 'bar' ? 'middle' : (i === 0 ? 'start' : (i === last ? 'end' : 'middle'));
     parts.push(`<text class="axis-text" x="${xOf(i).toFixed(1)}" y="${H - 4}" text-anchor="${anchor}">${escHtml(label)}</text>`);
   });
 
