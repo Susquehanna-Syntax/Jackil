@@ -1,10 +1,9 @@
 from django.urls import path, register_converter
 
-from . import views
-from .converters import IssueRefConverter, ProjectKeyConverter
+from . import backlog, converters, views
 
-register_converter(ProjectKeyConverter, "projkey")
-register_converter(IssueRefConverter, "issueref")
+register_converter(converters.ProjectKeyConverter, "projkey")
+register_converter(converters.IssueRefConverter, "issueref")
 
 app_name = "projects"
 
@@ -19,4 +18,19 @@ urlpatterns = [
     path("<projkey:key>/", views.project_detail, name="project_detail"),
     path("<projkey:key>/settings/", views.project_settings, name="project_settings"),
     path("<projkey:key>/new/", views.issue_create, name="issue_create"),
+    path("<projkey:key>/backlog/", backlog.backlog_page, name="backlog"),
+    path("<projkey:key>/backlog/data/", backlog.backlog_data, name="backlog_data"),
+    path("<projkey:key>/backlog/rank/", backlog.backlog_rank, name="backlog_rank"),
+    path("<projkey:key>/sprints/", backlog.sprint_create, name="sprint_create"),
+    path(
+        "<projkey:key>/sprints/<int:id>/start/",
+        backlog.sprint_start,
+        name="sprint_start",
+    ),
+    path(
+        "<projkey:key>/sprints/<int:id>/complete/",
+        backlog.sprint_complete,
+        name="sprint_complete",
+    ),
+    path("<projkey:key>/sprints/<int:id>/edit/", backlog.sprint_edit, name="sprint_edit"),
 ]
