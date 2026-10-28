@@ -737,6 +737,14 @@ class Command(BaseCommand):
         """
 
         def _linked(source, target, relation):
+            """Whether a ticket-end link of this relation already exists.
+
+            Matched by relation and the kinds on each end rather than by pk: a
+            run without ``--fresh`` appends another copy of every ticket, so
+            the ticket on this end is not the row the last run linked. Either
+            direction counts - ``add_link`` will accept a reverse-ordered pair
+            of a different relation.
+            """
             if "ticket" not in (source[0], target[0]):
                 return False
             forward = DynamicLink.objects.filter(
