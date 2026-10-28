@@ -2119,3 +2119,9 @@ a.dash-card { text-decoration: none; }
 .rp-body[data-report="cost"] { height: auto; min-height: 120px; }
 .rp-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .rp-tools .form-select { width: auto; min-width: 200px; }
+
+/* ── Rates page (M5 p05c) ──────────────────────────────────────────────── */
+.rt-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 18px; align-items: start; }
+.rt-layout .form-card { margin-bottom: 0; }
+.rt-table .form-input { max-width: 160px; }
+@media (max-width: 900px) { .rt-layout { grid-template-columns: 1fr; } }

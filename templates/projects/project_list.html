@@ -15,6 +15,7 @@
       {% if show_archived %}Active projects{% else %}Archived projects{% endif %}
     </a>
     {% if can_admin %}
+    <a href="{% url 'projects:rates' %}" class="btn btn-outline">Rates</a>
     <a href="{% url 'projects:project_create' %}" class="btn btn-lav">
       <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New project

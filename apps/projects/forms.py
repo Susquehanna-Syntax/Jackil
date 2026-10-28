@@ -1,9 +1,11 @@
+import re
+
 from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.accounts.models import User
 
-from .models import Column, Issue, Project
+from .models import Column, CostSettings, Issue, Project
 
 INPUT = {"class": "form-input"}
 SELECT = {"class": "form-select"}
@@ -148,6 +150,60 @@ class IssueForm(forms.ModelForm):
         if self.project is not None:
             cleaned["labels"] = _labels_text(cleaned.get("labels", ""))
         return cleaned
+
+
+class CostSettingsForm(forms.ModelForm):
+    class Meta:
+        model = CostSettings
+        fields = ["default_hours_per_point", "show_cost_totals_to_agents", "currency"]
+        labels = {
+            "default_hours_per_point": "Default hours per point",
+            "show_cost_totals_to_agents": "Show cost totals to agents",
+            "currency": "Currency",
+        }
+        widgets = {
+            "default_hours_per_point": forms.NumberInput(attrs=INPUT),
+            "currency": forms.TextInput(attrs=INPUT),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # "EURO" should fail with the remedy below, not Django's stock
+        # max-length message; clean_currency covers every shape anyway.
+        self.fields["currency"].validators = [
+            v for v in self.fields["currency"].validators if getattr(v, "limit_value", None) != 3
+        ]
+
+    def clean_default_hours_per_point(self):
+        hours = self.cleaned_data["default_hours_per_point"]
+        if hours <= 0:
+            raise forms.ValidationError("Must be more than zero.")
+        return hours
+
+    def clean_currency(self):
+        code = self.cleaned_data["currency"].strip().upper()
+        if not re.fullmatch(r"[A-Z]{3}", code):
+            raise forms.ValidationError("Use a three-letter code such as USD.")
+        return code
+
+
+class RateForm(forms.Form):
+    """One row of the rates table, bound with prefix=f"u{user.pk}"."""
+
+    hourly_wage = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_digits=8,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={"class": "form-input", "step": "any"}),
+    )
+    sprint_hours = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_digits=6,
+        decimal_places=1,
+        widget=forms.NumberInput(attrs={"class": "form-input", "step": "any"}),
+    )
 
 
 def _split_labels(value) -> list[str]:

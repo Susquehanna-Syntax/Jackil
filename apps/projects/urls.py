@@ -1,6 +1,6 @@
 from django.urls import path, register_converter
 
-from . import backlog, board, converters, reports, views
+from . import backlog, board, converters, rates, reports, views
 
 register_converter(converters.ProjectKeyConverter, "projkey")
 register_converter(converters.IssueRefConverter, "issueref")
@@ -10,6 +10,7 @@ app_name = "projects"
 urlpatterns = [
     path("", views.project_list, name="project_list"),
     path("new/", views.project_create, name="project_create"),
+    path("rates/", rates.rates_page, name="rates"),
     # Issue routes first: a bare project-key pattern would happily match "NET-12".
     path("<issueref:ref>/", views.issue_detail, name="issue_detail"),
     path("<issueref:ref>/edit/", views.issue_edit, name="issue_edit"),
