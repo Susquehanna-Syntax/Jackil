@@ -18,11 +18,12 @@ from apps.reports.models import Report
 from apps.reports.widgets import GROUPS, REPORT_WIDGETS
 
 #: What the "New report" button and a POST without cards start with.
+#: Two to a row, so a new report fills the page's width.
 DEFAULT_CARDS = [
-    {"kind": "ticket_volume"},
-    {"kind": "status_mix"},
-    {"kind": "sla_compliance"},
-    {"kind": "agent_load"},
+    {"kind": "ticket_volume", "w": 6},
+    {"kind": "status_mix", "w": 6},
+    {"kind": "sla_compliance", "w": 6},
+    {"kind": "agent_load", "w": 6},
 ]
 
 #: The builder-editable fields a PATCH may carry; anything else is ignored.
