@@ -727,14 +727,7 @@ class Command(BaseCommand):
         return page
 
     def _links(self, admin, items, pages, mail_ticket_id):
-        """Dynamic Links, skipping a link whose end is missing.
-
-        A link that has a ticket on one end is matched by relation and the kind
-        of thing on the other end, because a run without ``--fresh`` appends
-        another copy of every ticket and moves its pk; ``_linked`` recognises
-        those. Item and page pks are stable, so re-seeding them lands on
-        ``add_link``'s own duplicate check instead.
-        """
+        """Dynamic Links, skipping a link whose end is missing."""
 
         def _linked(source, target, relation):
             """Whether a ticket-end link of this relation already exists.
@@ -744,6 +737,10 @@ class Command(BaseCommand):
             the ticket on this end is not the row the last run linked. Either
             direction counts - ``add_link`` will accept a reverse-ordered pair
             of a different relation.
+
+            A link with no ticket end needs no check here: Item and page pks
+            are stable, so re-seeding those lands on ``add_link``'s own
+            duplicate check and raises ``LinkError``.
             """
             if "ticket" not in (source[0], target[0]):
                 return False
