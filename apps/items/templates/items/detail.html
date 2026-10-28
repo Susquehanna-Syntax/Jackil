@@ -44,7 +44,34 @@
       <div>{% if item.warranty_end %}{{ item.warranty_end|date:"M d, Y" }}{% else %}&mdash;{% endif %}</div>
 
       <div style="color: var(--text-3);">Vigil host</div>
-      <div>{% if item.vigil_host_id %}{{ item.vigil_host_id }}{% else %}Not connected{% endif %}</div>
+      <div>
+        {% if vigil_host %}
+          {{ vigil_host.label }}
+          {% if vigil_host.status %}
+          <span class="pill {% if vigil_host.tone == 'ok' %}tc-mint{% elif vigil_host.tone == 'bad' %}tc-rose{% elif vigil_host.tone == 'warn' %}tc-peach{% else %}off{% endif %}">{{ vigil_host.status }}</span>
+          {% endif %}
+          <a href="{{ vigil_host.url }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open in Vigil</a>
+          {% if can_edit %}
+          <form method="post" action="{% url 'items:item_link_host' item.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="host_id" value="">
+            <button type="submit" class="btn btn-ghost btn-sm">Unlink</button>
+          </form>
+          {% endif %}
+        {% elif item.vigil_host_id %}
+          {{ item.vigil_host_id }}
+          <span style="color: var(--text-3);">{% if vigil_down %}Vigil unavailable{% else %}Not found in Vigil{% endif %}</span>
+        {% elif vigil_suggestion %}
+          Looks like {{ vigil_suggestion.label }}
+          <form method="post" action="{% url 'items:item_link_host' item.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="host_id" value="{{ vigil_suggestion.id }}">
+            <button type="submit" class="btn btn-outline btn-sm">Link this host</button>
+          </form>
+        {% else %}
+          Not connected
+        {% endif %}
+      </div>
 
       <div style="color: var(--text-3);">Notes</div>
       <div>{{ item.notes|linebreaksbr|default:"&mdash;" }}</div>

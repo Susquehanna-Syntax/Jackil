@@ -12,4 +12,5 @@ urlpatterns = [
     path("<int:pk>/", views.item_detail, name="item_detail"),
     path("<int:pk>/edit/", views.item_edit, name="item_edit"),
     path("<int:pk>/delete/", views.item_delete, name="item_delete"),
+    path("<int:pk>/vigil-host/", views.item_link_host, name="item_link_host"),
 ]
