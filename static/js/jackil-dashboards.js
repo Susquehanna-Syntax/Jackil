@@ -423,9 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
 //: lavender, people in mint. An unknown group falls into the last bucket so a
 //: widget added to the registry on the server still appears in the rail rather
 //: than vanishing from it.
-const GROUP_ACCENT = { tickets: 'sky', sla: 'peach', work: 'lav', people: 'mint', projects: 'coral' };
-const GROUP_LABEL = { tickets: 'Tickets', sla: 'SLA', work: 'My work', people: 'People', projects: 'Projects' };
-const GROUP_ORDER = ['tickets', 'sla', 'work', 'people', 'projects'];
+const GROUP_ACCENT = { tickets: 'sky', sla: 'peach', work: 'lav', people: 'mint', projects: 'coral', vigil: 'sky' };
+const GROUP_LABEL = { tickets: 'Tickets', sla: 'SLA', work: 'My work', people: 'People', projects: 'Projects', vigil: 'Vigil' };
+const GROUP_ORDER = ['tickets', 'sla', 'work', 'people', 'projects', 'vigil'];
 
 function _railHtml() {
   const widgets = DASH.catalog.widgets || {};

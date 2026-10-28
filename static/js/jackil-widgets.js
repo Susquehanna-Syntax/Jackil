@@ -333,8 +333,10 @@ function _settingsField(name, field, value, options) {
   if (t === 'choice') {
     return `<div class="form-group">${label}
       <select class="form-select" id="${escAttr(id)}" data-setting="${escAttr(name)}">
-        ${(field.options || []).map(o =>
-          `<option value="${escAttr(o)}"${String(o) === String(value) ? ' selected' : ''}>${escHtml(o)}</option>`).join('')}
+        ${(field.options || []).map(o => {
+          const [v, text] = Array.isArray(o) ? o : [o, o];
+          return `<option value="${escAttr(v)}"${String(v) === String(value) ? ' selected' : ''}>${escHtml(text)}</option>`;
+        }).join('')}
       </select></div>`;
   }
   return `<div class="form-group">${label}

@@ -8,7 +8,7 @@ from .contract import WIDGET_SCHEMA_VERSION
 from .data import widget_data
 from .models import Dashboard, DashboardWidget, starter_dashboard
 from .permissions import IsStaffRole
-from .widgets import GRID_COLUMNS, GRID_MAX_ROWS, WIDGET_REGISTRY
+from .widgets import GRID_COLUMNS, GRID_MAX_ROWS, UNIVERSAL_SETTINGS, WIDGET_REGISTRY
 
 
 def _serialize(dashboard, request_user):
@@ -172,7 +172,15 @@ def layout_update(request, dashboard_id):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         kind = entry.get("kind")
-        spec = WIDGET_REGISTRY.get(kind)
+        from apps.vigil.widgets import is_remote
+
+        if is_remote(kind):
+            # A saved Vigil tile must survive an outage: accepted by name
+            # alone, since its registry entry only exists while Vigil is
+            # readable.
+            spec = {"min_w": 2, "min_h": 2}
+        else:
+            spec = WIDGET_REGISTRY.get(kind)
         if spec is None:
             return Response(
                 {"error": f"unknown widget kind: {kind!r}"},
@@ -276,6 +284,11 @@ def widget_data_view(request, kind):
     Settings come from the query string and go through clean_settings, so an
     unknown key is ignored and an out-of-range number is clamped.
     """
+    from apps.vigil.widgets import is_remote, remote_widget_data
+
+    if is_remote(kind):
+        raw = {key: request.query_params.get(key) for key in request.query_params}
+        return Response(remote_widget_data(kind, raw, request.user))
     if kind not in WIDGET_REGISTRY:
         return Response(
             {"error": f"unknown widget kind: {kind!r}"}, status=status.HTTP_404_NOT_FOUND
@@ -293,6 +306,13 @@ def catalog(request):
     widgets = {
         kind: {**spec, "settings": settings_for(kind)} for kind, spec in WIDGET_REGISTRY.items()
     }
+    from apps.vigil.widgets import remote_catalog
+
+    for kind, entry in remote_catalog().items():
+        widgets[kind] = {
+            **entry,
+            "settings": {**UNIVERSAL_SETTINGS, **entry["settings"]},
+        }
     return Response(
         {
             "widgets": widgets,
