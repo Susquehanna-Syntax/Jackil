@@ -133,6 +133,14 @@ def ticket_detail(request, pk):
     from .models import TicketRating
 
     rating = TicketRating.objects.filter(ticket=ticket).first()
+    from apps.projects.models import Project
+    from apps.projects.permissions import can_see_projects
+
+    escalate_projects = (
+        Project.objects.filter(is_archived=False).order_by("key")
+        if can_see_projects(request.user)
+        else []
+    )
     ctx = {
         "ticket": ticket,
         "messages_thread": thread,
@@ -142,6 +150,7 @@ def ticket_detail(request, pk):
         "can_post_internal": permissions.can_post_internal(request.user),
         "agents": agents,
         "rating": rating,
+        "escalate_projects": escalate_projects,
         "suggestions": _suggestions(ticket, request.user, request),
         "can_rate": request.user.id == ticket.created_by_id
         and ticket.status in ("resolved", "closed"),

@@ -1,6 +1,6 @@
 from django.urls import path, register_converter
 
-from . import backlog, board, converters, rates, reports, views
+from . import backlog, board, converters, escalate, rates, reports, views
 
 register_converter(converters.ProjectKeyConverter, "projkey")
 register_converter(converters.IssueRefConverter, "issueref")
@@ -19,6 +19,7 @@ urlpatterns = [
     path("<projkey:key>/", views.project_detail, name="project_detail"),
     path("<projkey:key>/settings/", views.project_settings, name="project_settings"),
     path("<projkey:key>/new/", views.issue_create, name="issue_create"),
+    path("escalate/<int:ticket_pk>/", escalate.escalate, name="escalate"),
     path("<projkey:key>/backlog/", backlog.backlog_page, name="backlog"),
     path("<projkey:key>/board/", board.board_page, name="board"),
     path("<projkey:key>/board/data/", board.board_data, name="board_data"),
