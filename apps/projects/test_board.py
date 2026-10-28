@@ -7,7 +7,10 @@ the NET numbers the Scrum fixtures hand out — the two projects share no rows.
 import json
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
+from django.conf import settings
+from django.test import SimpleTestCase
 from django.urls import reverse
 
 from apps.projects import service
@@ -338,14 +341,33 @@ class BoardPageTests(BoardTest):
         boards = service.create_project(self.admin, "BRD", "Board Room", "kanban")
         self.login(self.agent)
         response = self.client.get(reverse("projects:backlog", args=[boards.key]))
-        # Phase 04b puts the real board behind this name; until then its page is a
-        # placeholder, so only the hop to it is checked here.
-        self.assertRedirects(
-            response,
-            reverse("projects:board", args=[boards.key]),
-            target_status_code=302,
-            fetch_redirect_response=False,
-        )
+        self.assertRedirects(response, reverse("projects:board", args=[boards.key]))
+
+    def test_board_page_renders_for_both_methods(self):
+        boards = self.kanban()
+        self.login(self.agent)
+        scrum = self.client.get(reverse("projects:board", args=["NET"]))
+        kanban = self.client.get(reverse("projects:board", args=[boards.key]))
+        self.assertEqual(scrum.status_code, 200)
+        self.assertEqual(kanban.status_code, 200)
+        for response, key, data_url in (
+            (scrum, "NET", "/projects/NET/board/data/"),
+            (kanban, "OPS", "/projects/OPS/board/data/"),
+        ):
+            page = response.content.decode()
+            self.assertIn('id="bd-columns"', page)
+            self.assertIn(data_url, page)
+            self.assertIn("jackil-board.js", page)
+            self.assertIn(f"{key} Board — Projects — Jackil", page)
+        self.assertIn(reverse("projects:backlog", args=["NET"]), scrum.content.decode())
+        self.assertNotIn(reverse("projects:backlog", args=["OPS"]), kanban.content.decode())
+
+    def test_project_page_links_the_board(self):
+        boards = self.kanban()
+        self.login(self.agent)
+        for key in ("NET", boards.key):
+            page = self.client.get(reverse("projects:project_detail", args=[key])).content.decode()
+            self.assertIn(reverse("projects:board", args=[key]), page)
 
     def test_the_board_page_is_staff_only(self):
         self.kanban()
@@ -356,3 +378,34 @@ class BoardPageTests(BoardTest):
         response = self.client.get("/projects/NET/board/data/")
         self.assertEqual(response.status_code, 302)
         self.assertIn("login", response.url)
+
+
+class BoardScriptTests(SimpleTestCase):
+    def setUp(self):
+        self.script = Path(settings.BASE_DIR, "static/js/jackil-board.js").read_text()
+
+    def test_script_wires_the_drag_and_the_dialogs(self):
+        for literal in [
+            "'dragstart'",
+            "'drop'",
+            "'dragover'",
+            "data-issue-id",
+            "closest('.bd-card')",
+            "data-move-url",
+            "status === 409",
+            "force: true",
+            "data-bd-move",
+            "bd-move-modal",
+            "escHtml",
+            "showToast",
+        ]:
+            self.assertIn(literal, self.script)
+
+    def test_script_has_no_side_stripes(self):
+        self.assertNotIn("border-left", self.script)
+
+    def test_board_css_has_no_side_stripes(self):
+        css = Path(settings.BASE_DIR, "static/css/style.css").read_text()
+        block = css.split("/* Board (M5 p04b) */", 1)[1]
+        self.assertNotIn("border-left", block)
+        self.assertNotIn("border-right", block)

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ project.key }} Board — Projects — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'projects:project_detail' project.key %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to {{ project.key }}
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">{{ project.name }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        <span class="issue-key">{{ project.key }}</span>
+        <span id="bd-sprint">&middot; Board</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      {% if backlog_url %}<a href="{{ backlog_url }}" class="btn btn-outline">Backlog</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="filter-bar fade-in d2">
+    <select class="form-select" id="bd-assignee">
+      <option value="">Anyone</option>
+      <option value="me">Assigned to me</option>
+    </select>
+    <select class="form-select" id="bd-type">
+      <option value="">All types</option>
+      <option value="epic">Epic</option>
+      <option value="story">Story</option>
+      <option value="task">Task</option>
+      <option value="bug">Bug</option>
+    </select>
+    <input type="search" class="form-input" id="bd-q" placeholder="Search titles...">
+  </div>
+</div>
+
+<div id="bd-columns"
+     class="bd-columns fade-in d3"
+     data-data-url="{{ data_url }}"
+     data-move-url="{{ move_url }}"
+     data-scrum="{% if project.method == 'scrum' %}1{% else %}0{% endif %}">
+  <span class="muted-note">Loading the board&hellip;</span>
+</div>
+
+<div class="modal-overlay" id="bd-move-modal" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Move issue</div>
+      <button class="modal-close" type="button" data-modal-close>
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding: 16px 24px;">
+      <div class="form-group">
+        <label class="form-label" for="bd-move-column">Move to</label>
+        <select class="form-select" id="bd-move-column"></select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="bd-move-pos">Position</label>
+        <select class="form-select" id="bd-move-pos">
+          <option value="top">Top</option>
+          <option value="bottom">Bottom</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+      <button type="button" class="btn btn-lav" id="bd-move-ok">Move</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/jackil-board.js' %}"></script>
+{% endblock %}

@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
 from . import permissions, service, views
 from .models import Column, Issue, Project
@@ -14,11 +15,22 @@ from .models import Column, Issue, Project
 
 @login_required
 def board_page(request, key):
-    """The board screen. Phase 04b draws it; until then it sends staff to the project."""
+    """The board screen: one column per project Column, cards you drag between them."""
     if not permissions.can_see_projects(request.user):
         raise PermissionDenied
     project = get_object_or_404(Project, key=key.upper())
-    return redirect("projects:project_detail", key=project.key)
+    return render(
+        request,
+        "projects/board.html",
+        {
+            "project": project,
+            "data_url": reverse("projects:board_data", args=[project.key]),
+            "move_url": reverse("projects:board_move", args=[project.key]),
+            "backlog_url": reverse("projects:backlog", args=[project.key])
+            if project.method == "scrum"
+            else "",
+        },
+    )
 
 
 @login_required
