@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Wiki — Jackil{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in d1">
+  <div>
+    <div class="page-title">Wiki</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+      {{ spaces|length }} space{{ spaces|length|pluralize }}
+    </div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    {% if can_manage_spaces %}
+    <a href="{% url 'wiki:space_create' %}" class="btn btn-outline">New Space</a>
+    {% endif %}
+    <a href="{% url 'wiki:page_new' %}" class="btn btn-lav">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Page
+    </a>
+  </div>
+</div>
+
+{% if spaces %}
+<div class="stat-grid fade-in d2">
+  {% for space in spaces %}
+  <a class="stat-card" href="{% url 'wiki:space_detail' space.slug %}" style="display:block;">
+    <div class="kb-category-head">
+      <div class="kb-category-icon" style="background: var(--{{ space.icon_color|default:'lavender' }});">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      </div>
+      <div style="min-width:0;">
+        <div class="kb-category-name">{{ space.name }}</div>
+        <div class="kb-category-desc">{{ space.description|default:"No description" }}</div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state fade-in d2">
+  <div class="empty-state-icon">
+    <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+  </div>
+  <h3>No spaces yet</h3>
+  <p>A space is a shelf of pages &mdash; Networking, Servers, Onboarding.</p>
+</div>
+{% endif %}
+
+<div class="form-card fade-in d3" style="margin-top: 28px; max-width: 780px;">
+  <div class="form-card-title">Recently updated</div>
+  {% if recent %}
+  <div class="inbox-list" style="margin-top: 12px;">
+    {% for page in recent %}
+    <a class="inbox-row" href="{{ page.get_absolute_url }}">
+      <div class="inbox-row-main">
+        <div style="min-width: 0;">
+          <div class="inbox-name">{{ page.title }}</div>
+          <div class="inbox-addr">{{ page.space.name }} &middot;
+            {% if page.updated_by %}{{ page.updated_by.get_full_name|default:page.updated_by.username }}{% else %}nobody yet{% endif %},
+            {{ page.updated_at|timesince }} ago</div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="form-card-hint">No pages yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

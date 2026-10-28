@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_new %}New Page{% else %}Edit {{ page.title }}{% endif %} — Wiki — Jackil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/vendor/katex/katex.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="wiki-breadcrumbs">
+    <a href="{% url 'wiki:home' %}">Wiki</a>
+    {% if space %}&rsaquo; <a href="{% url 'wiki:space_detail' space.slug %}">{{ space.name }}</a>{% endif %}
+    {% if not is_new %}&rsaquo; <a href="{{ page.get_absolute_url }}">{{ page.title }}</a>{% endif %}
+  </div>
+
+  <div class="page-title">{% if is_new %}New Page{% else %}Edit {{ page.title }}{% endif %}</div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="wiki-editor-grid fade-in d2">
+      <div>
+        {% if errors.non_field %}
+        <div class="message message-error">{{ errors.non_field }}</div>
+        {% endif %}
+
+        <div class="form-card">
+          <div class="form-group">
+            <label class="form-label" for="id_title">Title</label>
+            <input type="text" name="title" id="id_title" class="form-input" maxlength="200" value="{{ page.title }}" required>
+            {% if errors.title %}<div class="message message-error">{{ errors.title }}</div>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_space">Space</label>
+            <select name="space" id="id_space" class="form-select">
+              {% for option in spaces %}
+              <option value="{{ option.slug }}" {% if space.slug == option.slug %}selected{% endif %}>{{ option.name }}</option>
+              {% endfor %}
+            </select>
+            {% if errors.space %}<div class="message message-error">{{ errors.space }}</div>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_parent">Parent page</label>
+            <select name="parent" id="id_parent" class="form-select">
+              <option value="">No parent &mdash; top of the space</option>
+              {% for option in parents %}
+              <option value="{{ option.slug }}" {% if page.parent_id == option.pk %}selected{% endif %}>{{ option.title }}</option>
+              {% endfor %}
+            </select>
+            {% if errors.parent %}<div class="message message-error">{{ errors.parent }}</div>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_attachment">Attachment</label>
+            <input type="file" name="attachment" id="id_attachment" class="form-input" disabled>
+            <div class="form-card-hint" style="margin-top:6px;">Uploading attachments arrives with the live preview.</div>
+          </div>
+
+          {% if is_new %}
+          <div class="form-group">
+            <label class="form-label" for="id_template">Start from</label>
+            <select name="template" id="id_template" class="form-select">
+              <option value="">Blank page</option>
+              {% for template in templates %}
+              <option value="{{ template.pk }}" {% if selected_template == template.pk %}selected{% endif %}>{{ template.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-card-hint" style="margin-top:6px;">Choosing a template reloads this page with its body filled in.</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-card">
+          <div class="form-card-title">Body</div>
+          <div class="wiki-toolbar" aria-hidden="true">
+            <button type="button" disabled title="Arrives with the live preview">B</button>
+            <button type="button" disabled title="Arrives with the live preview">Link</button>
+            <button type="button" disabled title="Arrives with the live preview">Image</button>
+          </div>
+          <textarea class="form-input wiki-editor" name="body" id="id_body">{{ page.body }}</textarea>
+          {% if errors.body %}<div class="message message-error">{{ errors.body }}</div>{% endif %}
+          <div class="form-card-hint" style="margin-top:6px;">Markdown, <code>$LaTeX$</code>, callouts and <code>[[Page title]]</code> links.</div>
+        </div>
+
+        <div class="form-card">
+          <div class="form-group">
+            <label class="form-label" for="id_summary">Change summary</label>
+            <input type="text" name="summary" id="id_summary" class="form-input" maxlength="200" placeholder="What you changed">
+          </div>
+          <div class="form-group">
+            <label class="setting-check"><input type="checkbox" name="is_published" {% if page.is_published_to_help_center %}checked{% endif %}> Published to help center</label>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button type="submit" class="btn btn-lav">{{ submit_label }}</button>
+          <a href="{% if is_new %}{% url 'wiki:home' %}{% else %}{{ page.get_absolute_url }}{% endif %}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </div>
+
+      <div class="wiki-preview markdown-body" data-markdown>{% if preview_html %}{{ preview_html }}{% else %}<p style="color: var(--text-3);">Nothing saved yet. Your page appears here once you save.</p>{% endif %}</div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/vendor/katex/katex.min.js' %}"></script>
+<script src="{% static 'js/jackil-math.js' %}"></script>
+{% endblock %}

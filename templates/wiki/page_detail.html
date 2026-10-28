@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page.title }} — Wiki — Jackil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/vendor/katex/katex.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="wiki-breadcrumbs">
+    <a href="{% url 'wiki:home' %}">Wiki</a> &rsaquo;
+    <a href="{% url 'wiki:space_detail' space.slug %}">{{ space.name }}</a>
+    {% for ancestor in ancestors %}
+    &rsaquo; <a href="{{ ancestor.get_absolute_url }}">{{ ancestor.title }}</a>
+    {% endfor %}
+    &rsaquo; {{ page.title }}
+  </div>
+
+  <div class="page-header">
+    <div style="min-width:0;">
+      <div class="page-title">{{ page.title }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        Edited by
+        {% if page.updated_by %}{{ page.updated_by.get_full_name|default:page.updated_by.username }}{% else %}nobody yet{% endif %},
+        {{ page.updated_at|timesince }} ago &middot; {{ page.views }} view{{ page.views|pluralize }}
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{% url 'wiki:page_edit' page.slug %}" class="btn btn-outline">Edit</a>
+      <a href="{% url 'wiki:page_history' page.slug %}" class="btn btn-outline">History</a>
+      <a href="{% url 'wiki:page_new' %}?space={{ space.slug }}&amp;parent={{ page.slug }}" class="btn btn-outline">New child page</a>
+      {% if can_delete %}
+      <a href="{% url 'wiki:page_delete' page.slug %}" class="btn btn-outline">Delete</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="wiki-layout fade-in d2">
+    <nav class="wiki-tree" aria-label="Pages in {{ space.name }}">
+      {% if tree %}
+      <ul>{{ tree }}</ul>
+      {% else %}
+      <div class="form-card-hint">No pages yet.</div>
+      {% endif %}
+    </nav>
+
+    <div style="min-width:0;">
+      <article class="markdown-body" data-markdown>{{ html }}</article>
+
+      <div id="wiki-links"></div>
+
+      <div class="form-card" style="margin-top: 28px;">
+        <div class="form-card-title">Children</div>
+        {% if children %}
+        <ul style="list-style:none; margin-top:10px;">
+          {% for child in children %}
+          <li style="padding: 4px 0;"><a href="{{ child.get_absolute_url }}">{{ child.title }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="form-card-hint">No pages underneath this one.</div>
+        {% endif %}
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title">Attachments</div>
+        {% if attachments %}
+        <ul style="list-style:none; margin-top:10px;">
+          {% for attachment in attachments %}
+          <li style="padding: 4px 0;"><a href="{{ attachment.file.url }}">{{ attachment.original_name }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="form-card-hint">Nothing attached yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/vendor/katex/katex.min.js' %}"></script>
+<script src="{% static 'js/jackil-math.js' %}"></script>
+{% endblock %}

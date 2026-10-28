@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ page.title }} — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1" style="max-width: 640px;">
+  <a href="{{ page.get_absolute_url }}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to {{ page.title }}
+  </a>
+
+  <div class="page-title">Delete “{{ page.title }}”?</div>
+
+  <div class="form-card" style="margin-top: 16px;">
+    <div class="form-card-hint">
+      {% if descendant_count %}
+      This page has {{ descendant_count }} child page{{ descendant_count|pluralize }} underneath it.
+      They are deleted with it.
+      {% else %}
+      No pages are underneath this one.
+      {% endif %}
+      Its versions and attachments go too.
+    </div>
+  </div>
+
+  <form method="post" style="display:flex; gap:8px; margin-top:18px;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline">Delete page</button>
+    <a href="{{ page.get_absolute_url }}" class="btn btn-ghost">Cancel</a>
+  </form>
+</div>
+{% endblock %}

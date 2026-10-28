@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}History — {{ page.title }} — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{{ page.get_absolute_url }}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to {{ page.title }}
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">History</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ page.title }}</div>
+    </div>
+    <a href="{% url 'wiki:page_diff' page.slug %}" class="btn btn-outline">Compare latest</a>
+  </div>
+
+  <div class="form-card fade-in d2" style="max-width: 780px;">
+    {% if versions %}
+    <div class="inbox-list" style="margin-top:12px;">
+      {% for version in versions %}
+      <div class="inbox-row">
+        <div class="inbox-row-main">
+          <div style="min-width:0;">
+            <div class="inbox-name">
+              <a href="{% url 'wiki:page_version' page.slug version.number %}">Version {{ version.number }}</a>
+              &middot; {{ version.title }}
+            </div>
+            <div class="inbox-addr">
+              {% if version.author %}{{ version.author.get_full_name|default:version.author.username }}{% else %}nobody{% endif %},
+              {{ version.created_at|timesince }} ago{% if version.summary %} &middot; {{ version.summary }}{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="inbox-row-meta">
+          <a class="btn btn-outline btn-sm" href="{% url 'wiki:page_version' page.slug version.number %}">View</a>
+          <form method="post" action="{% url 'wiki:page_restore' page.slug version.number %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm">Restore</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="form-card-hint">No versions yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
