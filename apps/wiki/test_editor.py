@@ -17,7 +17,7 @@ from apps.wiki.models import Page, PageAttachment, Space
 #: A real 1x1 PNG: a "PNG" that only looks like one would not be an image to
 #: anything downstream that decodes the stored file.
 PNG = base64.b64decode(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=="
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
 )
 
 # Uploads land in a throwaway directory, never the repo's media/; .rexymcp/ is gitignored.
@@ -155,13 +155,13 @@ class AttachmentDownloadTest(TestCase):
         cls.space = Space.objects.create(name="Ops")
         cls.page = Page.objects.create(space=cls.space, title="Runbook")
 
-    def attach(self, name="diagram.png", content_type="image/png"):
+    def attach(self, name="diagram.png", content_type="image/png", data=PNG):
         return PageAttachment.objects.create(
             page=self.page,
-            file=SimpleUploadedFile(name, PNG, content_type=content_type),
+            file=SimpleUploadedFile(name, data, content_type=content_type),
             original_name=name,
             content_type=content_type,
-            size=len(PNG),
+            size=len(data),
         )
 
     def test_agent_downloads_the_bytes_under_the_original_name(self):
@@ -175,7 +175,7 @@ class AttachmentDownloadTest(TestCase):
     def test_images_render_inline_and_other_files_download(self):
         self.client.force_login(self.agent)
         image = self.attach()
-        document = self.attach("notes.txt", "text/plain")
+        document = self.attach("notes.txt", "text/plain", data=b"plain words")
 
         self.assertNotIn(
             "attachment",

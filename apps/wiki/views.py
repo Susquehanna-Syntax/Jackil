@@ -17,6 +17,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
 
+from apps.wiki.files import INLINE_IMAGE_TYPES, SAFE_HEADERS, sniff_image
+
 from .markdown import render as render_markdown
 from .models import Page, PageAttachment, PageTemplate, Space
 from .service import save_version
@@ -487,7 +489,8 @@ def page_attach(request, slug):
             page=page,
             file=f,
             original_name=f.name[:255],
-            content_type=getattr(f, "content_type", "") or "",
+            # Stored from the bytes, not the browser's claim (see apps/wiki/files.py).
+            content_type=sniff_image(f) or "application/octet-stream",
             size=f.size or 0,
             uploaded_by=request.user,
         )
@@ -501,21 +504,28 @@ def attachment_download(request, pk):
     """The file itself: images inline so previews can point at them here."""
     _staff_or_403(request)
     attachment = get_object_or_404(PageAttachment, pk=pk)
-    inline = attachment.content_type.startswith("image/")
     try:
-        return FileResponse(
-            attachment.file.open("rb"),
-            as_attachment=not inline,
-            filename=attachment.original_name,
-        )
+        handle = attachment.file.open("rb")
     except FileNotFoundError as exc:
         raise Http404 from exc
+    # Decided again from the bytes at serve time, so a row stored before this
+    # check existed, or edited in the admin, cannot be served inline as HTML.
+    image_type = sniff_image(handle)
+    response = FileResponse(
+        handle,
+        as_attachment=image_type is None,
+        filename=attachment.original_name,
+        content_type=image_type or "application/octet-stream",
+    )
+    for header, value in SAFE_HEADERS.items():
+        response[header] = value
+    return response
 
 
 def _attachment_json(attachment):
     url = reverse("wiki:attachment_download", args=[attachment.pk])
     name = attachment.original_name
-    if attachment.content_type.startswith("image/"):
+    if attachment.content_type in INLINE_IMAGE_TYPES.values():
         # Alt text becomes an HTML attribute, so it is escaped before Markdown is.
         markdown = f"![{escape(name)}]({url})"
     else:
