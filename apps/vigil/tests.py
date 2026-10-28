@@ -390,3 +390,21 @@ class SettingsPageTests(TestCase):
         self.assertTrue(connection.last_ok)
         self.assertEqual(connection.last_message, "Connected to Vigil 2026.16.0 as alice.")
         self.assertEqual(connection.vigil_version, "2026.16.0")
+
+
+class WidgetListNotFoundTests(TestCase):
+    """The widget list is not a per-item path: its 404 means an old Vigil."""
+
+    def test_widget_list_404_says_update_vigil(self):
+        import urllib.error
+        from unittest import mock
+
+        from apps.vigil.client import VigilClient, VigilUnavailable
+
+        def refuse(request, timeout):
+            raise urllib.error.HTTPError(request.full_url, 404, "Not Found", {}, None)
+
+        with mock.patch("apps.vigil.client.urlopen", side_effect=refuse):
+            with self.assertRaises(VigilUnavailable) as caught:
+                VigilClient("https://vigil.example", "vjk_x").widgets()
+        self.assertIn("Update Vigil", str(caught.exception))

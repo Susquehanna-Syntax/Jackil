@@ -23,8 +23,8 @@ class _NotFound(Exception):
     """Internal signal: Vigil answered 404 where an item was expected."""
 
 
-#: Per-item paths answer 404 with "not found"; a 404 anywhere else means the
-#: integration itself is missing.
+#: Per-item paths (one object, one widget) answer 404 with "not found"; a 404
+#: anywhere else, the widget list included, means the integration is missing.
 _ITEM_PATHS = tuple(f"{t}/" for t in TYPES) + ("widgets/",)
 
 
@@ -62,7 +62,7 @@ class VigilClient:
         except ssl.SSLError:
             raise VigilUnavailable("Vigil's certificate was not accepted.") from None
         except urllib.error.HTTPError as exc:
-            if exc.code == 404 and path.startswith(_ITEM_PATHS):
+            if exc.code == 404 and path != "widgets/" and path.startswith(_ITEM_PATHS):
                 raise _NotFound from None
             raise self._http_failure(exc) from None
         except urllib.error.URLError as exc:
@@ -137,7 +137,7 @@ class VigilClient:
 
     def detail(self, type: str, id: str) -> dict | None:
         _check_type(type)
-        return self._get_or_none(f"{type}/{id}/")
+        return self._get_or_none(f"{type}/{urllib.parse.quote(str(id), safe='')}/")
 
     def widgets(self) -> list[dict]:
         widgets = self._get("widgets/").get("widgets")
