@@ -1980,4 +1980,3 @@ a.dash-card { text-decoration: none; }
 .wiki-diff .add { display: block; background: rgba(var(--rgb-mint), var(--tint-a)); }
 .wiki-diff .del { display: block; background: rgba(var(--rgb-rose), var(--tint-a)); }
 @media (max-width: 900px) { .wiki-layout, .wiki-editor-grid { grid-template-columns: 1fr; } .wiki-tree { position: static; } }
-@media (max-width: 900px) { .wiki-layout, .wiki-editor-grid { grid-template-columns: 1fr; } .wiki-tree { position: static; } }
