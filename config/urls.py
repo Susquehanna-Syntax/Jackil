@@ -16,6 +16,7 @@ urlpatterns = [
     path("dashboards/api/", include("apps.dashboards.urls", namespace="dashboards")),
     path("items/", include("apps.items.urls", namespace="items")),
     path("links/", include("apps.links.urls", namespace="links")),
+    path("wiki/", include("apps.wiki.urls", namespace="wiki")),
 ]
 
 if feature_enabled("api"):
