@@ -1,4 +1,9 @@
-"""Adding, clearing and rejecting the wage rows on the rates page."""
+"""Adding, clearing and rejecting the wage rows on the rates page.
+
+The same flows are exercised end-to-end against the running URLconf with:
+
+    USE_SQLITE=1 SECRET_KEY=test python manage.py test apps.projects.test_rates --parallel 1
+"""
 
 import re
 from decimal import Decimal
