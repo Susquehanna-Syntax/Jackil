@@ -52,7 +52,7 @@
           </select>
           <select class="form-select" name="card-{{ card.index }}-chart">
             {% for chart in card.charts %}
-            <option value="{{ chart }}" {% if chart == card.chart %}selected{% endif %}>{{ chart }}</option>
+            <option value="{{ chart }}" {% if chart == card.chart %}selected{% endif %}>{% if chart == "stacked-bar" %}Stacked bar{% else %}{{ chart|capfirst }}{% endif %}</option>
             {% endfor %}
           </select>
           <input class="form-input" type="text" name="card-{{ card.index }}-title"

@@ -47,7 +47,7 @@ REPORT_WIDGETS: dict[str, dict] = {
         "how": (
             "Every ticket in the report's sources is counted once, under the status it holds now."
         ),
-        "size": {"w": 4, "h": 4},
+        "size": {"w": 6, "h": 4},
         "group": "tickets",
     },
     "priority_mix": {
@@ -62,7 +62,7 @@ REPORT_WIDGETS: dict[str, dict] = {
             "Only open tickets are counted — every ticket that is not "
             "resolved or closed — under its current priority."
         ),
-        "size": {"w": 4, "h": 4},
+        "size": {"w": 6, "h": 4},
         "group": "tickets",
     },
     "sla_compliance": {
@@ -139,7 +139,7 @@ REPORT_WIDGETS: dict[str, dict] = {
             "Every agent and admin is listed with the open tickets assigned "
             "to them now, most loaded first."
         ),
-        "size": {"w": 4, "h": 4},
+        "size": {"w": 6, "h": 4},
         "group": "people",
     },
     "velocity": {
@@ -189,7 +189,7 @@ REPORT_WIDGETS: dict[str, dict] = {
             "and the pay of whoever completed it, and added up per project. "
             "Issues we cannot price are left out."
         ),
-        "size": {"w": 4, "h": 4},
+        "size": {"w": 6, "h": 4},
         "group": "projects",
         "source": "projects",
         "needs": "cost",
@@ -208,7 +208,7 @@ REPORT_WIDGETS: dict[str, dict] = {
             "Each sprint adds up the price of the finished issues outside the "
             "epics that sat in it."
         ),
-        "size": {"w": 4, "h": 4},
+        "size": {"w": 6, "h": 4},
         "group": "projects",
         "source": "projects",
         "needs": "cost",
@@ -226,7 +226,7 @@ REPORT_WIDGETS: dict[str, dict] = {
             "For each person we can price, the cost of their finished work is "
             "divided by its story points. People with no points are left out."
         ),
-        "size": {"w": 4, "h": 4},
+        "size": {"w": 6, "h": 4},
         "group": "projects",
         "source": "projects",
         "needs": "rates",
@@ -260,7 +260,7 @@ REPORT_WIDGETS: dict[str, dict] = {
             "Every page carries its running view count. The ten highest are "
             "shown, most-read first; equal counts go alphabetical by title."
         ),
-        "size": {"w": 4, "h": 4},
+        "size": {"w": 6, "h": 4},
         "group": "wiki",
         "source": "wiki",
     },

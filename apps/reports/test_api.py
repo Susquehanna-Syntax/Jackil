@@ -117,7 +117,7 @@ class WidgetCatalogTests(ReportTestCase):
         self.assertTrue(body["widgets"]["ticket_volume"]["available"])
         self.assertFalse(body["widgets"]["cost_by_project"]["available"])
         self.assertFalse(body["widgets"]["cost_per_point"]["available"])
-        self.assertEqual(body["widgets"]["status_mix"]["size"], {"w": 4, "h": 4})
+        self.assertEqual(body["widgets"]["status_mix"]["size"], {"w": 6, "h": 4})
 
         admin = make_user("chief", "admin")
         self.client.force_authenticate(admin)
