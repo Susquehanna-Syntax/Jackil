@@ -318,7 +318,7 @@ def project_cost(settings, user):
         "tone": "info",
     }
     if left:
-        payload["sub"] = f"{left} issues left out"
+        payload["sub"] = f"{left} issue{'' if left == 1 else 's'} left out"
     return payload
 
 

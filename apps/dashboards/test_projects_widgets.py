@@ -143,7 +143,7 @@ class ProjectCostWidgetTests(ProjectWidgetTests):
         self.assertEqual(data["value"], 240)
         self.assertEqual(data["label"], "Spent on NET (USD)")
         self.assertEqual(data["tone"], "info")
-        self.assertEqual(data["sub"], "1 issues left out")
+        self.assertEqual(data["sub"], "1 issue left out")
 
     def test_project_cost_without_a_project_asks_for_one(self):
         data = widget_data("project_cost", {}, self.agent)["data"]
