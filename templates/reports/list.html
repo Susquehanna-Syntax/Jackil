@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Reports</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        Saved reports over your tickets, projects and wiki.
+      </div>
+    </div>
+    <form method="post" action="{% url 'reports:report_create' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary">New report</button>
+    </form>
+  </div>
+
+  {% if reports %}
+  <div class="rl-grid fade-in d2">
+    {% for report in reports %}
+    <a class="form-card rl-card" href="{% url 'reports:report_page' report.id %}">
+      <div class="rl-head">
+        <div class="form-card-title">{{ report.name }}</div>
+        <span class="pill {% if report.shared %}tc-mint{% else %}off{% endif %} upper">
+          {% if report.shared %}Shared{% else %}Private{% endif %}
+        </span>
+      </div>
+      {% if report.description %}<div class="form-card-hint">{{ report.description }}</div>{% endif %}
+      <div class="rl-meta">
+        {{ report.widgets|length }} card{{ report.widgets|length|pluralize }} &middot;
+        {{ report.owner.username }} &middot; updated {{ report.updated_at|date:"M j, Y" }}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <h3>No reports yet. Make one to start.</h3>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

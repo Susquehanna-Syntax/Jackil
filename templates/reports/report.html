@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ report.name }} — Reports — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'reports:reports_home' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; All reports
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">{{ report.name }}</div>
+      {% if report.description %}
+      <div style="font-size: 13px; color: var(--text-2); margin-top: 4px;">{{ report.description }}</div>
+      {% endif %}
+      <div style="font-size: 12.5px; color: var(--text-3); margin-top: 4px;">
+        Last {{ report.range_days }} days &middot;
+        {% if report.shared %}Shared{% else %}Private{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="rv-grid fade-in d2" data-report="{{ report.id }}">
+    {% for card in cards %}
+    <div class="form-card rv-card" title="{{ card.how }}"
+         style="grid-column: span {{ card.w }};">
+      <div class="rv-card-head">
+        <div class="form-card-title">{{ card.title }}</div>
+        <a class="btn btn-outline btn-sm" href="{{ card.csv_url }}">CSV</a>
+      </div>
+      <div class="rv-body" data-index="{{ card.index }}" style="height: calc({{ card.h }} * 60px)"></div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <h3>This report has no cards yet.</h3>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/jackil-widgets.js' %}"></script>
+<script src="{% static 'js/jackil-report-view.js' %}"></script>
+{% endblock %}
