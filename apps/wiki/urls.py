@@ -6,6 +6,7 @@ app_name = "wiki"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("preview/", views.preview, name="preview"),
     path("spaces/new/", views.space_create, name="space_create"),
     path("s/<slug:slug>/", views.space_detail, name="space_detail"),
     path("s/<slug:slug>/edit/", views.space_edit, name="space_edit"),
@@ -18,4 +19,6 @@ urlpatterns = [
     path("p/<slug:slug>/restore/<int:number>/", views.page_restore, name="page_restore"),
     path("p/<slug:slug>/move/", views.page_move, name="page_move"),
     path("p/<slug:slug>/delete/", views.page_delete, name="page_delete"),
+    path("p/<slug:slug>/attach/", views.page_attach, name="page_attach"),
+    path("attachment/<int:pk>/", views.attachment_download, name="attachment_download"),
 ]

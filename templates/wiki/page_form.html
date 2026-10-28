@@ -17,7 +17,7 @@
 
   <div class="page-title">{% if is_new %}New Page{% else %}Edit {{ page.title }}{% endif %}</div>
 
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" data-wiki-editor{% if not is_new %} data-attach-url="{% url 'wiki:page_attach' page.slug %}"{% endif %}>
     {% csrf_token %}
 
     <div class="wiki-editor-grid fade-in d2">
@@ -54,12 +54,6 @@
             {% if errors.parent %}<div class="message message-error">{{ errors.parent }}</div>{% endif %}
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="id_attachment">Attachment</label>
-            <input type="file" name="attachment" id="id_attachment" class="form-input" disabled>
-            <div class="form-card-hint" style="margin-top:6px;">Uploading attachments arrives with the live preview.</div>
-          </div>
-
           {% if is_new %}
           <div class="form-group">
             <label class="form-label" for="id_template">Start from</label>
@@ -76,14 +70,15 @@
 
         <div class="form-card">
           <div class="form-card-title">Body</div>
-          <div class="wiki-toolbar" aria-hidden="true">
-            <button type="button" disabled title="Arrives with the live preview">B</button>
-            <button type="button" disabled title="Arrives with the live preview">Link</button>
-            <button type="button" disabled title="Arrives with the live preview">Image</button>
-          </div>
+          <div class="wiki-toolbar" aria-hidden="true"></div>
           <textarea class="form-input wiki-editor" name="body" id="id_body">{{ page.body }}</textarea>
           {% if errors.body %}<div class="message message-error">{{ errors.body }}</div>{% endif %}
-          <div class="form-card-hint" style="margin-top:6px;">Markdown, <code>$LaTeX$</code>, callouts and <code>[[Page title]]</code> links.</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+            <button type="button" class="btn btn-outline btn-sm" data-wiki-attach>Attach files</button>
+            <input type="file" name="files" data-wiki-files multiple hidden>
+            <span class="form-card-hint">Or paste an image and it uploads here.</span>
+          </div>
+          <div class="form-card-hint" style="margin-top:6px;">Markdown, <code>$LaTeX$</code>, callouts and <code>[[Page title]]</code> links. Ctrl/Cmd+S saves.</div>
         </div>
 
         <div class="form-card">
@@ -111,4 +106,5 @@
 {% block extra_body %}
 <script src="{% static 'js/vendor/katex/katex.min.js' %}"></script>
 <script src="{% static 'js/jackil-math.js' %}"></script>
+<script src="{% static 'js/jackil-wiki-editor.js' %}"></script>
 {% endblock %}

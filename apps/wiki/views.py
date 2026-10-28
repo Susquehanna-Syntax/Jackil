@@ -5,17 +5,20 @@ through the help centre, which is phase 03's surface.
 """
 
 import difflib
+import json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import F
-from django.http import Http404
+from django.http import FileResponse, Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.html import escape, mark_safe
 
 from .markdown import render as render_markdown
-from .models import Page, PageTemplate, Space
+from .models import Page, PageAttachment, PageTemplate, Space
 from .service import save_version
 
 #: The colours a space icon may take — the same set Items offers.
@@ -25,6 +28,10 @@ SPACE_COLOURS = ["lavender", "sky", "mint", "peach", "lemon", "rose", "coral"]
 #: editor refuses anything longer rather than saving a page that lies about
 #: its own contents.
 MAX_BODY = 1_000_000
+
+
+def _max_attachment_size():
+    return getattr(settings, "MAX_ATTACHMENT_SIZE", 25 * 1024 * 1024)
 
 
 def _staff_or_403(request):
@@ -436,3 +443,81 @@ def page_delete(request, slug):
         "wiki/page_confirm_delete.html",
         {"page": page, "descendant_count": len(page.descendant_ids())},
     )
+
+
+@login_required
+def preview(request):
+    """The editor's live preview, through the renderer the saved page uses."""
+    _staff_or_403(request)
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Send JSON with a body to preview."}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({"error": "Send JSON with a body to preview."}, status=400)
+
+    body = payload.get("body", "")
+    if not isinstance(body, str):
+        return JsonResponse({"error": "The body must be text."}, status=400)
+    if len(body) > MAX_BODY:
+        return JsonResponse({"error": "That page is too long to preview."}, status=413)
+
+    return JsonResponse({"html": render_markdown(body, user=request.user)})
+
+
+@login_required
+def page_attach(request, slug):
+    """Attach uploaded files to a page and hand back their Markdown."""
+    _staff_or_403(request)
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    page = get_object_or_404(Page.objects.select_related("space"), slug=slug)
+
+    # Nothing is saved unless every file fits: half an upload is worse than none.
+    limit = _max_attachment_size()
+    files = [f for f in request.FILES.getlist("files") if f]
+    for f in files:
+        if f.size and f.size > limit:
+            return JsonResponse({"error": f"{f.name} is too large"}, status=400)
+
+    created = [
+        PageAttachment.objects.create(
+            page=page,
+            file=f,
+            original_name=f.name[:255],
+            content_type=getattr(f, "content_type", "") or "",
+            size=f.size or 0,
+            uploaded_by=request.user,
+        )
+        for f in files
+    ]
+    return JsonResponse({"files": [_attachment_json(a) for a in created]})
+
+
+@login_required
+def attachment_download(request, pk):
+    """The file itself: images inline so previews can point at them here."""
+    _staff_or_403(request)
+    attachment = get_object_or_404(PageAttachment, pk=pk)
+    inline = attachment.content_type.startswith("image/")
+    try:
+        return FileResponse(
+            attachment.file.open("rb"),
+            as_attachment=not inline,
+            filename=attachment.original_name,
+        )
+    except FileNotFoundError as exc:
+        raise Http404 from exc
+
+
+def _attachment_json(attachment):
+    url = reverse("wiki:attachment_download", args=[attachment.pk])
+    name = attachment.original_name
+    if attachment.content_type.startswith("image/"):
+        # Alt text becomes an HTML attribute, so it is escaped before Markdown is.
+        markdown = f"![{escape(name)}]({url})"
+    else:
+        markdown = f"[{name}]({url})"
+    return {"name": name, "url": url, "markdown": markdown}
