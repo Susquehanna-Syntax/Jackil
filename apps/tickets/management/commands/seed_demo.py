@@ -729,53 +729,44 @@ class Command(BaseCommand):
     def _links(self, admin, items, pages, mail_ticket_id):
         """Dynamic Links, skipping a link whose end is missing.
 
-        Each link is matched with its own rule: Item and page pks are stable,
-        so the exact pair identifies them, but a ticket's pk does not - a run
-        without ``--fresh`` appends another copy of every ticket - so the links
-        that involve one are matched by relation and the kind on the other end.
+        Links that involve a ticket are matched by relation and the kind of
+        thing on the other end, because a run without ``--fresh`` appends
+        another copy of every ticket and moves its pk; ``add_link``'s own
+        duplicate check catches the rest, since Item and page pks are stable.
         """
-
-        def item_end(item):
-            return ("item", _pk(item))
-
-        def ticket_end(ticket_id):
-            return ("ticket", ticket_id)
-
         mail_item = items.get("Mail server")
+        vpn_ticket = _ticket("VPN")
         wanted = [
-            (ticket_end(mail_ticket_id), item_end(mail_item), "affects", True),
-            (_end(_ticket("VPN")), item_end(items.get("VPN gateway")), "relates_to", True),
+            (("ticket", mail_ticket_id), ("item", _pk(mail_item)), "affects"),
+            (("ticket", _pk(vpn_ticket)), ("item", _pk(items.get("VPN gateway"))), "relates_to"),
             (
-                _end(pages.get("Mail relay runbook")),
-                item_end(mail_item),
+                ("page", _pk(pages.get("Mail relay runbook"))),
+                ("item", _pk(mail_item)),
                 "documented_in",
-                False,
             ),
             (
-                _end(_ticket("VPN")),
-                _end(pages.get("VPN troubleshooting")),
+                ("ticket", _pk(vpn_ticket)),
+                ("page", _pk(pages.get("VPN troubleshooting"))),
                 "documented_in",
-                True,
             ),
         ]
-        pairs = set(
-            DynamicLink.objects.values_list("source_type", "source_id", "target_type", "target_id")
+        ticket_relations = set(
+            DynamicLink.objects.values_list("source_type", "target_type", "relation")
         )
-        ticket_relations = {
-            (a, b, c)
-            for a, b, c in DynamicLink.objects.values_list(
-                "source_type", "target_type", "relation"
-            ).filter(source_type="ticket")
-        }
 
         created = 0
-        for source, target, relation, by_ticket_relation in wanted:
+        for source, target, relation in wanted:
             if source[1] is None or target[1] is None:
                 continue
-            if by_ticket_relation:
-                if (source[0], target[0], relation) in ticket_relations:
-                    continue
-            elif (source + target) in pairs or (target + source) in pairs:
+            if (
+                "ticket" in (source[0], target[0])
+                and (
+                    source[0],
+                    target[0],
+                    relation,
+                )
+                in ticket_relations
+            ):
                 continue
             try:
                 add_link(admin, source, target, relation)
@@ -783,14 +774,6 @@ class Command(BaseCommand):
                 continue
             created += 1
         return created
-
-
-def _end(obj):
-    """A Dynamic Links end: (type name, pk as text); (None, None) when absent."""
-    if obj is None:
-        return (None, None)
-    kind = "ticket" if isinstance(obj, Ticket) else "page"
-    return (kind, str(obj.pk))
 
 
 def _ticket(title_substring):
