@@ -2,8 +2,10 @@
 
 import json
 from decimal import Decimal
+from pathlib import Path
 
-from django.test import TestCase
+from django.conf import settings
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from apps.accounts.models import User
@@ -447,3 +449,56 @@ class LoadTests(BacklogTest):
 
 
 from django.utils import timezone  # noqa: E402  (used by LoadTests)
+
+
+class BacklogPageTests(BacklogTest):
+    def test_backlog_page_renders_for_scrum(self):
+        self.login(self.agent)
+        response = self.client.get(reverse("projects:backlog", args=["NET"]))
+        self.assertEqual(response.status_code, 200)
+        page = response.content.decode()
+        self.assertIn('id="bl-lists"', page)
+        self.assertIn(reverse("projects:backlog_data", args=["NET"]), page)
+        self.assertIn("jackil-backlog.js", page)
+
+    def test_project_page_links_backlog_only_for_scrum(self):
+        boards = service.create_project(self.admin, "BRD", "Board Room", "kanban")
+        self.login(self.agent)
+        scrum = self.client.get(reverse("projects:project_detail", args=["NET"]))
+        self.assertContains(scrum, reverse("projects:backlog", args=["NET"]))
+        kanban = self.client.get(reverse("projects:project_detail", args=[boards.key]))
+        self.assertNotIn(reverse("projects:backlog", args=["BRD"]), kanban.content.decode())
+
+    def test_customer_cannot_open_the_page(self):
+        self.login(self.customer)
+        response = self.client.get(reverse("projects:backlog", args=["NET"]))
+        self.assertEqual(response.status_code, 403)
+
+
+class BacklogScriptTests(SimpleTestCase):
+    def setUp(self):
+        self.script = Path(settings.BASE_DIR, "static/js/jackil-backlog.js").read_text()
+
+    def test_script_wires_the_drag_and_the_dialogs(self):
+        for literal in [
+            "'dragstart'",
+            "'drop'",
+            "'dragover'",
+            "data-issue-id",
+            "closest('.bl-row')",
+            "data-bl-move",
+            "bl-move-modal",
+            "showToast",
+            "escHtml",
+        ]:
+            self.assertIn(literal, self.script)
+
+    def test_script_never_assigns_the_whole_payload_as_markup(self):
+        self.assertNotIn("innerHTML = data", self.script)
+        self.assertNotIn("border-left", self.script)
+
+    def test_backlog_css_has_no_side_stripes(self):
+        css = Path(settings.BASE_DIR, "static/css/style.css").read_text()
+        block = css.split("/* Backlog (M5 p03b) */", 1)[1]
+        self.assertNotIn("border-left", block)
+        self.assertNotIn("border-right", block)

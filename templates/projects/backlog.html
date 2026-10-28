@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ project.key }} Backlog — Projects — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'projects:project_detail' project.key %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to {{ project.key }}
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">{{ project.name }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        <span class="issue-key">{{ project.key }}</span>
+        &middot; Sprint planning
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="btn btn-outline" id="bl-create">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create sprint
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="bl-layout fade-in d2">
+  <div id="bl-lists"
+       data-data-url="{{ data_url }}"
+       data-rank-url="{{ rank_url }}"
+       data-create-url="{{ create_url }}"
+       data-project="{{ project.key }}">
+    <span class="muted-note">Loading the backlog&hellip;</span>
+  </div>
+
+  <aside class="form-card bl-load" id="bl-load">
+    <div class="form-card-title">Load</div>
+    <div class="form-card-hint">Committed points against what each person usually finishes.</div>
+  </aside>
+</div>
+
+<div class="modal-overlay" id="bl-move-modal" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Move issue</div>
+      <button class="modal-close" type="button" data-modal-close>
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding: 16px 24px;">
+      <div class="form-group">
+        <label class="form-label" for="bl-move-target">Move to</label>
+        <select class="form-select" id="bl-move-target"></select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="bl-move-pos">Position</label>
+        <select class="form-select" id="bl-move-pos">
+          <option value="top">Top</option>
+          <option value="bottom">Bottom</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+      <button type="button" class="btn btn-lav" id="bl-move-ok">Move</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bl-start-modal" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Start sprint</div>
+      <button class="modal-close" type="button" data-modal-close>
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding: 16px 24px;">
+      <div class="form-group">
+        <label class="form-label" for="bl-start-from">Start date</label>
+        <input type="date" class="form-input" id="bl-start-from">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="bl-start-to">End date</label>
+        <input type="date" class="form-input" id="bl-start-to">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+      <button type="button" class="btn btn-mint" id="bl-start-ok">Start sprint</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bl-sprint-modal" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="bl-sprint-title">Create sprint</div>
+      <button class="modal-close" type="button" data-modal-close>
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding: 16px 24px;">
+      <div class="form-group">
+        <label class="form-label" for="bl-sprint-name">Name</label>
+        <input type="text" class="form-input" id="bl-sprint-name" placeholder="Leave empty to name it yourself">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="bl-sprint-goal">Goal</label>
+        <textarea class="form-textarea" id="bl-sprint-goal"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+      <button type="button" class="btn btn-lav" id="bl-sprint-ok">Save</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/jackil-backlog.js' %}"></script>
+{% endblock %}

@@ -18,6 +18,7 @@
       </div>
     </div>
     <div style="display:flex; gap:8px;">
+      {% if project.method == "scrum" %}<a href="{% url 'projects:backlog' project.key %}" class="btn btn-outline">Backlog</a>{% endif %}
       {% if can_admin %}
       <a href="{% url 'projects:project_settings' project.key %}" class="btn btn-outline">Settings</a>
       {% endif %}

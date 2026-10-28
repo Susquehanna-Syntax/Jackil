@@ -2058,3 +2058,27 @@ a.dash-card { text-decoration: none; }
 .column-table .form-input, .column-table .form-select { min-width: 90px; }
 
 @media (max-width: 900px) { .issue-layout { grid-template-columns: 1fr; } }
+
+/* Backlog (M5 p03b) */
+.bl-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+.bl-load { position: sticky; top: 24px; }
+.bl-sprint { padding: 16px; margin-bottom: 16px; }
+.bl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.bl-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.bl-dates { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.bl-goal { font-size: 12.5px; color: var(--text-3); margin-top: 6px; max-width: 52ch; }
+.bl-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.bl-list { list-style: none; padding: 0; margin: 0; min-height: 44px; border-radius: var(--r-md); display: flex; flex-direction: column; gap: 6px; }
+.bl-list.bl-over { background: rgba(var(--rgb-lavender), .08); }
+.bl-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 110px 48px auto; align-items: center; gap: 10px; background: var(--s2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 12px; cursor: grab; }
+.bl-row:active { cursor: grabbing; }
+.bl-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--text-1); }
+.bl-who { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bl-pts { font-size: 12px; color: var(--text-3); text-align: right; font-family: var(--font-mono); }
+.bl-empty { min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 12.5px; color: var(--text-3); border: 1px dashed var(--border); border-radius: var(--r-md); }
+.bl-person { margin-bottom: 14px; }
+.bl-person-name { font-size: 13px; color: var(--text-1); margin-bottom: 4px; }
+.bl-bar { height: 6px; border-radius: 999px; background: rgba(var(--rgb-grey), .18); overflow: hidden; }
+.bl-bar span { display: block; height: 100%; background: var(--fill); }
+.bl-words { font-size: 12px; color: var(--ink); margin-top: 4px; }
+@media (max-width: 900px) { .bl-layout { grid-template-columns: 1fr; } .bl-load { position: static; } }
