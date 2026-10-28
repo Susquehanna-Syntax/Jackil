@@ -2094,7 +2094,7 @@ a.dash-card { text-decoration: none; }
 
 /* Board (M5 p04b) */
 .bd-columns { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
-.bd-col { flex: 1 0 260px; max-width: 360px; background: var(--s1); border-radius: var(--r-md); padding: 12px; }
+.bd-col { flex: 1 1 260px; min-width: 260px; background: var(--s1); border-radius: var(--r-md); padding: 12px; }
 .bd-col-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
 .bd-col-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
 .bd-list { list-style: none; padding: 0; margin: 0; min-height: 60px; display: flex; flex-direction: column; gap: 8px; border-radius: var(--r-sm); }

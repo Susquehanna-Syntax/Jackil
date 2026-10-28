@@ -100,7 +100,7 @@ function bdFindCard(issueId) {
 
 function bdCardHtml(card) {
   const priority = BD_PRIORITY_TONE[card.priority]
-    ? `<span class="pill ${BD_PRIORITY_TONE[card.priority]}">${escHtml(card.priority)}</span>`
+    ? `<span class="pill ${BD_PRIORITY_TONE[card.priority]}">${escHtml(bdLabel(card.priority))}</span>`
     : '';
   const subs = card.subtasks_total
     ? `<span class="bd-subs">${card.subtasks_done}/${card.subtasks_total} sub-tasks</span>`
@@ -112,7 +112,7 @@ function bdCardHtml(card) {
     `<li class="bd-card" draggable="true" data-issue-id="${escAttr(card.id)}">` +
     '<div class="bd-card-top">' +
     `<a class="issue-key" href="${escAttr(card.url)}">${escHtml(card.key)}</a>` +
-    `<span class="pill ${BD_TYPE_TONE[card.type] || 'tc-sky'}">${escHtml(card.type)}</span>` +
+    `<span class="pill ${BD_TYPE_TONE[card.type] || 'tc-sky'}">${escHtml(bdLabel(card.type))}</span>` +
     priority +
     '</div>' +
     `<a class="bd-title" href="${escAttr(card.url)}">${escHtml(card.title)}</a>` +
@@ -144,6 +144,14 @@ function bdColumnHtml(column) {
     `<ul class="bd-list" data-column="${escAttr(column.id)}">${cards}</ul>` +
     '</section>'
   );
+}
+
+//: "subtask" and "high" are API values; the pills say them the way the
+//: project page does.
+function bdLabel(value) {
+  if (value === 'subtask') return 'Sub-task';
+  const text = String(value || '');
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function bdSprintLine(data) {
