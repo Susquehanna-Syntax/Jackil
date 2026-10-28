@@ -41,6 +41,15 @@ def _group_by_day(tickets, when):
     return buckets
 
 
+def _created_in(tickets, start, end):
+    """Only the tickets created inside the window: the rest cannot land on a label."""
+    return tickets.filter(created_at__date__range=(start, end))
+
+
+def _closed_in(tickets, start, end):
+    return tickets.filter(status__in=RESOLVED_STATUSES, closed_at__date__range=(start, end))
+
+
 def _median_hours(pairs):
     """Median hours from created_at to *until*, or 0 with no data."""
     hours = [
@@ -54,8 +63,8 @@ def _median_hours(pairs):
 def ticket_volume(tickets, start, end):
     """Tickets created per day, and resolved/closed per day by closed_at."""
     labels = _days(start, end)
-    created = _group_by_day(tickets, lambda t: t.created_at)
-    resolved = _group_by_day(tickets.filter(status__in=RESOLVED_STATUSES), lambda t: t.closed_at)
+    created = _group_by_day(_created_in(tickets, start, end), lambda t: t.created_at)
+    resolved = _group_by_day(_closed_in(tickets, start, end), lambda t: t.closed_at)
     series = [
         ("Created", [len(created.get(label, [])) for label in labels]),
         ("Resolved", [len(resolved.get(label, [])) for label in labels]),
@@ -66,7 +75,7 @@ def ticket_volume(tickets, start, end):
 def sla_compliance(tickets, start, end):
     """Share of per-day closures that met their resolution due date."""
     labels = _days(start, end)
-    closed = _group_by_day(tickets.filter(status__in=RESOLVED_STATUSES), lambda t: t.closed_at)
+    closed = _group_by_day(_closed_in(tickets, start, end), lambda t: t.closed_at)
     values = []
     for label in labels:
         day_tickets = [t for t in closed.get(label, []) if t.resolution_due is not None]
@@ -85,7 +94,7 @@ def sla_compliance(tickets, start, end):
 def first_response_time(tickets, start, end):
     """Median hours from creation to first response, per day of creation."""
     labels = _days(start, end)
-    created = _group_by_day(tickets, lambda t: t.created_at)
+    created = _group_by_day(_created_in(tickets, start, end), lambda t: t.created_at)
     values = [
         _median_hours([(t.created_at, t.first_responded_at) for t in created.get(label, [])])
         for label in labels
@@ -96,7 +105,7 @@ def first_response_time(tickets, start, end):
 def resolution_time(tickets, start, end):
     """Median hours from creation to closure, per day of closure."""
     labels = _days(start, end)
-    closed = _group_by_day(tickets.filter(status__in=RESOLVED_STATUSES), lambda t: t.closed_at)
+    closed = _group_by_day(_closed_in(tickets, start, end), lambda t: t.closed_at)
     values = [
         _median_hours([(t.created_at, t.closed_at) for t in closed.get(label, [])])
         for label in labels
@@ -108,7 +117,9 @@ def csat(tickets, start, end):
     """Mean CSAT score per day of the rating's creation."""
     labels = _days(start, end)
     buckets = {}
-    for rating in TicketRating.objects.filter(ticket__in=tickets):
+    for rating in TicketRating.objects.filter(
+        ticket__in=tickets, created_at__date__range=(start, end)
+    ):
         label = _day(rating.created_at)
         if label is not None:
             buckets.setdefault(label, []).append(rating.score)
