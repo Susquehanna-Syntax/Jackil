@@ -758,15 +758,8 @@ class Command(BaseCommand):
         for source, target, relation in wanted:
             if source[1] is None or target[1] is None:
                 continue
-            if (
-                "ticket" in (source[0], target[0])
-                and (
-                    source[0],
-                    target[0],
-                    relation,
-                )
-                in ticket_relations
-            ):
+            pair = (source[0], target[0], relation)
+            if "ticket" in (source[0], target[0]) and pair in ticket_relations:
                 continue
             try:
                 add_link(admin, source, target, relation)
