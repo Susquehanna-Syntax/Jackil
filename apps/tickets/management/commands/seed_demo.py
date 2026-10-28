@@ -66,14 +66,14 @@ DEPARTMENTS = [
     ("Finance", "Invoices, expenses and procurement."),
 ]
 
-#: (name, kind, department, vendor, warranty years from today, notes, attributes)
+#: (name, kind, department, vendor, warranty days from today, notes, attributes)
 ITEMS = [
     (
         "Mail server",
         "Server",
         "IT Support",
         "Dell",
-        2,
+        730,
         "Runs the internal mail relay. Patched on the second Tuesday each month.",
         {"Serial": "DLX-7741-Q", "Rack": "B4", "IP": "10.20.4.11", "Host": "mail-01"},
     ),
@@ -82,7 +82,7 @@ ITEMS = [
         "Server",
         "IT Support",
         "HPE",
-        1,
+        400,
         "Home drives and the shared projects share. Nightly backup to the NAS.",
         {"Serial": "HPEQ-2210-8", "Rack": "B4", "IP": "10.20.4.12", "Host": "files-01"},
     ),
@@ -91,7 +91,7 @@ ITEMS = [
         "Network device",
         "IT Support",
         "Fortinet",
-        3,
+        1000,
         "Terminates both office uplinks. Changes follow the firewall change process.",
         {"Serial": "FTN-90331-2", "Rack": "A1", "IP": "10.20.1.1", "Host": "fw-edge-01"},
     ),
@@ -100,7 +100,7 @@ ITEMS = [
         "Network device",
         "IT Support",
         "Aruba",
-        2,
+        700,
         "Stack of two in the comms room; every access switch uplinks here.",
         {"Serial": "ARB-55120-7", "Rack": "A1", "IP": "10.20.2.2", "Host": "sw-core-01"},
     ),
@@ -118,7 +118,7 @@ ITEMS = [
         "Application",
         "Human Resources",
         "Brightpath",
-        1,
+        300,
         "Vendor-hosted. Single sign-on through the internal directory.",
         {"URL": "https://payroll.example.com", "Version": "2026.2"},
     ),
@@ -127,7 +127,7 @@ ITEMS = [
         "Licence",
         "IT Support",
         "Microsoft",
-        1,
+        365,
         "Renewed each October with the annual IT contract.",
         {"Plan": "Business Premium", "Seats": "140", "Used": "128"},
     ),
@@ -145,7 +145,7 @@ ITEMS = [
         "Server",
         "IT Support",
         "Synology",
-        1,
+        450,
         "Holds 35 days of snapshots for the file server and the mail server.",
         {"Serial": "SYN-4471-K", "Rack": "B5", "IP": "10.20.4.30", "Host": "nas-01"},
     ),
@@ -154,7 +154,7 @@ ITEMS = [
         "Other",
         "Facilities",
         "HID",
-        4,
+        1400,
         "Door controllers and the reception reader; managed by Facilities.",
         {"Reader": "reception-01", "Firmware": "3.11.2"},
     ),
@@ -672,11 +672,10 @@ class Command(BaseCommand):
         agents = list(User.objects.filter(role="agent").order_by("username"))
         owner = agents[0] if agents else None
         items = {}
-        for name, kind_name, dept_name, vendor, warranty_years, notes, attributes in ITEMS:
+        for name, kind_name, dept_name, vendor, warranty_days, notes, attributes in ITEMS:
             warranty_end = None
-            if warranty_years is not None:
-                today = datetime.date.today()
-                warranty_end = today.replace(year=today.year + warranty_years)
+            if warranty_days is not None:
+                warranty_end = datetime.date.today() + datetime.timedelta(days=warranty_days)
             item, _ = Item.objects.get_or_create(
                 name=name,
                 defaults={
