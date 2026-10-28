@@ -11,8 +11,10 @@ gauge, series.
 Setting types the form generator knows how to render: ``choice`` — one of
 `options`; ``int`` — a bounded number; ``text`` — a short string; ``bool`` —
 a checkbox; ``saved_view`` — an int chosen from the operator's saved views, 0
-meaning "all open tickets". A type no field in the registry uses yet stays out
-of the form generator: it would be rendering for a caller that does not exist.
+meaning "all open tickets"; ``project`` — a project key chosen from the
+non-archived projects, "" meaning "none picked yet". A type no field in the
+registry uses yet stays out of the form generator: it would be rendering for a
+caller that does not exist.
 """
 
 WIDGET_REGISTRY: dict[str, dict] = {
@@ -153,11 +155,63 @@ WIDGET_REGISTRY: dict[str, dict] = {
         "min_h": 3,
         "settings": {},
     },
+    "sprint_burndown": {
+        "group": "projects",
+        "shape": "series",
+        "label": "Sprint burndown",
+        "description": "Points left in a project's active sprint, day by day.",
+        "w": 6,
+        "h": 4,
+        "min_w": 3,
+        "min_h": 3,
+        "settings": {
+            "project": {"type": "project", "label": "Project", "default": ""},
+        },
+    },
+    "team_load": {
+        "group": "projects",
+        "shape": "table",
+        "label": "Team load",
+        "description": "Story points committed this sprint against each person's usual.",
+        "w": 6,
+        "h": 4,
+        "min_w": 3,
+        "min_h": 3,
+        "settings": {
+            "project": {"type": "project", "label": "Project", "default": ""},
+        },
+    },
+    "my_issues": {
+        "group": "projects",
+        "shape": "list",
+        "label": "My issues",
+        "description": "Open project issues assigned to you.",
+        "w": 6,
+        "h": 5,
+        "min_w": 3,
+        "min_h": 3,
+        "settings": {
+            "limit": {"type": "int", "label": "How many", "min": 1, "max": 50, "default": 8},
+        },
+    },
+    "project_cost": {
+        "group": "projects",
+        "shape": "stat",
+        "label": "Project cost",
+        "description": "What a project's finished work cost.",
+        "w": 3,
+        "h": 2,
+        "min_w": 2,
+        "min_h": 2,
+        "settings": {
+            "project": {"type": "project", "label": "Project", "default": ""},
+        },
+    },
 }
 
 SHAPES = ("stat", "list", "table", "gauge", "series")
 
-GROUPS = ("tickets", "sla", "work", "people")
+GROUPS = ("tickets", "sla", "work", "people", "projects")
 
 #: Settings every widget has, whatever its kind. The card title lives here
 #: rather than in each of the nine entries: a dashboard may hold three ticket
@@ -222,6 +276,8 @@ def clean_settings(kind: str, raw) -> dict:
                 continue
         elif field["type"] == "bool":
             value = bool(value)
+        elif field["type"] == "project":
+            value = str(value).strip().upper()[:10]
         else:
             value = str(value)[:200]
         cleaned[name] = value

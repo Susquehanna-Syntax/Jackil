@@ -317,3 +317,18 @@ def saved_view_options(request):
 
     views = SavedView.objects.filter(Q(owner=request.user) | Q(is_shared=True)).order_by("name")
     return Response([[0, "All open tickets"]] + [[v.pk, v.name] for v in views])
+
+
+@api_view(["GET"])
+@permission_classes([IsStaffRole])
+def project_options(request):
+    """Every project a ``project`` setting may name, as ``[[key, "KEY — Name"], …]``.
+
+    First entry is always the "" pseudo-choice — "Pick a project" — which is
+    what a project widget shows with nothing chosen yet. Archived projects
+    are not offered: their widgets would only ever show a stale figure.
+    """
+    from apps.projects.models import Project
+
+    projects = Project.objects.filter(is_archived=False).order_by("key")
+    return Response([["", "Pick a project"]] + [[p.key, f"{p.key} — {p.name}"] for p in projects])

@@ -2,7 +2,8 @@
 
 One function per registry kind, keyed in ``DATA``; ``widget_data`` is the
 entry point the API view calls. Each returns the *inner* payload — the
-envelope and its validation are the contract's job.
+envelope and its validation are the contract's job. The project widgets reach
+into ``apps.projects`` lazily, so importing dashboards never imports projects.
 """
 
 from datetime import datetime, time, timedelta
@@ -27,6 +28,22 @@ RESOLVED = ("resolved", "closed")
 
 #: How close to its resolution due time makes a ticket "needs attention".
 ATTENTION_WINDOW = timedelta(hours=4)
+
+#: What a project widget says before anyone has picked a project.
+PICK = "Pick a project in this widget's settings."
+
+#: What a burndown with nothing to plot draws: the series is there, with no
+#: points on it.
+EMPTY_BURNDOWN = {"kind": "line", "labels": [], "series": [{"name": "Remaining", "values": []}]}
+
+
+def _project(settings):
+    """The non-archived ``Project`` a ``project`` setting names, else None."""
+    from apps.projects.models import Project
+
+    if not settings["project"]:
+        return None
+    return Project.objects.filter(key=settings["project"], is_archived=False).first()
 
 
 def _open_tickets():
@@ -230,6 +247,81 @@ def agent_load(settings, user):
     return {"columns": ["Agent", "Open", "Critical"], "rows": rows}
 
 
+def sprint_burndown(settings, user):
+    from apps.projects import backlog, metrics
+
+    project = _project(settings)
+    if project is None:
+        return dict(EMPTY_BURNDOWN)
+    sprint = backlog._planning_sprint(project, backlog._sprint_rows(project))
+    if sprint is None or sprint.state != "active":
+        return dict(EMPTY_BURNDOWN)
+    return metrics.burndown(sprint)
+
+
+def team_load(settings, user):
+    from apps.projects import backlog
+
+    columns = ["Person", "Committed", "Usual"]
+    project = _project(settings)
+    if project is None:
+        return {"columns": columns, "rows": [[PICK, 0, "—"]]}
+    sprint = backlog._planning_sprint(project, backlog._sprint_rows(project))
+    rows = [
+        [
+            person["name"],
+            person["committed"],
+            "—" if person["velocity"] is None else f"{person['velocity']:.1f}",
+        ]
+        for person in backlog._people(project, sprint)
+    ]
+    return {"columns": columns, "rows": rows}
+
+
+def my_issues(settings, user):
+    from apps.projects.models import Issue
+    from apps.projects.views import issue_url
+
+    issues = (
+        Issue.objects.filter(assignee=user, project__is_archived=False)
+        .exclude(type="subtask")
+        .exclude(column__category="done")
+        .select_related("column", "project")
+        .order_by("-created_at", "-id")[: settings["limit"]]
+    )
+    items = [
+        {
+            "title": f"{issue.key} {issue.title}",
+            "href": issue_url(issue),
+            "meta": "" if issue.column is None else issue.column.name,
+        }
+        for issue in issues
+    ]
+    return {"items": items, "empty": "No open project issues are assigned to you."}
+
+
+def project_cost(settings, user):
+    from apps.projects.cost import total_cost
+    from apps.projects.models import CostSettings
+    from apps.projects.permissions import can_see_cost
+
+    project = _project(settings)
+    if project is None:
+        return {"value": 0, "label": PICK, "tone": "muted"}
+    if not can_see_cost(user):
+        return {"value": 0, "label": "Cost hidden", "tone": "muted"}
+    done = project.issues.exclude(type="epic").filter(column__category="done")
+    total, left = total_cost(done)
+    payload = {
+        "value": int(total),
+        "label": f"Spent on {project.key} ({CostSettings.get_solo().currency})",
+        "tone": "info",
+    }
+    if left:
+        payload["sub"] = f"{left} issues left out"
+    return payload
+
+
 DATA = {
     "stat_tile": stat_tile,
     "ticket_list": ticket_list,
@@ -240,6 +332,10 @@ DATA = {
     "tickets_by_priority": tickets_by_priority,
     "volume_trend": volume_trend,
     "agent_load": agent_load,
+    "sprint_burndown": sprint_burndown,
+    "team_load": team_load,
+    "my_issues": my_issues,
+    "project_cost": project_cost,
 }
 
 

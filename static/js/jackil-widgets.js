@@ -288,10 +288,10 @@ function _settingsField(name, field, value, options) {
              ${min !== undefined ? `min="${escAttr(min)}"` : ''}
              ${field.max !== undefined ? `max="${escAttr(field.max)}"` : ''}></div>`;
   }
-  // Only a saved-view picker has an options list to be handed. A `choice`
-  // draws its own, and any other type drawing one would be drawing it for a
-  // widget with no source of them.
-  if (t === 'saved_view' && options.length) {
+  // Only a saved-view or project picker has an options list to be handed. A
+  // `choice` draws its own, and any other type drawing one would be drawing it
+  // for a widget with no source of them.
+  if ((t === 'saved_view' || t === 'project') && options.length) {
     return `<div class="form-group">${label}
       <select class="form-select" id="${escAttr(id)}" data-setting="${escAttr(name)}">
         ${options.map(([v, text]) =>
@@ -311,14 +311,19 @@ function _settingsField(name, field, value, options) {
            ${field.placeholder ? `placeholder="${escAttr(field.placeholder)}"` : ''}></div>`;
 }
 
-/* Saved views as [[id, name], …], the 0 "All open tickets" pseudo-view first.
+/* Each list-backed setting type has its own options endpoint, as [[value, text], …].
    Unreachable options come back empty rather than throwing: the field then
-   falls back to the number box above, which is still an honest way to set what
+   falls back to the control above, which is still an honest way to set what
    this control stores. */
 async function _settingsOptions(type) {
-  if (type !== 'saved_view') return [];
+  const SOURCES = {
+    saved_view: '/dashboards/api/options/saved_view/',
+    project: '/dashboards/api/options/project/',
+  };
+  const url = SOURCES[type];
+  if (!url) return [];
   try {
-    return await apiJson('/dashboards/api/options/saved_view/');
+    return await apiJson(url);
   } catch (e) {
     return [];
   }
