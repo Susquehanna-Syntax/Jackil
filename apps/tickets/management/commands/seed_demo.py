@@ -163,31 +163,27 @@ ITEMS = [
 RUNBOOK = """# Mail relay runbook
 
 The internal relay on **mail-01** (`10.20.4.11`) accepts mail from the
-office network only. Queue depth should stay under 200 messages.
+office network. Queue depth should stay under 200 messages.
 
 > [!WARNING]
-> Do not restart the relay during the 07:00-09:00 mail peak. Drain the queue
-> first, or thousands of messages bounce to the backup MX.
+> Restarting the relay during the 07:00-09:00 mail peak bounces thousands of
+> messages to the backup MX. Drain the queue first.
 
 ## Daily checks
 
 1. Check the queue: `mailq | head -20`
-2. Confirm the relay answers on port 25 from inside the network.
-3. Glance at yesterday's log for `deferred` lines.
-4. Compare throughput against the weekly average - $r = \\frac{n}{t}$
-   messages per second, where $n$ is delivered mail and $t$ is the window.
+2. Compare throughput with the weekly average: $r = \\frac{n}{t}$.
 
 ## Hosts
 
 | Host | Role | Address |
 | --- | --- | --- |
 | mail-01 | primary relay | `10.20.4.11` |
-| mail-02 | standby relay | `10.20.4.13` |
 | mx-backup | secondary MX | `mx-backup.example.com` |
 
 ## Capacity
 
-The relay is sized so the queued backlog never outruns the uplink:
+The relay is sized so the backlog never outruns the uplink:
 
 $$\\sum_{i=1}^{n} q_i \\le C$$
 
@@ -195,10 +191,9 @@ $$\\sum_{i=1}^{n} q_i \\le C$$
 
 - [x] Confirm the queue drained
 - [ ] Tell the service desk the incident is over
-- [ ] Raise a follow-up ticket if the cause is still unknown
 
 Restore from snapshot if the disk is unreadable - see [[Backup NAS restore]].
-The incident that prompted this runbook was [[ticket:MAIL_TICKET_ID]].
+The incident behind this runbook was [[ticket:MAIL_TICKET_ID]].
 
 ```bash
 systemctl status relay
