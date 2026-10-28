@@ -18,8 +18,14 @@ class SeedDemoTests(TestCase):
         )
 
     def test_seed_creates_items_pages_and_links(self):
-        call_command("seed_demo", stdout=StringIO())
+        out = StringIO()
+        call_command("seed_demo", stdout=out)
 
+        summary = out.getvalue().splitlines()[-1]
+        self.assertRegex(
+            summary,
+            r"\d+ departments, \d+ users, \d+ tickets, \d+ items, \d+ pages, \d+ links\.",
+        )
         self.assertGreaterEqual(Item.objects.count(), 8)
         self.assertTrue(
             {"Servers", "Networking", "Onboarding", "Help Center"}.issubset(

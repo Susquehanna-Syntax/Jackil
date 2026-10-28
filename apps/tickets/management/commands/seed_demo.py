@@ -650,9 +650,12 @@ class Command(BaseCommand):
                 ticket.save()
 
         items = self._items(departments)
+        # Chipped into the runbook body and linked below, so it is resolved
+        # once and shared: a second lookup could pick a different copy of the
+        # ticket if the caller did not pass --fresh.
         mail_ticket = _ticket("mail server down")
         pages = self._wiki(admin, _pk(mail_ticket))
-        links = self._links(admin, items, pages)
+        links = self._links(admin, items, pages, _pk(mail_ticket))
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -722,7 +725,7 @@ class Command(BaseCommand):
         pages[title] = page
         return page
 
-    def _links(self, admin, items, pages):
+    def _links(self, admin, items, pages, mail_ticket_id):
         """Dynamic Links, skipping a link whose end is missing.
 
         Each link is matched with its own rule: Item and page pks are stable,
@@ -734,9 +737,12 @@ class Command(BaseCommand):
         def item_end(item):
             return ("item", _pk(item))
 
+        def ticket_end(ticket_id):
+            return ("ticket", ticket_id)
+
         mail_item = items.get("Mail server")
         wanted = [
-            (_end(_ticket("mail server down")), item_end(mail_item), "affects", True),
+            (ticket_end(mail_ticket_id), item_end(mail_item), "affects", True),
             (_end(_ticket("VPN")), item_end(items.get("VPN gateway")), "relates_to", True),
             (
                 _end(pages.get("Mail relay runbook")),
