@@ -2082,3 +2082,12 @@ a.dash-card { text-decoration: none; }
 .bl-bar span { display: block; height: 100%; background: var(--fill); }
 .bl-words { font-size: 12px; color: var(--ink); margin-top: 4px; }
 @media (max-width: 900px) { .bl-layout { grid-template-columns: 1fr; } .bl-load { position: static; } }
+/* On a phone the assignee drops under the title, so the title keeps the width. */
+@media (max-width: 600px) {
+  .bl-row { grid-template-columns: auto minmax(0, 1fr) 28px auto; grid-template-areas: "key title pts move" "key who pts move"; row-gap: 2px; }
+  .bl-row > .issue-key { grid-area: key; }
+  .bl-title { grid-area: title; }
+  .bl-who { grid-area: who; }
+  .bl-pts { grid-area: pts; }
+  .bl-row > [data-bl-move] { grid-area: move; }
+}
