@@ -2158,3 +2158,6 @@ a.dash-card { text-decoration: none; }
 .vg-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 18px; align-items: start; }
 .vg-layout .form-card { margin-bottom: 0; }
 @media (max-width: 900px) { .vg-layout { grid-template-columns: 1fr; } }
+
+/* Form fields inside a list-style modal body line up with its header. */
+.modal-body > .form-group, .modal-body > .muted-note, .modal-body > [data-links-results] { margin-left: 24px; margin-right: 24px; }
