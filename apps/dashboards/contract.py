@@ -14,7 +14,7 @@ that refuses to validate is a bug in the widget, not user input — hence
 WIDGET_SCHEMA_VERSION = 1
 SHAPES = ("stat", "list", "table", "gauge", "series")
 TONES = ("ok", "warn", "bad", "info", "muted")
-SERIES_KINDS = ("bar", "line")
+SERIES_KINDS = ("bar", "line", "area", "stacked-bar")
 
 
 def _is_number(value) -> bool:

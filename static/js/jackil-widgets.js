@@ -131,7 +131,11 @@ function _seriesSvg(data, W, H) {
   const labels = data.labels || [];
   const series = data.series || [];
   const values = series.flatMap((s) => s.values || []);
-  const max = Math.max(...values, 0) || 1;
+  // Stacked bars reach the sum of their segments, so that sum is the maximum
+  // the y scale has to fit; every other kind peaks at a single value.
+  const max = data.kind === 'stacked-bar'
+    ? Math.max(...labels.map((_, li) => series.reduce((n, s) => n + ((s.values || [])[li] || 0), 0)), 0) || 1
+    : Math.max(...values, 0) || 1;
   const padL = 30, padR = 6, padT = 6, padB = 18;
   const plotW = Math.max(10, W - padL - padR);
   const plotH = Math.max(10, H - padT - padB);
@@ -146,20 +150,35 @@ function _seriesSvg(data, W, H) {
   }
 
   let xOf;
-  if (data.kind === 'bar') {
+  if (data.kind === 'bar' || data.kind === 'stacked-bar') {
+    const stacked = data.kind === 'stacked-bar';
     const groupW = plotW / Math.max(1, labels.length);
-    const barW = Math.max(1, (groupW * 0.72) / Math.max(1, series.length));
+    const barW = stacked
+      ? Math.max(1, groupW * 0.72)
+      : Math.max(1, (groupW * 0.72) / Math.max(1, series.length));
     xOf = (i) => padL + groupW * i + groupW / 2;
     labels.forEach((label, li) => {
-      const x0 = padL + groupW * li + (groupW - barW * series.length) / 2;
+      const x0 = stacked ? xOf(li) - barW / 2 : padL + groupW * li + (groupW - barW * series.length) / 2;
+      let stackTop = padT + plotH;
       series.forEach((s, si) => {
         const v = (s.values || [])[li] || 0;
-        const top = y(v);
+        if (stacked && v <= 0) return;
         // One series: each bar is its own category, so it takes its own slot.
-        const fill = series.length > 1 ? colour(si) : colour(li);
-        parts.push(`<rect x="${(x0 + si * barW).toFixed(1)}" y="${top.toFixed(1)}" width="${barW.toFixed(1)}" `
-          + `height="${(padT + plotH - top).toFixed(1)}" rx="3" fill="${fill}">`
-          + `<title>${escHtml(`${label}: ${v}`)}</title></rect>`);
+        const fill = stacked || series.length > 1 ? colour(si) : colour(li);
+        let top = y(v);
+        let height = padT + plotH - top;
+        if (stacked) {
+          stackTop -= (v / max) * plotH;
+          top = stackTop;
+          height = (v / max) * plotH;
+        }
+        const isTop = !stacked || si === series.length - 1
+          || series.slice(si + 1).every((t) => ((t.values || [])[li] || 0) <= 0);
+        const title = stacked ? `${label} · ${s.name || ''}: ${v}` : `${label}: ${v}`;
+        parts.push(`<rect x="${(stacked ? x0 : x0 + si * barW).toFixed(1)}" y="${top.toFixed(1)}" `
+          + `width="${barW.toFixed(1)}" height="${height.toFixed(1)}"`
+          + (isTop ? ' rx="3"' : '') + ` fill="${fill}">`
+          + `<title>${escHtml(title)}</title></rect>`);
       });
     });
   } else {
@@ -168,8 +187,13 @@ function _seriesSvg(data, W, H) {
     series.forEach((s, si) => {
       const vs = s.values || [];
       if (vs.length > 1) {
+        const points = vs.map((v, i) => `${xOf(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+        if (data.kind === 'area') {
+          parts.push(`<polygon fill="${colour(si)}" fill-opacity="0.18" stroke="none" `
+            + `points="${points} ${xOf(vs.length - 1).toFixed(1)},${y(0).toFixed(1)} ${xOf(0).toFixed(1)},${y(0).toFixed(1)}"/>`);
+        }
         parts.push(`<polyline fill="none" stroke="${colour(si)}" stroke-width="2" stroke-linejoin="round" `
-          + `points="${vs.map((v, i) => `${xOf(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}"/>`);
+          + `points="${points}"/>`);
       }
       vs.forEach((v, i) => parts.push(`<circle cx="${xOf(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.5" fill="${colour(si)}">`
         + `<title>${escHtml(`${labels[i] ?? ''}: ${v}`)}</title></circle>`));
@@ -185,7 +209,7 @@ function _seriesSvg(data, W, H) {
   const last = labels.length - 1;
   labels.forEach((label, i) => {
     if (i !== last && (i % every !== 0 || last - i < every)) return;
-    const anchor = data.kind === 'bar' ? 'middle' : (i === 0 ? 'start' : (i === last ? 'end' : 'middle'));
+    const anchor = (data.kind === 'bar' || data.kind === 'stacked-bar') ? 'middle' : (i === 0 ? 'start' : (i === last ? 'end' : 'middle'));
     parts.push(`<text class="axis-text" x="${xOf(i).toFixed(1)}" y="${H - 4}" text-anchor="${anchor}">${escHtml(label)}</text>`);
   });
 

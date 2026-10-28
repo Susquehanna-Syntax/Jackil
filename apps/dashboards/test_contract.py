@@ -76,6 +76,27 @@ class ContractTests(SimpleTestCase):
             "pie",
         )
 
+    def test_contract_accepts_area_and_stacked_bar(self):
+        for kind in ("area", "stacked-bar"):
+            validate_payload(
+                "series",
+                {
+                    "kind": kind,
+                    "labels": ["Mon", "Tue"],
+                    "series": [
+                        {"name": "S1", "values": [1, 2]},
+                        {"name": "S2", "values": [3, 0]},
+                    ],
+                },
+            )
+
+    def test_contract_still_refuses_an_unknown_kind(self):
+        self.assert_refuses(
+            "series",
+            {"kind": "pie", "labels": ["Mon"], "series": [{"name": "S", "values": [1]}]},
+            "pie",
+        )
+
     def test_unknown_shape_is_refused(self):
         self.assert_refuses("heatmap", {}, "heatmap")
 
