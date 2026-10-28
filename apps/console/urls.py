@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.vigil import views as vigil_views
 from config.features import feature_enabled
 
 from . import views
@@ -12,6 +13,7 @@ urlpatterns = [
     path("email/new/", views.inbox_create, name="inbox_create"),
     path("email/<int:pk>/", views.inbox_edit, name="inbox_edit"),
     path("email/<int:pk>/delete/", views.inbox_delete, name="inbox_delete"),
+    path("vigil/", vigil_views.vigil_settings, name="vigil_settings"),
 ]
 
 if feature_enabled("sla"):

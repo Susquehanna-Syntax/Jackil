@@ -2153,3 +2153,8 @@ a.dash-card { text-decoration: none; }
 .rb-checks { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
 .rb-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }
 @media (max-width: 1000px) { .rb-layout { grid-template-columns: 1fr; } .rb-card { grid-template-columns: 1fr 1fr; } .rb-labels { grid-column: 1 / -1; } }
+
+/* ── Vigil settings (M6 p01) ─────────────────────────────────────────────── */
+.vg-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 18px; align-items: start; }
+.vg-layout .form-card { margin-bottom: 0; }
+@media (max-width: 900px) { .vg-layout { grid-template-columns: 1fr; } }
