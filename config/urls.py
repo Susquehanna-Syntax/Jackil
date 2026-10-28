@@ -17,6 +17,7 @@ urlpatterns = [
     path("items/", include("apps.items.urls", namespace="items")),
     path("links/", include("apps.links.urls", namespace="links")),
     path("wiki/", include("apps.wiki.urls", namespace="wiki")),
+    path("projects/", include("apps.projects.urls", namespace="projects")),
 ]
 
 if feature_enabled("api"):

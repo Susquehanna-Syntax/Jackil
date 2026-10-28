@@ -185,5 +185,9 @@ def complete_sprint(user, sprint, move_open_to=None) -> Sprint:
     return sprint
 
 
+def record_event(user, issue, kind, data) -> None:
+    IssueEvent.objects.create(issue=issue, kind=kind, actor=user, data=data)
+
+
 def _record(issue, kind, actor, data):
-    IssueEvent.objects.create(issue=issue, kind=kind, actor=actor, data=data)
+    record_event(actor, issue, kind, data)

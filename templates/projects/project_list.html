@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Projects — Jackil{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in d1">
+  <div>
+    <div class="page-title">Projects</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+      {{ cards|length }} project{{ cards|length|pluralize }}{% if show_archived %} archived{% endif %}
+    </div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <a href="?archived={% if show_archived %}0{% else %}1{% endif %}" class="btn btn-outline">
+      {% if show_archived %}Active projects{% else %}Archived projects{% endif %}
+    </a>
+    {% if can_admin %}
+    <a href="{% url 'projects:project_create' %}" class="btn btn-lav">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New project
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if cards %}
+<div class="project-grid fade-in d2">
+  {% for card in cards %}
+  <a href="{% url 'projects:project_detail' card.project.key %}" class="project-card{% if card.project.is_archived %} archived{% endif %}">
+    <div class="project-card-head">
+      <span class="issue-key">{{ card.project.key }}</span>
+      <span class="pill tc-lav">{{ card.method }}</span>
+    </div>
+    <div class="project-card-name">{{ card.project.name }}</div>
+    <div class="project-card-meta">{{ card.lead }} &middot; {{ card.open }} open issue{{ card.open|pluralize }}</div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state fade-in d2">
+  <div class="empty-state-icon">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></svg>
+  </div>
+  <h3>{% if show_archived %}No archived projects{% else %}No projects yet{% endif %}</h3>
+  <p>{% if show_archived %}Nothing has been archived.{% else %}Create the first project to start tracking issues.{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

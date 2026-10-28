@@ -5,3 +5,8 @@ class ProjectsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.projects"
     verbose_name = "Projects"
+
+    def ready(self):
+        from .links import register_project_types
+
+        register_project_types()

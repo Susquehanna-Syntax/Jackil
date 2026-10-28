@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.key }} settings — Projects — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'projects:project_detail' project.key %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to {{ project.key }}
+  </a>
+
+  <div class="page-title">{{ project.key }} settings</div>
+
+  <form method="post" style="max-width: 680px;">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="message message-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-card">
+      <div class="form-card-title">Project</div>
+      <div class="form-card-hint">Archive a project to keep it out of the list without losing its issues.</div>
+      <div class="form-grid-2">
+        {% for field in form %}
+        {% if field.name != "description" %}
+        <div class="form-group">
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}
+          <div class="message message-error">{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-lav">Save project</button>
+  </form>
+
+  <div class="form-card fade-in d2" style="margin-top: 28px; max-width: 900px;">
+    <div class="form-card-title">Columns</div>
+    <div class="form-card-hint">
+      Rename, reorder, or change a column's category. A column with issues in it cannot be deleted.
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="columns">
+      <table class="column-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Order</th>
+            <th>WIP limit</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in column_rows %}
+          <tr>
+            <td><input class="form-input" type="text" name="name-{{ row.column.pk }}" value="{{ row.column.name }}"></td>
+            <td>
+              <select class="form-select" name="category-{{ row.column.pk }}">
+                {% for value, label in row.categories %}
+                <option value="{{ value }}" {% if row.column.category == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input class="form-input" type="number" name="order-{{ row.column.pk }}" value="{{ row.column.order }}"></td>
+            <td><input class="form-input" type="number" name="wip-limit-{{ row.column.pk }}" value="{{ row.column.wip_limit|default_if_none:'' }}"></td>
+            <td style="white-space:nowrap;">
+              {{ row.issues }} issue{{ row.issues|pluralize }}
+              {% if not row.issues %}
+              <button type="submit" class="btn btn-outline btn-sm" name="delete_column" value="{{ row.column.pk }}">Delete</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-outline" style="margin-top:14px;">Save columns</button>
+    </form>
+
+    <form method="post" class="filter-bar" style="margin-top: 20px;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="columns">
+      {% for error in new_column_form.non_field_errors %}
+      <div class="message message-error">{{ error }}</div>
+      {% endfor %}
+      <div class="form-group" style="flex:1; margin:0;">
+        <label class="form-label" for="{{ new_column_form.id_for_label }}">New column</label>
+        {{ new_column_form.name }}
+        {% for error in new_column_form.name.errors %}<div class="message message-error">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label" for="new-category">Category</label>
+        {{ new_column_form.category }}
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label" for="new-wip">WIP limit</label>
+        {{ new_column_form.wip_limit }}
+      </div>
+      <input type="hidden" name="order" value="999">
+      <button type="submit" class="btn btn-lav" name="add_column" value="1" style="align-self:flex-end;">Add column</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
