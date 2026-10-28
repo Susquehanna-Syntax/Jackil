@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "apps.links",
     "apps.items",
     "apps.wiki",
+    "apps.projects",
 ]
 
 MIDDLEWARE = [
