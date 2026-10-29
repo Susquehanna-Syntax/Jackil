@@ -72,6 +72,12 @@ class PortalForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         choices = form_choices()
         self.fields["request_forms"].choices = choices
+        self.fields["is_published"].label = "Published"
+        self.fields["is_default"].label = "Default portal"
+        if not self.is_bound:
+            # The model keeps a list; the field edits text. Without this the
+            # input shows the list's repr ("[]"), which then fails its own check.
+            self.initial["vigil_status_pages"] = ", ".join(self.instance.vigil_status_pages or [])
         if self.instance.pk and not self.is_bound:
             allowed = {slug for slug, _ in choices}
             self.initial["request_forms"] = [

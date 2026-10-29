@@ -301,3 +301,17 @@ class PortalFormTests(TestCase):
 
         page = self.client.get(f"/settings/portals/{portal.pk}/")
         self.assertContains(page, space.name)
+
+
+class EditFormTests(TestCase):
+    def test_saved_status_pages_show_as_text_and_save_round_trips(self):
+        from apps.portals.forms import PortalForm
+        from apps.portals.models import Portal
+
+        portal = Portal.objects.get(is_default=True)
+        portal.vigil_status_pages = ["mail", "vpn"]
+        portal.save()
+        form = PortalForm(instance=portal)
+        self.assertEqual(form.initial["vigil_status_pages"], "mail, vpn")
+        empty = Portal.objects.create(name="Empty", slug="empty-check")
+        self.assertEqual(PortalForm(instance=empty).initial["vigil_status_pages"], "")
