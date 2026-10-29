@@ -122,4 +122,5 @@ history in `dev/`, and the single-page user guide `wiki.html`.
 
 ## License
 
-Free and open source.
+AGPLv3 — see [LICENSE](LICENSE). SQSY Business features are unlocked by an
+SQSY Business licence on the Vigil instance Jackil is linked to.
