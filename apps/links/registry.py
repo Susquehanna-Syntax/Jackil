@@ -48,3 +48,23 @@ def get_resolver(name: str) -> Resolver:
 def types() -> list[str]:
     """Registered type names, sorted."""
     return sorted(_TYPES)
+
+
+#: What a person calls each type: the picker groups results under these words
+#: rather than the stored names ("card", "vigil:host").
+TYPE_LABELS = {
+    "ticket": "Tickets",
+    "card": "Issues",
+    "project": "Projects",
+    "page": "Wiki pages",
+    "item": "Items",
+}
+
+
+def type_label(name: str) -> str:
+    """The plural, human name for a type; Vigil kinds read "Vigil hosts" etc."""
+    if name in TYPE_LABELS:
+        return TYPE_LABELS[name]
+    if name.startswith("vigil:"):
+        return "Vigil " + name.split(":", 1)[1] + "s"
+    return name.replace("_", " ").capitalize()

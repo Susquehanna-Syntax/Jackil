@@ -170,6 +170,18 @@ class LinksApiTests(TestCase):
         self.assertIn(("ticket", str(self.mail_ticket.pk)), found)
         self.assertIn(("item", str(self.mail_item.pk)), found)
 
+    def test_search_names_each_type_in_words(self):
+        labels = {row["type"]: row["type_label"] for row in self._search("mail")}
+        self.assertEqual(labels["ticket"], "Tickets")
+        self.assertEqual(labels["item"], "Items")
+
+    def test_type_label_reads_vigil_kinds_and_unknown_types(self):
+        from .registry import type_label
+
+        self.assertEqual(type_label("card"), "Issues")
+        self.assertEqual(type_label("vigil:host"), "Vigil hosts")
+        self.assertEqual(type_label("asset_tag"), "Asset tag")
+
     def _search(self, term):
         resp = self._get(self.agent, "links:links-search", q=term)
         return resp.json()["results"]

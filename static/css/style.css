@@ -2240,3 +2240,13 @@ a.dash-card { text-decoration: none; }
    tint, which read as a heavy block on Paper. */
 .dash-card.edge-grey { background: transparent; border-color: var(--border); }
 .dash-table th.num { text-align: right; }
+/* Link picker (M8b): results grouped under their type's words, one active row. */
+.links-result-group { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+                      color: var(--text-3); margin: 8px 2px 0; }
+.links-result-group:first-child { margin-top: 0; }
+.links-result { align-items: center; text-align: left; font: inherit; font-size: 13px; }
+.links-result-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.links-result small { flex-shrink: 0; }
+.links-result.active { border-color: var(--lavender-ink); background: var(--s3); }
+.links-keys { margin: 10px 24px 0; font-size: 11px; }
+.modal-body > .links-results { margin-left: 24px; margin-right: 24px; }

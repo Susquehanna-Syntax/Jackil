@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 from apps.dashboards.permissions import IsStaffRole
 
-from .registry import get_resolver, types
+from .registry import get_resolver, type_label, types
 from .relations import DEFAULT_RELATION, RELATIONS
 from .service import LinkError, add_link, links_for, remove_link
 
@@ -82,7 +82,7 @@ def links_search(request):
             # unavailable; an unavailable end is never worth linking to.
             if not target.available or (target.type, str(target.id)) == exclude:
                 continue
-            results.append(asdict(target))
+            results.append({**asdict(target), "type_label": type_label(target.type)})
     return Response({"results": results})
 
 
@@ -98,7 +98,9 @@ def links_resolve_url(request):
                 continue
             target = resolver.resolve([obj_id], request.user).get(obj_id)
             if target is not None:
-                return Response({"target": asdict(target)})
+                return Response(
+                    {"target": {**asdict(target), "type_label": type_label(target.type)}}
+                )
     return Response(
         {"error": "That link doesn't point at anything Jackil knows."},
         status=status.HTTP_404_NOT_FOUND,

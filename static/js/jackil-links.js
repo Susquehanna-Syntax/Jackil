@@ -123,18 +123,23 @@ const JackilLinks = {
       '<div class="modal-overlay" id="' + this.DIALOG_ID + '" aria-hidden="true"><div class="modal">'
       + '<div class="modal-header"><div class="modal-title">Add link</div></div>'
       + '<div class="modal-body">'
-      + '<div class="form-group"><label class="form-label" for="links_relation">Relation</label>'
-      + '<select class="form-select" id="links_relation" data-links-relation></select></div>'
       + '<div class="form-group"><label class="form-label" for="links_query">Find something</label>'
       + '<input type="text" class="form-input" id="links_query" data-links-query autocomplete="off" '
-      + 'placeholder="Search tickets, items&hellip; or paste a link">'
-      + '<div class="links-results" data-links-results><span class="muted-note">Start typing.</span></div>'
+      + 'role="combobox" aria-controls="links_results" aria-expanded="false" '
+      + 'placeholder="Search tickets, issues, pages, items&hellip; or paste a link"></div>'
+      + '<div class="form-group"><label class="form-label" for="links_relation">Relation</label>'
+      + '<select class="form-select" id="links_relation" data-links-relation></select></div>'
+      + '<div class="links-results" id="links_results" role="listbox" data-links-results>'
+      + '<span class="muted-note">Start typing.</span></div>'
+      + '<div class="links-keys muted-note">Arrow keys to move, Enter to link.</div>'
       + '</div>'
       + '<div class="modal-footer"><button type="button" class="btn btn-outline" data-modal-close>Cancel</button></div>'
       + '</div></div>',
     );
     const el = document.getElementById(this.DIALOG_ID);
-    el.querySelector('[data-links-query]').addEventListener('input', (e) => this.onType(e.target.value));
+    const query = el.querySelector('[data-links-query]');
+    query.addEventListener('input', (e) => this.onType(e.target.value));
+    query.addEventListener('keydown', (e) => this.onKey(e));
     el.querySelector('[data-links-results]').addEventListener('click', (e) => {
       const row = e.target.closest('[data-links-result]');
       if (row) this.addTarget(row);
@@ -163,6 +168,7 @@ const JackilLinks = {
   },
 
   note(message) {
+    this.active = -1;
     this.results().innerHTML = '<span class="muted-note">' + escHtml(message) + '</span>';
   },
 
@@ -210,17 +216,53 @@ const JackilLinks = {
       this.note('Nothing found.');
       return;
     }
-    this.results().innerHTML = results.map((target) => {
-      // Type and status go out as escaped words, joined by an escaped middot.
-      const meta = [escHtml(target.type), target.status ? escHtml(target.status) : '']
-        .filter(Boolean)
-        .join(' &middot; ');
-      return '<button type="button" class="links-result" data-links-result data-type="' + escAttr(target.type)
-        + '" data-id="' + escAttr(target.id) + '">'
-        + '<span>' + escHtml(target.label) + '</span>'
-        + '<small>' + meta + '</small>'
-        + '</button>';
-    }).join('');
+    // Grouped under the type's own words, in the order the search returned
+    // them, so "Issues" and "Vigil hosts" read as headings, not as codes.
+    const groups = new Map();
+    results.forEach((target) => {
+      const key = target.type_label || target.type;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(target);
+    });
+    let html = '';
+    groups.forEach((targets, heading) => {
+      html += '<div class="links-result-group">' + escHtml(heading) + '</div>';
+      html += targets.map((target) =>
+        '<button type="button" class="links-result" role="option" tabindex="-1" data-links-result'
+        + ' data-type="' + escAttr(target.type) + '" data-id="' + escAttr(target.id) + '">'
+        + '<span class="links-result-label">' + escHtml(target.label) + '</span>'
+        + (target.status ? '<small>' + escHtml(target.status) + '</small>' : '')
+        + '</button>',
+      ).join('');
+    });
+    this.results().innerHTML = html;
+    this.setActive(0);
+  },
+
+  rows() {
+    return Array.from(this.results().querySelectorAll('[data-links-result]'));
+  },
+
+  setActive(index) {
+    const rows = this.rows();
+    rows.forEach((row, i) => row.classList.toggle('active', i === index));
+    this.active = rows.length ? index : -1;
+    if (rows[index]) rows[index].scrollIntoView({ block: 'nearest' });
+    const query = document.getElementById('links_query');
+    if (query) query.setAttribute('aria-expanded', rows.length ? 'true' : 'false');
+  },
+
+  onKey(e) {
+    const rows = this.rows();
+    if (!rows.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const step = e.key === 'ArrowDown' ? 1 : -1;
+      this.setActive((this.active + step + rows.length) % rows.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (rows[this.active]) this.addTarget(rows[this.active]);
+    }
   },
 
   addTarget(row) {
