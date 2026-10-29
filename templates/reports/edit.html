@@ -37,8 +37,10 @@
         <input type="hidden" name="card_count" value="{{ cards|length }}">
         {% for card in cards %}
         <div class="rb-card">
+          <label class="rb-f"><span>Order</span>
           <input class="form-input" type="number" name="card-{{ card.index }}-order"
-                 value="{{ card.order }}" min="1" step="1" title="Order">
+                 value="{{ card.order }}" min="1" step="1" title="Order"></label>
+          <label class="rb-f"><span>Card</span>
           <select class="form-select" name="card-{{ card.index }}-kind">
             {% for group in card.kind_options %}
             <optgroup label="{{ group.group }}">
@@ -49,26 +51,32 @@
               {% endfor %}
             </optgroup>
             {% endfor %}
-          </select>
+          </select></label>
+          <label class="rb-f"><span>Chart</span>
           <select class="form-select" name="card-{{ card.index }}-chart">
             {% for chart in card.charts %}
             <option value="{{ chart }}" {% if chart == card.chart %}selected{% endif %}>{% if chart == "stacked-bar" %}Stacked bar{% else %}{{ chart|capfirst }}{% endif %}</option>
             {% endfor %}
-          </select>
+          </select></label>
+          <label class="rb-f"><span>Title</span>
           <input class="form-input" type="text" name="card-{{ card.index }}-title"
-                 value="{{ card.title }}" placeholder="{{ card.registry_title }}">
+                 value="{{ card.title }}" placeholder="{{ card.registry_title }}"></label>
+          <label class="rb-f"><span>Width</span>
           <input class="form-input" type="number" name="card-{{ card.index }}-w"
-                 value="{{ card.w }}" min="1" max="12" step="1" title="Width">
+                 value="{{ card.w }}" min="1" max="12" step="1" title="Width"></label>
+          <label class="rb-f"><span>Height</span>
           <input class="form-input" type="number" name="card-{{ card.index }}-h"
-                 value="{{ card.h }}" min="1" max="24" step="1" title="Height">
-          <label style="font-size: 12px; color: var(--text-2); display: inline-flex; gap: 4px; align-items: center; white-space: nowrap;">
+                 value="{{ card.h }}" min="1" max="24" step="1" title="Height"></label>
+          <label class="rb-remove">
             <input type="checkbox" class="form-check" name="card-{{ card.index }}-remove"> Remove
           </label>
           <div class="rb-labels">
-            <input class="form-input" type="text" name="card-{{ card.index }}-x_label"
-                   value="{{ card.x_label }}" placeholder="{{ card.x_label_placeholder }}">
-            <input class="form-input" type="text" name="card-{{ card.index }}-y_label"
-                   value="{{ card.y_label }}" placeholder="{{ card.y_label_placeholder }}">
+            <label class="rb-f"><span>Across (x axis)</span>
+          <input class="form-input" type="text" name="card-{{ card.index }}-x_label"
+                   value="{{ card.x_label }}" placeholder="{{ card.x_label_placeholder }}"></label>
+            <label class="rb-f"><span>Up (y axis)</span>
+          <input class="form-input" type="text" name="card-{{ card.index }}-y_label"
+                   value="{{ card.y_label }}" placeholder="{{ card.y_label_placeholder }}"></label>
           </div>
         </div>
         <div class="form-card-hint">{{ card.how }}</div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load links_tags sla_tags %}
+{% load links_tags sla_tags local_time %}
 
 {% block title %}Ticket #{{ ticket.pk }} — Jackil{% endblock %}
 
@@ -105,7 +105,7 @@
   {% for m in messages_thread %}
     {% if m.kind == "system" %}
     <div class="msg-system">
-      <span>{{ m.body }} · {{ m.created_at|date:"M d, H:i" }}</span>
+      <span>{{ m.body }} · {% local_time m.created_at "short" %}</span>
     </div>
     {% else %}
     <div class="msg{% if m.kind == 'note' %} msg-note{% endif %}{% if m.is_email %} msg-email{% endif %} fade-in">
@@ -121,7 +121,7 @@
             {% if m.email_status == "failed" %}<span class="msg-badge msg-badge-failed">Delivery failed</span>{% endif %}{% endif %}
           {% if m.author.role == "agent" %}<span class="msg-role msg-role-agent">Support</span>{% elif m.author.role == "admin" %}<span class="msg-role msg-role-admin">Admin</span>{% endif %}
         </span>
-        <span class="msg-time">{{ m.created_at|date:"M d, Y H:i" }}</span>
+        <span class="msg-time">{% local_time m.created_at %}</span>
       </div>
       <div class="msg-body">{{ m.body|linebreaks }}</div>
       {% with atts=m.attachments.all %}
@@ -203,7 +203,7 @@
     {% if ticket.due_at %}
     <span class="sla-badge sla-due">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Due {{ ticket.due_at|date:"M d, H:i" }}
+      Due {% local_time ticket.due_at "short" %}
     </span>
     {% endif %}
   </div>

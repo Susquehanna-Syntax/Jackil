@@ -1,4 +1,5 @@
 {% extends "console/settings_base.html" %}
+{% load local_time %}
 
 {% block settings_content %}
 <div class="section-heading">Edition</div>
@@ -33,12 +34,12 @@
 
     <p class="form-card-hint" style="margin-top: 12px;">
       {% if record.last_checked_at %}
-        Last checked {{ record.last_checked_at|date:"j M Y, H:i" }}.
+        Last checked {% local_time record.last_checked_at %}.
       {% else %}
         Never checked.
       {% endif %}
       {% if record.last_verified_at %}
-        Last verified {{ record.last_verified_at|date:"j M Y, H:i" }}.
+        Last verified {% local_time record.last_verified_at %}.
       {% else %}
         Never verified.
       {% endif %}

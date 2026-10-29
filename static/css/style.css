@@ -2301,3 +2301,11 @@ a.issue-key:hover { color: var(--text-1); text-decoration: underline; }
 }
 .bd-card-foot { justify-content: flex-start; gap: 12px; }
 .bd-card-foot > :last-child { margin-left: auto; }
+/* Report builder (M8b): every card-row input says what it is. */
+.rb-card { align-items: end; }
+.rb-f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rb-f > span { font-size: 11px; color: var(--text-3); }
+.rb-remove { font-size: 12px; color: var(--text-2); display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; padding-bottom: 12px; }
+.rb-side .form-group { margin-bottom: 16px; }
+.rb-side .form-group:last-child { margin-bottom: 0; }
+.rb-checks { margin-top: 8px; }

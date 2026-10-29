@@ -122,7 +122,25 @@ function toggleSidebar() {
   _applySidebarToggle(expanded);
 }
 
+/* Times arrive as labelled UTC inside <time data-local>; show them in the
+   reader's own zone, keeping the UTC text as the hover title. */
+const _LOCAL_TIME_FORMATS = {
+  datetime: { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' },
+  short: { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
+};
+
+function localTimes(root) {
+  (root || document).querySelectorAll('time[data-local]').forEach((el) => {
+    const when = new Date(el.getAttribute('datetime'));
+    if (Number.isNaN(when.getTime())) return;
+    const format = _LOCAL_TIME_FORMATS[el.dataset.local] || _LOCAL_TIME_FORMATS.datetime;
+    if (!el.title) el.title = el.textContent;
+    el.textContent = when.toLocaleString(undefined, format);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  localTimes(document);
   const expanded = document.documentElement.getAttribute('data-sidebar') === 'expanded';
   _sidebarLabels();
   _applySidebarToggle(expanded);
