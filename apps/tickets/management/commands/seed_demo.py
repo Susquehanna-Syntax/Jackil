@@ -6,6 +6,7 @@ departments (matched by username / name). Use ``--fresh`` to wipe tickets first.
 
 import datetime
 import random
+from itertools import cycle
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -14,6 +15,9 @@ from apps.accounts.models import Department, User
 from apps.items.models import Item, ItemKind
 from apps.links.models import DynamicLink
 from apps.links.service import LinkError, add_link
+from apps.portals.models import Portal
+from apps.projects import service as projects_service
+from apps.projects.models import Issue, Project, Sprint
 from apps.tickets.models import Ticket
 from apps.wiki.models import Page, Space
 from apps.wiki.service import save_version
@@ -476,12 +480,228 @@ AGENTS = [
     ("lena", "Lena", "Rossi", "peach"),
 ]
 
+#: Project rows: key, name, method, lead username, department. A Scrum project
+#: reads the sprint list in ``PROJECT_SPRINTS``; anything else gets ``WEB_ISSUES``.
+PROJECTS = [
+    ("OPS", "IT Operations", "scrum", "aria", "IT Support"),
+    ("WEB", "Intranet refresh", "kanban", "dev", ""),
+]
+PROJECT_DESCRIPTIONS = {
+    "OPS": "The rack room, the network, and everything that plugs into both.",
+    "WEB": "Bringing the intranet up to date, one page at a time.",
+}
+
+#: A sprint's issues: (type, title, description, priority, points, column).
+#: The last row of each closed sprint is the one carried over to the next.
+PROJECT_SPRINTS = [
+    (
+        "Sprint 1",
+        "Get the rack room and the backup path dependable before winter.",
+        [
+            (
+                "story",
+                "Replace the core switch in rack B",
+                "Dual PSU, uplinks labelled.",
+                "high",
+                8,
+                "done",
+            ),
+            (
+                "task",
+                "Rotate the VPN certificate",
+                "Old cert expires this month.",
+                "high",
+                3,
+                "done",
+            ),
+            (
+                "task",
+                "Move backups to the new NAS",
+                "Copy the seed data, verify a restore.",
+                "medium",
+                5,
+                "done",
+            ),
+            (
+                "bug",
+                "Mail relay queue grows after each restart",
+                "Deferred mail piles up for an hour.",
+                "high",
+                2,
+                "done",
+            ),
+            ("task", "Label the patch panels in the comms room", "", "low", 1, "in_progress"),
+        ],
+    ),
+    (
+        "Sprint 2",
+        "Stand up monitoring so incidents reach the desk before the users do.",
+        [
+            (
+                "story",
+                "Add monitoring to the file server shares",
+                "Disk, snapshot age, SMB latency.",
+                "high",
+                5,
+                "done",
+            ),
+            (
+                "story",
+                "Alert on certificate expiry across all hosts",
+                "Two weeks' warning to the queue.",
+                "medium",
+                5,
+                "done",
+            ),
+            (
+                "task",
+                "Document the firewall change process",
+                "Post it in the Networking space.",
+                "medium",
+                3,
+                "done",
+            ),
+            (
+                "task",
+                "Retire the old print server",
+                "Move the queues to the new host first.",
+                "low",
+                3,
+                "done",
+            ),
+            (
+                "bug",
+                "Guest Wi-Fi captive portal loops on phones",
+                "The redirect drops the session.",
+                "medium",
+                2,
+                "todo",
+            ),
+        ],
+    ),
+    (
+        "Sprint 3",
+        "Clear the access backlog and finish the storage migration.",
+        [
+            (
+                "story",
+                "Bring the badge readers onto the new firmware",
+                "Reception first, then the doors.",
+                "medium",
+                8,
+                "done",
+            ),
+            (
+                "task",
+                "Archive last year's project shares",
+                "Read-only for twelve months.",
+                "medium",
+                3,
+                "done",
+            ),
+            (
+                "bug",
+                "VPN drops on laptops leaving the office Wi-Fi",
+                "Idle timeout below the roaming interval.",
+                "high",
+                3,
+                "done",
+            ),
+            ("task", "Publish the password reset guide to the Help Center", "", "low", 2, "done"),
+            ("story", "Trial an attendance kiosk at reception", "", "low", 5, "in_progress"),
+        ],
+    ),
+]
+
+#: The active sprint: (type, title, description, priority, points, column).
+#: ``parent`` marks an issue as a sub-task of the story just above it.
+ACTIVE_SPRINT_GOAL = "Finish the laptop refresh and cut the file server over."
+ACTIVE_SPRINT_ISSUES = [
+    (
+        "story",
+        "Roll out new laptops to the finance team",
+        "Image, join the domain, migrate.",
+        "medium",
+        8,
+        "in_progress",
+    ),
+    ("subtask", "Image the four finance laptops", "", "medium", None, "in_progress"),
+    (
+        "story",
+        "Move the file server shares onto the NAS",
+        "Cut over at the weekend.",
+        "high",
+        5,
+        "todo",
+    ),
+    (
+        "bug",
+        "Badge reader at the side door loses its network",
+        "The PoE injector is suspect.",
+        "medium",
+        2,
+        "todo",
+    ),
+    ("task", "Review the Microsoft 365 licence pool", "Twelve seats sit unused.", "low", 3, "done"),
+    ("subtask", "Cancel the twelve unused seats", "", "low", None, "todo"),
+]
+
+#: Backlog issues with no sprint: (type, title, description, priority, points).
+OPS_BACKLOG = [
+    ("epic", "Office network refresh", "Switches and uplinks on both floors.", "medium", 13),
+    ("story", "Plan the office uplink upgrade", "Both circuits renew in March.", "medium", 8),
+    ("task", "Replace the printer on the second floor", "Jam-prone; parts are gone.", "low", 2),
+    ("bug", "File server share is slow on Mondays", "Antivirus scans the whole volume.", "high", 3),
+    ("story", "Add port-level monitoring to the access switches", "", "medium", 5),
+    ("task", "Renew the firewall support contract", "", "low", 1),
+]
+
+#: The Kanban board's issues, no sprints: (type, title, description, priority, points, column).
+WEB_ISSUES = [
+    (
+        "story",
+        "Rewrite the welcome page copy",
+        "Say what we do in one sentence.",
+        "medium",
+        3,
+        "todo",
+    ),
+    ("task", "Collect photographs of each floor", "", "low", 2, "todo"),
+    (
+        "bug",
+        "Old policy PDFs open from the top menu",
+        "Four links point at deleted files.",
+        "low",
+        2,
+        "todo",
+    ),
+    (
+        "story",
+        "Add a staff directory to the intranet",
+        "Search by team and by floor.",
+        "high",
+        5,
+        "in_progress",
+    ),
+    ("task", "Agree which teams appear on the home page", "", "medium", 1, "in_progress"),
+    (
+        "epic",
+        "Intranet content review",
+        "Everything published before 2024.",
+        "medium",
+        8,
+        "in_progress",
+    ),
+    ("story", "Publish the travel and expenses guide", "", "medium", 3, "done"),
+    ("task", "Move the intranet onto the new theme", "", "medium", 5, "done"),
+    ("task", "Retire the legacy news page", "Its pages moved to the Wiki.", "low", 2, "done"),
+]
+
 CUSTOMERS = [
     ("jordan", "Jordan", "Reyes", "rose"),
     ("priya", "Priya", "Anand", "lemon"),
     ("marcus", "Marcus", "Bell", "coral"),
 ]
-
 TICKETS = [
     (
         "Laptop won't connect to VPN",
@@ -591,6 +811,7 @@ class Command(BaseCommand):
             departments[name] = dept
 
         agents = []
+        users = {"admin": admin}
         for username, first, last, color in AGENTS:
             user, created = User.objects.get_or_create(
                 username=username,
@@ -611,6 +832,7 @@ class Command(BaseCommand):
                 user.avatar = _make_avatar(first[0], color)
                 user.save(update_fields=["avatar"])
             agents.append(user)
+            users[username] = user
 
         customers = []
         for username, first, last, color in CUSTOMERS:
@@ -657,14 +879,163 @@ class Command(BaseCommand):
         mail_ticket = _ticket("mail server down")
         pages = self._wiki(admin, _pk(mail_ticket))
         links = self._links(admin, items, pages, _pk(mail_ticket))
+        self._projects(admin, users, departments)
+        self._portal(departments)
 
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seeded: {Department.objects.count()} departments, "
                 f"{User.objects.count()} users, {Ticket.objects.count()} tickets, "
-                f"{Item.objects.count()} items, {Page.objects.count()} pages, {links} links."
+                f"{Item.objects.count()} items, {Page.objects.count()} pages, {links} links, "
+                f"{Project.objects.count()} projects, {Issue.objects.count()} issues."
             )
         )
+
+    def _projects(self, admin, users, departments):
+        """The two demo boards: OPS with a sprint history, WEB as a Kanban."""
+        if Project.objects.filter(key__in=[key for key, *_ in PROJECTS]).exists():
+            return 0
+        assignees = cycle([users[name] for name, *_ in AGENTS])
+        created = 0
+        for key, name, method, lead, department in PROJECTS:
+            project = projects_service.create_project(
+                admin,
+                key,
+                name,
+                method=method,
+                lead=users[lead],
+                description=PROJECT_DESCRIPTIONS[key],
+                department=departments.get(department),
+            )
+            if method == "scrum":
+                created += self._scrum_board(admin, project, assignees)
+            else:
+                created += self._issues(admin, project, assignees, WEB_ISSUES)
+        return created
+
+    def _scrum_board(self, admin, project, assignees):
+        """Three closed sprints of work, an active one, and the backlog behind it."""
+        sprints = []
+        created = 0
+
+        for name, goal, rows in PROJECT_SPRINTS + [
+            ("Sprint 4", ACTIVE_SPRINT_GOAL, ACTIVE_SPRINT_ISSUES)
+        ]:
+            sprint = Sprint.objects.create(project=project, name=name, goal=goal)
+            sprints.append(sprint)
+            created += self._issues(admin, project, assignees, rows, sprint=sprint)
+
+        for position, sprint in enumerate(sprints[:3], start=1):
+            projects_service.start_sprint(
+                admin, sprint, _sprint_start(position), _sprint_end(position)
+            )
+            open_rows = list(sprint.issues.exclude(column__category="done"))
+            projects_service.complete_sprint(admin, sprint)
+            for issue in open_rows:
+                # Carried over: the service only clears the sprint it was given.
+                projects_service.set_sprint(admin, issue, sprints[position])
+
+        projects_service.start_sprint(
+            admin, sprints[3], _sprint_start(4), timezone.localdate() + datetime.timedelta(days=9)
+        )
+
+        self._issues(admin, project, assignees, OPS_BACKLOG)
+        created += len(OPS_BACKLOG)
+
+        self._backdate_history(sprints[:3])
+        return created
+
+    def _issues(self, admin, project, assignees, rows, sprint=None):
+        """One list of issues onto the board: create, place in a column, and go.
+
+        A row is (type, title, description, priority, points) and lands in the
+        To do column; with a sixth item it goes to that column instead. A sub-task
+        hangs off the issue just above it and takes that agent as its assignee;
+        every other issue gets the next agent in the round-robin.
+        """
+        columns = {column.category: column for column in project.columns.all()}
+        last = None
+        for row in rows:
+            kind, category = row[0], row[5] if len(row) > 5 else "todo"
+            subtask = kind == "subtask"
+            issue = self._issue(
+                admin,
+                project,
+                # A sub-task's hours belong to whoever owns the story above it.
+                last[1] if subtask else next(assignees),
+                row,
+                sprint=sprint,
+                parent=last[0] if subtask else None,
+            )
+            if not subtask:
+                last = (issue, issue.assignee)
+            projects_service.move_issue(admin, issue, columns[category])
+
+        return len(rows)
+
+    @staticmethod
+    def _issue(admin, project, assignee, row, sprint=None, parent=None):
+        kind, title, description, priority, points = row[:5]
+        return projects_service.create_issue(
+            admin,
+            project,
+            type=kind,
+            title=title,
+            description=description,
+            priority=priority,
+            story_points=points,
+            assignee=assignee,
+            sprint=sprint,
+            parent=parent,
+        )
+
+    @staticmethod
+    def _backdate_history(sprints):
+        """Move the closed sprints into the past, now that the service stamped them.
+
+        Velocity reads ``completed_at`` inside the sprint's own window, so each
+        done issue gets a moment between its sprint's start and close.
+        """
+        for position, sprint in enumerate(sprints, start=1):
+            start = timezone.make_aware(
+                datetime.datetime.combine(_sprint_start(position), datetime.time(9, 0))
+            )
+            end = timezone.make_aware(
+                datetime.datetime.combine(_sprint_end(position), datetime.time(16, 0))
+            )
+            Sprint.objects.filter(pk=sprint.pk).update(
+                start_date=_sprint_start(position),
+                end_date=_sprint_end(position),
+                started_at=start,
+                closed_at=end,
+            )
+            done = list(sprint.issues.filter(column__category="done"))
+            span = max((end - start).total_seconds() // (len(done) + 1), 1)
+            for number, issue in enumerate(done, start=1):
+                Issue.objects.filter(pk=issue.pk).update(
+                    completed_at=start + datetime.timedelta(seconds=span * number)
+                )
+
+    def _portal(self, departments):
+        """The published IT Support portal; the default portal stays as it is.
+
+        ``Portal.save`` would hand the default to any portal created with
+        ``is_default=True``, so this one is never created that way.
+        """
+        portal, _ = Portal.objects.get_or_create(
+            slug="it-support",
+            defaults={
+                "name": "IT Support",
+                "intro": "Report a problem, ask for equipment, or look it up yourself first.",
+                "is_published": True,
+                "department": departments.get("IT Support"),
+                "show_search": True,
+                "show_my_tickets": True,
+            },
+        )
+        help_center = Space.objects.filter(name="Help Center").first()
+        if help_center is not None:
+            portal.spaces.add(help_center)
 
     def _items(self, departments):
         """The Items register: get_or_create by name, so re-running adds nothing."""
@@ -780,6 +1151,15 @@ class Command(BaseCommand):
                 continue
             created += 1
         return created
+
+
+def _sprint_start(position):
+    """Closed sprint ``position`` (1 = oldest) ran two weeks per cycle."""
+    return timezone.localdate() - datetime.timedelta(days=(4 - position) * 14 + 14)
+
+
+def _sprint_end(position):
+    return _sprint_start(position) + datetime.timedelta(days=14)
 
 
 def _ticket(title_substring):
