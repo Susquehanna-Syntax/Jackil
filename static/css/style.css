@@ -2250,3 +2250,32 @@ a.dash-card { text-decoration: none; }
 .links-result.active { border-color: var(--lavender-ink); background: var(--s3); }
 .links-keys { margin: 10px 24px 0; font-size: 11px; }
 .modal-body > .links-results { margin-left: 24px; margin-right: 24px; }
+/* Wiki editor (M8b): details in one strip, body beside its preview, the
+   toolbar joined to the text it edits, save on one line. */
+.wk-details { display: grid; grid-template-columns: minmax(0, 2fr) repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: start; }
+.wk-details .form-group { margin-bottom: 0; }
+.wiki-editor-grid { margin-bottom: 18px; align-items: stretch; }
+.wiki-editor-grid .form-card { margin-bottom: 0; }
+.wk-pane { display: flex; flex-direction: column; min-width: 0; }
+.wk-pane-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.wk-pane-head .form-card-title { margin-bottom: 0; }
+.wk-editor-box { display: flex; flex-direction: column; flex: 1; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--s2); }
+.wk-editor-box .wiki-toolbar { margin: 0; padding: 6px; border-bottom: 1px solid var(--border); background: var(--s1); }
+.wk-editor-box .wiki-toolbar { gap: 2px; }
+.wk-editor-box .wiki-toolbar button { font: inherit; font-size: 12px; padding: 4px 7px; background: transparent; border-color: transparent; }
+.wk-editor-box .wiki-toolbar button:hover { background: var(--s2); border-color: var(--border); }
+.wk-editor-box .wiki-editor { flex: 1; border: 0; border-radius: 0; box-shadow: none; }
+.wk-pane .wiki-preview { flex: 1; border: 0; padding: 4px 2px; background: transparent; }
+.wk-attach { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.wk-save { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.wk-summary { flex: 1 1 320px; margin-bottom: 0; }
+.wk-save .setting-check { padding-bottom: 10px; }
+.wk-save-actions { display: flex; gap: 8px; margin-left: auto; }
+@media (max-width: 900px) { .wk-details { grid-template-columns: 1fr; } .wk-pane .wiki-preview { min-height: 160px; } .wk-editor-box .wiki-editor { min-height: 40vh; } }
+/* Wiki page (M8b): the page between its tree and what surrounds it. */
+.wiki-layout:has(> .wiki-rail) { grid-template-columns: 230px minmax(0, 1fr) 300px; }
+.wiki-rail { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.wiki-rail .form-card { margin: 0; padding: 16px 18px; }
+.wiki-rail .links-panel { margin: 0; }
+@media (max-width: 1200px) { .wiki-layout:has(> .wiki-rail) { grid-template-columns: 230px minmax(0, 1fr); } .wiki-rail { grid-column: 2; } }
+@media (max-width: 900px) { .wiki-layout:has(> .wiki-rail) { grid-template-columns: 1fr; } .wiki-rail { grid-column: auto; } }
