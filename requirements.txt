@@ -12,4 +12,8 @@ mdit-py-plugins>=0.6,<0.7
 nh3>=0.3.7,<0.4
 Pygments>=2.21,<3
 python3-saml>=1.16,<2
-xmlsec>=1.3.14,<2
+# xmlsec refuses to import when its libxml2 differs from lxml's. The 3.12
+# manylinux wheels of both (amd64 and arm64) carry libxml2 2.14.6, so the
+# image needs no compiler or libxmlsec1 packages; move these two together.
+xmlsec==1.3.18
+lxml==6.1.3

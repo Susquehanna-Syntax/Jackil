@@ -34,6 +34,12 @@ class EmptyDatabaseWidgetTests(TestCase):
         for kind, spec in WIDGET_REGISTRY.items():
             payload = widget_data(kind, default_settings(kind), self.agent)
             self.assertEqual(payload["version"], 1, kind)
+            if kind == "report_chart":
+                # No report picked yet: a muted stat that says what to pick.
+                self.assertEqual(payload["shape"], "stat", kind)
+                self.assertEqual(payload["data"]["tone"], "muted", kind)
+                validate_payload("stat", payload["data"])
+                continue
             self.assertEqual(payload["shape"], spec["shape"], kind)
             validate_payload(spec["shape"], payload["data"])
 

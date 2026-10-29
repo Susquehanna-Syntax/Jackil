@@ -341,7 +341,8 @@ class SettingsPageTests(TestCase):
         self.assertIn(
             (
                 "error",
-                "That is not a Jackil integration key; they start with vjk_.",
+                "That is not a Vigil key for Jackil; an integration key starts "
+                "with vjk_ and a scoped API key with vsk_.",
             ),
             self.messages_from(response),
         )

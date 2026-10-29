@@ -30,8 +30,11 @@ class VigilConnectionForm(forms.Form):
 
     def clean_key(self):
         key = (self.cleaned_data.get("key") or "").strip()
-        if key and not key.startswith("vjk_"):
+        # vsk_ is a Vigil Business scoped API key, which an admin uses to
+        # limit what Jackil can see to some sites.
+        if key and not key.startswith(("vjk_", "vsk_")):
             raise forms.ValidationError(
-                "That is not a Jackil integration key; they start with vjk_."
+                "That is not a Vigil key for Jackil; an integration key starts "
+                "with vjk_ and a scoped API key with vsk_."
             )
         return key

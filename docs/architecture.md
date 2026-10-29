@@ -1,9 +1,10 @@
 # Jackil — Architecture
 
-Jackil is a self-hosted **IT ticket-management (helpdesk)** application for a
-**single organization** divided into departments. It is not multi-tenant: one
-install serves one org. Inventory/asset management is explicitly out of scope —
-that is handled by a sibling product (Vigil) which will later connect to Jackil.
+Jackil is a self-hosted **service desk and work tracker** for a **single
+organization** divided into departments: tickets, projects, a wiki and items,
+joined by Dynamic Links. It is not multi-tenant: one install serves one org.
+Monitored machines belong to the sibling product, Vigil; Jackil reads them
+through the Vigil integration and never runs anything there.
 
 ## Stack
 
@@ -20,7 +21,8 @@ that is handled by a sibling product (Vigil) which will later connect to Jackil.
 1. **Data** — Django models in `apps/*/models.py`. Core apps: `accounts`
    (User, Department), `tickets` (Ticket, conversation, attachments, SLA,
    custom fields), plus feature apps added per milestone (`inbox`, `automation`,
-   `kb`, `api`, `reports`).
+   `kb`, `api`, `reports`, and in 2026.3 `projects`, `wiki`, `links`, `items`,
+   `dashboards`, `portals`, `vigil`, `licensing`, `saml`).
 2. **Domain/services** — plain functions and management commands that implement
    business logic (SLA computation, email rendering/parsing, automation-rule
    evaluation). Kept out of views so they are unit-testable and reusable from
@@ -74,10 +76,43 @@ Permission helpers live in `apps/tickets/permissions.py` (extracted from the
   (conditions → actions) and applies matching actions (assign, set priority,
   add tag, send macro, escalate).
 
+## 2026.3 building blocks
+
+- **Dynamic Links** (`apps/links`) — one `DynamicLink` table joins any two objects
+  (ticket, issue, page, item, or a Vigil host, task, playbook, run or
+  automation) with a relation. A registry names each type, how to search it
+  and how to show it; the link picker and every "Linked" panel read that
+  registry, so a new type is one registry entry.
+- **Projects** (`apps/projects`) — Project, Issue (with a per-project key such
+  as `OPS-12`), columns, sprints and sub-tasks; board and backlog are plain
+  JavaScript over JSON endpoints.
+- **Wiki** (`apps/wiki`) — Space, Page (tree), PageVersion (history and diffs),
+  PageTemplate, PageAttachment. Markdown rendered server-side and sanitised.
+- **Items** (`apps/items`) — admin-defined item kinds (`ItemKind`) with fields, and `Item` records:
+  what an organization tracks that is not a monitored machine.
+- **Dashboards and reports** (`apps/dashboards`, `apps/reports`) — a widget
+  registry (kind, shape, settings) shared by dashboards and saved reports, and
+  one drawing script, `static/js/jackil-widgets.js`, which Vigil also uses for
+  Jackil widgets.
+- **Portals** (`apps/portals`) — a customer-facing portal per department.
+  Customers never see Vigil data or costs; only admins see wages.
+- **Vigil integration** (`apps/vigil`) — server to server. Jackil stores the
+  Vigil address and a key (an integration key `vjk_`, or a Vigil SQSY
+  Business scoped key `vsk_` limited to some sites), encrypted at rest, and
+  calls Vigil's read-only integration endpoints for search, detail and widget
+  data. No per-user mapping between the two apps.
+- **Edition** (`apps/licensing`) — Jackil reads the signed SQSY licence blob
+  from the linked Vigil and verifies it itself (Ed25519, instance binding, the
+  `jackil` claim). A valid licence turns on the Business features (SAML,
+  portal branding, CSV export, audit log, CSAT); without one Jackil is the
+  full Community edition. `feature_enabled(slug)` is the only gate.
+- **SAML** (`apps/saml`) — python3-saml, self-contained behind
+  `feature_enabled("saml")` so it can move to a private package later.
+
 ## Non-goals
 
 - Multi-tenancy / multiple organizations in one install.
-- Inventory / asset management (owned by Vigil).
+- Monitoring, agents or remote actions on machines (owned by Vigil).
 - Real-time chat / websockets (email + threaded comments cover messaging).
 - Billing / payments.
 
@@ -97,3 +132,6 @@ Permission helpers live in `apps/tickets/permissions.py` (extracted from the
 - **M5 — Search, History, Notifications & Dashboard Customization.** Global
   search, activity/audit history, saved views, notifications, dashboard
   customization, profile/settings, polish.
+- **2026.3** — the SQSY design language and shell, dashboards, Dynamic Links
+  and Items, the wiki, projects, saved reports, the Vigil integration,
+  customer portals, the SQSY Business edition with SAML, and a UX pass.
