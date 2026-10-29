@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ what }} — SQSY Business — Jackil{% endblock %}
+{% block content %}
+<div class="fade-in d1">
+  <div class="hero-title">{{ what }}</div>
+  <div class="hero-sub">
+    {{ what }} is part of SQSY Business. It turns on when the Vigil Jackil is
+    linked to has an SQSY Business licence that includes Jackil.
+  </div>
+</div>
+{% if is_admin %}
+<div class="fade-in d2" style="margin-top:20px;">
+  <a href="{% url 'console:edition_settings' %}" class="btn btn-lav">Edition settings</a>
+</div>
+{% endif %}
+{% endblock %}

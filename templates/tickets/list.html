@@ -11,8 +11,12 @@
     <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ tickets|length }} ticket{{ tickets|length|pluralize }}</div>
   </div>
   <div style="display:flex; gap:8px;">
+    {% if 'audit_log' in business_features %}
     <a href="{% url 'tickets:activity_log' %}" class="btn btn-outline">Activity</a>
+    {% endif %}
+    {% if 'csv_export' in business_features %}
     <a href="{% url 'tickets:ticket_export' %}" class="btn btn-outline">Export CSV</a>
+    {% endif %}
     <a href="{% url 'tickets:ticket_create' %}" class="btn btn-lav">
       <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Ticket

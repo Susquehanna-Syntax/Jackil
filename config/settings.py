@@ -102,6 +102,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.notifications.context_processors.notifications",
                 "config.context_processors.features",
+                "config.context_processors.business",
                 "apps.civilsso.context_processors.civil",
             ],
         },

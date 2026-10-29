@@ -27,6 +27,7 @@ BUSINESS_FEATURES = frozenset(
         "csv_export",
         "audit_log",
         "csat",
+        # Reserved for a future release: no Jackil feature uses it yet.
         "white_label",
     }
 )

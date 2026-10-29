@@ -1,9 +1,8 @@
 """Open-core feature registry.
 
-Maps optional "pro" feature slugs to their Django app names and reports which
-are installed, so the open core degrades gracefully when a pro app is absent.
-The check is import-free: it only consults the app registry, never imports the
-pro app.
+Optional apps are identified by slug and reported through :func:`feature_enabled`
+so the open core degrades gracefully when one is absent. The check is
+import-free: it only consults the app registry, never imports the optional app.
 
 The SQSY Business slugs are not apps at all — they follow the edition, worked
 out from the licence on the linked Vigil (``apps.licensing.service``). The set

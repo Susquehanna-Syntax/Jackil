@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from apps.accounts.models import Department, User
+from apps.licensing.gates import business_page
+from config.features import feature_enabled
 
 from . import permissions
 from .filters import filter_tickets
@@ -152,7 +154,8 @@ def ticket_detail(request, pk):
         "rating": rating,
         "escalate_projects": escalate_projects,
         "suggestions": _suggestions(ticket, request.user, request),
-        "can_rate": request.user.id == ticket.created_by_id
+        "can_rate": feature_enabled("csat")
+        and request.user.id == ticket.created_by_id
         and ticket.status in ("resolved", "closed"),
     }
     return render(request, "tickets/detail.html", ctx)
@@ -445,6 +448,9 @@ def ticket_rate(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
     if ticket.created_by_id != request.user.id or ticket.status not in ("resolved", "closed"):
         return redirect("tickets:ticket_detail", pk=pk)
+    if not feature_enabled("csat"):
+        messages.info(request, "Ratings are not being collected.")
+        return redirect("tickets:ticket_detail", pk=pk)
     if request.method == "POST":
         try:
             score = int(request.POST.get("score", "0"))
@@ -465,13 +471,16 @@ def ticket_rate(request, pk):
 
 @login_required
 def ticket_export(request):
-    """Export tickets as CSV (staff only) — enterprise data export."""
+    """Export tickets as CSV (staff only)."""
     import csv
 
     from django.http import HttpResponse
 
     if request.user.role not in ("agent", "admin"):
         return redirect("tickets:dashboard")
+    gated = business_page(request, "csv_export", what="CSV export")
+    if gated is not None:
+        return gated
 
     def safe(value):
         """Neutralize CSV formula injection: prefix cells that a spreadsheet
@@ -533,6 +542,9 @@ def activity_log(request):
     """Recent audit trail across tickets (staff only)."""
     if request.user.role not in ("agent", "admin"):
         return redirect("tickets:dashboard")
+    gated = business_page(request, "audit_log", what="Activity log")
+    if gated is not None:
+        return gated
     from .models import TicketMessage
 
     events = (
