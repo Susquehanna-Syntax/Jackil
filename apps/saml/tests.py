@@ -61,12 +61,19 @@ class FakeAuth:
         self.request_data = request_data
         self.settings = settings
 
+    request_id = "ONELOGIN_test-request"
+    seen_request_id = None
+
     def login(self, return_to=None):
         self.return_to = return_to
+        FakeAuth.last_return_to = return_to
         return self.url
 
-    def process_response(self):
-        pass
+    def get_last_request_id(self):
+        return self.request_id
+
+    def process_response(self, request_id=None):
+        FakeAuth.seen_request_id = request_id
 
     def get_errors(self):
         return list(self.errors)
@@ -128,6 +135,8 @@ class LoginStartTests(SamlTestCase):
         evil = fresh.get(reverse("saml-login"), {"next": "https://evil.example/x"})
         self.assertRedirects(evil, FakeAuth.url, fetch_redirect_response=False)
         self.assertFalse(self._session_next(evil))
+        # Nor is the unsafe address handed to the IdP as the RelayState.
+        self.assertIsNone(FakeAuth.last_return_to)
 
 
 class AcsTests(SamlTestCase):
@@ -136,6 +145,25 @@ class AcsTests(SamlTestCase):
         business_on()
         configure()
         mock.patch("apps.saml.views.OneLogin_Saml2_Auth", FakeAuth).start()
+        # Every ACS test answers a sign-in this browser started.
+        session = self.client.session
+        session[views._REQUEST_SESSION_KEY] = FakeAuth.request_id
+        session.save()
+
+    def test_acs_refuses_an_unsolicited_or_replayed_response(self):
+        alice = User.objects.create_user("alice")
+        SamlIdentity.objects.create(user=alice, name_id="alice@example.com")
+        self.client.post(reverse("saml-acs"), {"SAMLResponse": "x"})  # uses up the request id
+        self.client.logout()
+        replay = self.client.post(reverse("saml-acs"), {"SAMLResponse": "x"})
+        self.assertRedirects(replay, "/login/?saml=failed", fetch_redirect_response=False)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_acs_checks_the_response_against_the_request_id(self):
+        alice = User.objects.create_user("alice")
+        SamlIdentity.objects.create(user=alice, name_id="alice@example.com")
+        self.client.post(reverse("saml-acs"), {"SAMLResponse": "x"})
+        self.assertEqual(FakeAuth.seen_request_id, FakeAuth.request_id)
 
     def test_acs_signs_in_a_known_identity(self):
         alice = User.objects.create_user("alice")

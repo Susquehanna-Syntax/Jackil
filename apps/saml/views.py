@@ -28,6 +28,7 @@ from apps.saml.models import SamlConfig, SamlIdentity
 logger = logging.getLogger("saml")
 
 _NEXT_SESSION_KEY = "saml_next"
+_REQUEST_SESSION_KEY = "saml_request_id"
 
 
 def prepare_request(request):
@@ -46,10 +47,16 @@ def login_start(request):
         raise Http404
 
     nxt = request.GET.get("next", "")
-    if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
+    if not (nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()})):
+        nxt = ""
+    if nxt:
         request.session[_NEXT_SESSION_KEY] = nxt
     auth = OneLogin_Saml2_Auth(prepare_request(request), service.settings_dict(request))
-    return redirect(auth.login(return_to=nxt or None))
+    target = auth.login(return_to=nxt or None)
+    # Remembered so the answer can be matched to this request: an assertion
+    # nobody here asked for (unsolicited, or replayed) is refused.
+    request.session[_REQUEST_SESSION_KEY] = auth.get_last_request_id()
+    return redirect(target)
 
 
 @csrf_exempt
@@ -64,9 +71,12 @@ def acs(request):
         return redirect("/login/?saml=failed")
 
     cfg = SamlConfig.get_solo()
+    request_id = request.session.pop(_REQUEST_SESSION_KEY, None)
+    if not request_id:
+        return fail("no sign-in was started from this browser (unsolicited or replayed response)")
     auth = OneLogin_Saml2_Auth(prepare_request(request), service.settings_dict(request))
     try:
-        auth.process_response()
+        auth.process_response(request_id=request_id)
     except Exception as malformed:  # junk in from the IdP is a failed sign-in, not a 500
         return fail(f"malformed assertion: {malformed}")
     errors = auth.get_errors()
