@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="pt-root fade-in d1{% if styling %} tc-{{ styling.tint }}{% endif %}">
+<div class="pt-root fade-in d1{% if styling %} pt-styled tc-{{ styling.tint }}{% endif %}">
   {% if styling and styling.logo_url %}<img class="pt-logo" src="{{ styling.logo_url }}" alt="">{% endif %}
   <div class="hero-title"><span>{{ portal.name }}</span></div>
   {% if intro_html %}<div class="hero-sub">{{ intro_html }}</div>{% endif %}

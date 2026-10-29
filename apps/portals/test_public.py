@@ -266,7 +266,7 @@ class StylingTests(TestCase):
 
         with patch("apps.portals.public.styling_enabled", return_value=True):
             page = self.home()
-        self.assertContains(page, '<div class="pt-root fade-in d1 tc-coral">')
+        self.assertContains(page, '<div class="pt-root fade-in d1 pt-styled tc-coral">')
         self.assertContains(page, STYLING["logo_url"])
         body = page.content.decode()
         self.assertIn(".hero-title { color: red; }", body)
@@ -277,7 +277,7 @@ class StylingTests(TestCase):
         self.portal.accent = "lavender"
         self.portal.save()
         with patch("apps.portals.public.styling_enabled", return_value=True):
-            self.assertContains(self.home(), '<div class="pt-root fade-in d1 tc-lav">')
+            self.assertContains(self.home(), '<div class="pt-root fade-in d1 pt-styled tc-lav">')
 
     def test_powered_by_hidden_only_when_styled(self):
         self.assertContains(self.home(), "Powered by Jackil")
