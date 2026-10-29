@@ -47,6 +47,17 @@ class VigilClient:
         url = f"{self.base_url}/{BASE_PATH}/{path}"
         if params:
             url = f"{url}?{urllib.parse.urlencode(params)}"
+        # A 404 on a per-item path is Vigil's "no such item"; elsewhere it means
+        # the integration itself is missing.
+        try:
+            payload = self._fetch(url)
+        except _NotFound:
+            if path != "widgets/" and path.startswith(_ITEM_PATHS):
+                raise
+            raise self._missing_integration() from None
+        return payload
+
+    def _fetch(self, url):
         request = Request(  # noqa: S310 - admin-entered Vigil address
             url,
             headers={
@@ -62,7 +73,7 @@ class VigilClient:
         except ssl.SSLError:
             raise VigilUnavailable("Vigil's certificate was not accepted.") from None
         except urllib.error.HTTPError as exc:
-            if exc.code == 404 and path != "widgets/" and path.startswith(_ITEM_PATHS):
+            if exc.code == 404:
                 raise _NotFound from None
             raise self._http_failure(exc) from None
         except urllib.error.URLError as exc:
@@ -83,14 +94,18 @@ class VigilClient:
             raise VigilUnavailable("Vigil sent an answer Jackil could not read.")
         return payload
 
+    @staticmethod
+    def _missing_integration():
+        return VigilUnavailable(
+            "Vigil does not have the Jackil integration. Update Vigil to 2026.16 or later."
+        )
+
     def _http_failure(self, exc):
         code = exc.code
         if code in (401, 403):
             return VigilUnavailable("Vigil refused the integration key.")
         if code == 404:
-            return VigilUnavailable(
-                "Vigil does not have the Jackil integration. Update Vigil to 2026.16 or later."
-            )
+            return self._missing_integration()
         if code == 400:
             detail = ""
             try:
@@ -145,6 +160,20 @@ class VigilClient:
 
     def widget(self, kind: str, params: dict) -> dict | None:
         return self._get_or_none(f"widgets/{urllib.parse.quote(str(kind))}/", params)
+
+    def status_page(self, token: str) -> dict | None:
+        """A Vigil status page's public JSON; None when Vigil has no such page.
+
+        Public pages need no integration key and live outside the ``/api/v1``
+        path every other call uses, so this goes straight to ``_fetch``, which
+        keeps the same timeout, error mapping and size cap. Its 404 (our
+        ``_NotFound``) is an ordinary answer here, not a failure.
+        """
+        url = f"{self.base_url}/status/{urllib.parse.quote(str(token), safe='')}/data/"
+        try:
+            return self._fetch(url)
+        except _NotFound:
+            return None
 
 
 def get_client() -> VigilClient | None:

@@ -1,3 +1,26 @@
+{% if status_embeds %}
+{% for page in status_embeds %}
+<div class="form-card">
+  <div class="form-card-title">Service status</div>
+  <div class="pt-status {% if page.all_up %}pt-status-up{% else %}pt-status-down{% endif %}">{{ page.headline }}</div>
+  {% for host in page.hosts %}
+  <div class="pt-svc">
+    <div class="pt-svc-head">
+      <span>{{ host.hostname }}</span>
+      <span>
+        <span class="pt-status {% if host.up %}pt-status-up{% else %}pt-status-down{% endif %}">{{ host.up|yesno:"Up,Down" }}</span>
+        {% if host.uptime_pct %}<span class="pt-uptime">{{ host.uptime_pct }}%</span>{% endif %}
+      </span>
+    </div>
+    <div class="pt-bars">
+      {% for bar in host.bars %}<span class="pt-bar pt-bar-{{ bar.state }}" title="{{ bar.label }}"></span>{% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+
 <div class="form-card">
   <div class="form-card-title">Ask for help</div>
   <div class="kb-category-articles">

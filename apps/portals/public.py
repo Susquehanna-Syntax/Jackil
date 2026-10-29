@@ -17,6 +17,7 @@ from apps.wiki.models import Page, Space
 
 from .models import Portal
 from .service import form_choices, styling_enabled
+from .status import status_embeds
 
 CLOSED_STATUSES = ["resolved", "closed"]
 
@@ -106,6 +107,7 @@ def _context(request, portal, query=""):
         "sections": _sections(portal),
         "my_tickets": _my_tickets(request, portal),
         "styling": _styling(portal),
+        "status_embeds": status_embeds(portal) if portal.vigil_status_pages else [],
         "query": query,
     }
 

@@ -2188,3 +2188,17 @@ a.dash-card { text-decoration: none; }
 .pt-root .kb-category-name:hover { color: var(--lavender-ink); }
 .pt-results { margin-top: 28px; }
 @media (max-width: 900px) { .pt-layout { grid-template-columns: 1fr; } }
+
+/* ── Vigil status embeds (M7 p03) ────────────────────────────────────────── */
+.pt-bars { display: flex; gap: 2px; margin-top: 6px; }
+.pt-bar { flex: 1; height: 18px; border-radius: 2px; background: var(--s3); }
+.pt-bar-up { background: var(--mint); }
+.pt-bar-degraded { background: var(--lemon); }
+.pt-bar-down { background: var(--rose); }
+.pt-svc { padding: 8px 0; border-top: 1px solid var(--s2); }
+.pt-svc:first-of-type { border-top: 0; }
+.pt-svc-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.pt-status { font-size: 13px; }
+.pt-status-up { color: var(--mint-ink); }
+.pt-status-down { color: var(--rose-ink); }
+.pt-uptime { font-size: 13px; color: var(--text-3); }

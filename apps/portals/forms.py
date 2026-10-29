@@ -34,7 +34,7 @@ class PortalForm(forms.ModelForm):
     vigil_status_pages = forms.CharField(
         label="Vigil status pages",
         required=False,
-        help_text="Slugs separated by commas.",
+        help_text="The part after /status/ in each Vigil status page's link, separated by commas.",
         widget=forms.TextInput(attrs={"class": "form-input", "placeholder": "mail, portal"}),
     )
 
