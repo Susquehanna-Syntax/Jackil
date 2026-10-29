@@ -1,3 +1,5 @@
+"""The demo seed's projects and portal: what they must look like, twice over."""
+
 import re
 from io import StringIO
 
@@ -14,6 +16,11 @@ from apps.tickets.management.commands.seed_demo import RUNBOOK
 from apps.wiki.markdown import render
 from apps.wiki.models import Page, Space
 
+SUMMARY = re.compile(
+    r"\d+ departments, \d+ users, \d+ tickets, \d+ items, \d+ pages, "
+    r"\d+ links, \d+ projects, \d+ issues\."
+)
+
 
 class SeedDemoTests(TestCase):
     def setUp(self):
@@ -26,11 +33,7 @@ class SeedDemoTests(TestCase):
         call_command("seed_demo", stdout=out)
 
         summary = out.getvalue().splitlines()[-1]
-        self.assertRegex(
-            summary,
-            r"\d+ departments, \d+ users, \d+ tickets, \d+ items, \d+ pages, "
-            r"\d+ links, \d+ projects, \d+ issues\.",
-        )
+        self.assertRegex(summary, SUMMARY)
         self.assertGreaterEqual(Item.objects.count(), 8)
         self.assertTrue(
             {"Servers", "Networking", "Onboarding", "Help Center"}.issubset(
@@ -62,7 +65,9 @@ class SeedDemoTests(TestCase):
         self.assertEqual(web.sprints.count(), 0)
 
         chart = velocity_chart(ops)
-        completed = next(s["values"] for s in chart["series"] if s["name"] == "Completed")
+        completed = next(
+            series["values"] for series in chart["series"] if series["name"] == "Completed"
+        )
         self.assertEqual(len(completed), 3)
         for points in completed:
             self.assertGreater(points, 0)
@@ -77,20 +82,18 @@ class SeedDemoTests(TestCase):
 
     def test_seed_is_idempotent_for_projects_and_portal(self):
         call_command("seed_demo", stdout=StringIO())
-        before = (
-            Project.objects.count(),
-            Issue.objects.count(),
-            Sprint.objects.count(),
-            Portal.objects.count(),
-        )
+        before = self._counts()
         call_command("seed_demo", stdout=StringIO())
-        after = (
+        self.assertEqual(before, self._counts())
+
+    @staticmethod
+    def _counts():
+        return (
             Project.objects.count(),
             Issue.objects.count(),
             Sprint.objects.count(),
             Portal.objects.count(),
         )
-        self.assertEqual(before, after)
 
     def test_runbook_renders_math_and_a_callout(self):
         body = RUNBOOK.replace("MAIL_TICKET_ID", "1")
@@ -112,8 +115,9 @@ class SeedDemoTests(TestCase):
 
     @staticmethod
     def _fictional(text):
-        # Jackil's prose speaks of "the company" and "example.com"; a seeded
-        # string naming a real one, or a public address, is not demo data.
+        # Jackil's demo prose names only "the company" and example.com; anything
+        # else with a real-looking domain, or a registered company suffix, is
+        # a real name that has no business being in the screenshots.
         lowered = text.lower()
         assert "ltd" not in lowered, text
         assert " inc." not in lowered, text
