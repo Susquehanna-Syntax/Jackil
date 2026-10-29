@@ -27,6 +27,13 @@ def _visible_to(user):
 
 @login_required
 def home(request):
+    """``/help/`` is the portal front door; this page remains for a site with
+    no published default portal."""
+    from apps.portals.public import default_portal_redirect
+
+    to_portal = default_portal_redirect(request)
+    if to_portal is not None:
+        return to_portal
     query = request.GET.get("q", "").strip()
     if query:
         results = _visible_to(request.user).filter(

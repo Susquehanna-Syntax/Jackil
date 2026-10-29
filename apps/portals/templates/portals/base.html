@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ portal.name }}{% if query %} — {{ query }}{% endif %} — Jackil{% endblock %}
+
+{% block extra_head %}
+  {% if styling %}<style>{{ styling.css }}</style>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="pt-root fade-in d1{% if styling %} tc-{{ styling.tint }}{% endif %}">
+  {% if styling and styling.logo_url %}<img class="pt-logo" src="{{ styling.logo_url }}" alt="">{% endif %}
+  <div class="hero-title"><span>{{ portal.name }}</span></div>
+  {% if intro_html %}<div class="hero-sub">{{ intro_html }}</div>{% endif %}
+  {% if not portal.is_published %}<div class="pt-draft">Draft — only staff can see this</div>{% endif %}
+
+  {% if portal.show_search %}
+  <form method="get" action="{% url 'portals:portal_search' slug=portal.slug %}" class="kb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" name="q" value="{{ query }}" placeholder="Search {{ portal.name }}…"{% if search_page %} autofocus{% endif %}>
+    <button type="submit" class="btn btn-lav">Search</button>
+  </form>
+  {% endif %}
+
+  {% block portal_body %}{% endblock %}
+
+  {% if not styling or not portal.hide_powered_by %}
+  <div class="pt-powered">Powered by Jackil</div>
+  {% endif %}
+</div>
+{% endblock %}

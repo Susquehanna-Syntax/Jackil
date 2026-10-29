@@ -2173,3 +2173,16 @@ a.dash-card { text-decoration: none; }
 .ps-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .ps-checks { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
 @media (max-width: 1000px) { .ps-layout { grid-template-columns: 1fr; } }
+
+/* ── Public portals (M7 p02) ─────────────────────────────────────────────── */
+.pt-logo { height: 40px; width: auto; display: block; margin-bottom: 14px; }
+.pt-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 18px; align-items: start; margin-top: 28px; }
+.pt-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.pt-see-all { font-size: 12.5px; margin-top: 12px; }
+.pt-powered { margin-top: 34px; font-size: 12px; color: var(--text-3); }
+.pt-draft { display: inline-block; font-size: 12.5px; color: var(--text-2); background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 14px; margin-bottom: 18px; }
+.pt-root .hero-title span { color: var(--ink); }
+.pt-root .btn { background: var(--fill); color: var(--on-accent); }
+.pt-root .kb-article-link:hover { color: var(--ink); }
+.pt-results { margin-top: 28px; }
+@media (max-width: 900px) { .pt-layout { grid-template-columns: 1fr; } }

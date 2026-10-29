@@ -12,6 +12,7 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("settings/", include("apps.console.urls", namespace="console")),
     path("help/", include("apps.wiki.help_urls", namespace="help")),
+    path("portal/", include("apps.portals.urls", namespace="portals")),
     path("notifications/", include("apps.notifications.urls", namespace="notifications")),
     path("dashboards/api/", include("apps.dashboards.urls", namespace="dashboards")),
     path("items/", include("apps.items.urls", namespace="items")),

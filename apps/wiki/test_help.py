@@ -1,9 +1,14 @@
-"""The customer help center reads published wiki pages, and only those."""
+"""The customer help center reads published wiki pages, and only those.
+
+``/help/`` is now the portal front door, so these views are exercised through
+the default portal at ``/portal/<slug>/``.
+"""
 
 from django.test import TestCase
 from django.urls import reverse
 
 from apps.accounts.models import User
+from apps.portals.models import Portal
 from apps.tickets.models import Ticket
 from apps.wiki.models import Page, Space
 
@@ -25,12 +30,16 @@ class HelpCenterTests(TestCase):
             space=space, title="Printer admin password", body="secret runbook"
         )
 
+    def help_center(self, *, search=False):
+        slug = Portal.objects.get(is_default=True).slug
+        return reverse("portals:portal_search" if search else "portals:portal", args=[slug])
+
     def test_customer_sees_published_pages_only(self):
         self.client.force_login(self.customer)
-        body = self.client.get(reverse("help:home")).content.decode()
+        body = self.client.get(self.help_center()).content.decode()
         self.assertIn("Printer setup guide", body)
         self.assertNotIn("Printer admin password", body)
-        search = self.client.get(reverse("help:home"), {"q": "Printer"}).content.decode()
+        search = self.client.get(self.help_center(search=True), {"q": "Printer"}).content.decode()
         self.assertIn("Printer setup guide", search)
         self.assertNotIn("Printer admin password", search)
 
@@ -72,7 +81,7 @@ class HelpCenterTests(TestCase):
 
     def test_staff_search_marks_internal_pages_and_links_them_to_the_wiki(self):
         self.client.force_login(self.agent)
-        body = self.client.get(reverse("help:home"), {"q": "Printer"}).content.decode()
+        body = self.client.get(self.help_center(search=True), {"q": "Printer"}).content.decode()
         self.assertIn(reverse("wiki:page_detail", args=[self.internal.slug]), body)
         self.assertIn("Internal", body)
 
@@ -84,5 +93,5 @@ class HelpCenterTests(TestCase):
         self.assertIn(reverse("wiki:home"), body)
 
     def test_anonymous_is_sent_to_login(self):
-        resp = self.client.get(reverse("help:home"))
+        resp = self.client.get(self.help_center())
         self.assertEqual(resp.status_code, 302)
