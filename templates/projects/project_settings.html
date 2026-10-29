@@ -10,13 +10,14 @@
 
   <div class="page-title">{{ project.key }} settings</div>
 
-  <form method="post" style="max-width: 680px;">
+  <div class="ps-layout">
+  <form method="post" class="form-card ps-project">
     {% csrf_token %}
     {% if form.non_field_errors %}
     <div class="message message-error">{{ form.non_field_errors }}</div>
     {% endif %}
 
-    <div class="form-card">
+    <div>
       <div class="form-card-title">Project</div>
       <div class="form-card-hint">Archive a project to keep it out of the list without losing its issues.</div>
       <div class="form-grid-2">
@@ -37,10 +38,10 @@
         {{ form.description }}
       </div>
     </div>
-    <button type="submit" class="btn btn-lav">Save project</button>
+    <button type="submit" class="btn btn-lav" style="margin-top:16px;">Save project</button>
   </form>
 
-  <div class="form-card fade-in d2" style="margin-top: 28px; max-width: 900px;">
+  <div class="form-card fade-in d2 ps-columns">
     <div class="form-card-title">Columns</div>
     <div class="form-card-hint">
       Rename, reorder, or change a column's category. A column with issues in it cannot be deleted.
@@ -107,6 +108,7 @@
       <input type="hidden" name="order" value="999">
       <button type="submit" class="btn btn-lav" name="add_column" value="1" style="align-self:flex-end;">Add column</button>
     </form>
+  </div>
   </div>
 </div>
 {% endblock %}

@@ -162,7 +162,7 @@ function bdSprintLine(data) {
     return;
   }
   line.innerHTML = data.sprint
-    ? `&middot; <span class="issue-key">${escHtml(data.sprint.name)}</span> &middot; ends ${escHtml(data.sprint.end_date)}`
+    ? `&middot; ${escHtml(data.sprint.name)} &middot; ends ${escHtml(data.sprint.end_date)}`
     : 'No active sprint. Start one from the backlog.';
 }
 

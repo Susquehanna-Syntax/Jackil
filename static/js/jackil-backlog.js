@@ -36,7 +36,7 @@ function blRowHtml(row) {
     ? ''
     : `<button type="button" class="btn btn-ghost btn-sm" data-bl-move="${escAttr(row.id)}">Move</button>`;
   return (
-    `<li class="bl-row"${subtask ? '' : ' draggable="true"'} data-issue-id="${escAttr(row.id)}">` +
+    `<li class="bl-row${subtask ? ' bl-sub' : ''}"${subtask ? '' : ' draggable="true"'} data-issue-id="${escAttr(row.id)}">` +
     `<a class="issue-key" href="${escAttr(row.url)}">${escHtml(row.key)}</a>` +
     `<span class="bl-title">${escHtml(row.title)}</span>` +
     `<span class="bl-who">${escHtml(row.assignee_name || '')}</span>` +
@@ -117,7 +117,12 @@ function blRenderLoad(people) {
       } else {
         words = `${person.committed} of usual ${person.velocity} points`;
       }
-      const tone = person.velocity !== null && person.committed > person.velocity ? 'tc-rose' : 'tc-mint';
+      // Without history there is nothing to be over or under, so the bar
+      // stays neutral rather than claiming a healthy green.
+      let tone = 'bl-nohist';
+      if (person.velocity !== null) {
+        tone = person.committed > person.velocity ? 'tc-rose' : 'tc-mint';
+      }
       return (
         `<div class="bl-person ${tone}">` +
         `<div class="bl-person-name">${escHtml(person.name)}</div>` +

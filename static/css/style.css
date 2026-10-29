@@ -2279,3 +2279,25 @@ a.dash-card { text-decoration: none; }
 .wiki-rail .links-panel { margin: 0; }
 @media (max-width: 1200px) { .wiki-layout:has(> .wiki-rail) { grid-template-columns: 230px minmax(0, 1fr); } .wiki-rail { grid-column: 2; } }
 @media (max-width: 900px) { .wiki-layout:has(> .wiki-rail) { grid-template-columns: 1fr; } .wiki-rail { grid-column: auto; } }
+/* Project settings (M8b): the project beside its columns. */
+.ps-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 20px; align-items: start; }
+.ps-layout > .form-card { margin: 0; min-width: 0; }
+.ps-columns .column-table { width: 100%; }
+@media (max-width: 1100px) { .ps-layout { grid-template-columns: 1fr; } }
+/* Backlog and board (M8b): rows and cards a step off the card they sit on
+   (the old --s2 read as heavy blocks on Paper); keys and titles are links
+   that underline on hover only; sub-tasks sit under their parent. */
+.bl-row, .bd-card { background: color-mix(in srgb, var(--s2) 40%, var(--s1)); }
+.bl-row.bl-sub { margin-left: 28px; cursor: default; background: transparent; }
+a.issue-key, a.bd-title { text-decoration: none; }
+a.issue-key:hover { color: var(--text-1); text-decoration: underline; }
+.bl-nohist { --fill: var(--s4); --ink: var(--text-3); }
+.ps-columns .column-table th:nth-child(2) { width: 150px; }
+.ps-columns .column-table th:nth-child(3), .ps-columns .column-table th:nth-child(4) { width: 84px; }
+.ps-columns .column-table .form-input[type=number] { min-width: 0; }
+@media (max-width: 600px) {
+  .bl-head { flex-wrap: wrap; }
+  .bl-actions { width: 100%; justify-content: flex-start; }
+}
+.bd-card-foot { justify-content: flex-start; gap: 12px; }
+.bd-card-foot > :last-child { margin-left: auto; }
