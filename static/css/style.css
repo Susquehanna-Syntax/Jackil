@@ -1985,13 +1985,6 @@ a.dash-card { text-decoration: none; }
 .wiki-diff .add { display: block; background: rgba(var(--rgb-mint), var(--tint-a)); }
 .wiki-diff .del { display: block; background: rgba(var(--rgb-rose), var(--tint-a)); }
 @media (max-width: 900px) { .wiki-layout, .wiki-editor-grid { grid-template-columns: 1fr; } .wiki-tree { position: static; } }
-/* Pygments token colours on the design tokens, so code reads on every theme. */
-.markdown-body .k, .markdown-body .kn, .markdown-body .kd { color: var(--lavender-ink); }
-.markdown-body .s, .markdown-body .s1, .markdown-body .s2 { color: var(--mint-ink); }
-.markdown-body .nb, .markdown-body .nf { color: var(--sky-ink); }
-.markdown-body .c, .markdown-body .c1, .markdown-body .cm { color: var(--text-3); font-style: italic; }
-.markdown-body .m, .markdown-body .mi, .markdown-body .mf { color: var(--peach-ink); }
-
 /* ── Wiki backlinks, templates admin, suggested articles (M4 p05) ── */
 .wiki-backlinks { list-style: none; margin-top: 8px; }
 .wiki-backlinks li { padding: 4px 0; font-size: 13.5px; }
