@@ -1733,12 +1733,13 @@ html.rm-sim *, html.rm-sim *::before, html.rm-sim *::after {
 .dash-chart canvas { position: absolute; inset: 0; }
 .dash-gauge { display: flex; flex-direction: column; align-items: center;
               justify-content: center; height: 100%; position: relative; }
-.dash-gauge-ring { width: 78px; height: 78px; transform: rotate(-90deg); }
+.dash-gauge-ring { display: block; width: 62px; height: 62px; transform: rotate(-90deg); }
 .dash-gauge .gauge-bg { fill: none; stroke: var(--s3); stroke-width: 7; }
 .dash-gauge .gauge-fill { fill: none; stroke-width: 7; stroke-linecap: round;
                           transition: stroke-dashoffset .5s var(--ease-out-expo); }
-.dash-gauge-text { font-family: var(--font-mono); font-size: 19px; font-weight: 700;
-                   margin-top: -50px; margin-bottom: 26px; }
+.dash-gauge-dial { position: relative; flex-shrink: 0; margin-bottom: 4px; }
+.dash-gauge-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                   font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
 .dash-procs { display: flex; flex-direction: column; gap: 5px; }
 .dash-proc { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
 .dash-proc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1905,7 +1906,6 @@ a.dash-card { text-decoration: none; }
 .dash-widget-headless .dash-widget-head { display: none; }
 .dash-series-plot { flex: 1; min-height: 0; position: relative; }
 .dash-series-plot svg { position: absolute; inset: 0; display: block; }
-.dash-gauge-text { font-size: 17px; }
 
 /* ── Dashboard edit mode (M2 p04) ── */
 .dash-toolbar { flex-wrap: wrap; }
@@ -2236,3 +2236,7 @@ a.dash-card { text-decoration: none; }
 .td-actions .sla-row { margin: 16px 0 0; }
 .td-actions .sla-row:empty { display: none; }
 @media (max-width: 1000px) { .td-layout { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "head" "side" "main"; row-gap: 18px; } }
+/* Dashboard (M8b): a neutral row sits on the surface instead of a grey-brown
+   tint, which read as a heavy block on Paper. */
+.dash-card.edge-grey { background: transparent; border-color: var(--border); }
+.dash-table th.num { text-align: right; }
