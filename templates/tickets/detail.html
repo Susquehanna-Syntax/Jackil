@@ -8,8 +8,8 @@
   <a href="{% url 'tickets:ticket_list' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
     &larr; Back to Tickets
   </a>
-
-  <div class="ticket-detail-header">
+<div class="td-layout{% if user.role == "customer" %} td-solo{% endif %}">
+  <div class="ticket-detail-header td-head">
     {% if user.role == "customer" %}
     <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
       <span class="tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
@@ -60,29 +60,6 @@
       </span>
       {% endif %}
     </div>
-  </div>
-
-  {% if can_manage %}
-  <div class="sla-row">
-    {% sla_badge ticket "response" %}
-    {% sla_badge ticket "resolution" %}
-    {% if ticket.due_at %}
-    <span class="sla-badge sla-due">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Due {{ ticket.due_at|date:"M d, H:i" }}
-    </span>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  {% if user.role != "customer" and ticket.tags %}
-  <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;">
-    {% for tag in ticket.tag_list %}
-    <span style="font-size: 11px; color: var(--text-3); background: var(--s2); padding: 3px 10px; border-radius: 14px;">{{ tag }}</span>
-    {% endfor %}
-  </div>
-  {% endif %}
-
   <div class="ticket-detail-body">{{ ticket.description|linebreaks }}</div>
 
   {% with fvs=ticket.field_values.all %}
@@ -97,35 +74,8 @@
   </div>
   {% endif %}
   {% endwith %}
-
-  <div class="ticket-detail-actions">
-    {% if can_edit %}
-    <a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-sky">Edit Ticket</a>
-    {% endif %}
   </div>
-
-  {% links_panel "ticket" ticket.pk %}
-
-  {% if suggestions %}
-  <div class="form-card suggested-articles">
-    <div class="form-card-title">Suggested articles</div>
-    <div class="form-card-hint">Pages in the wiki that look like this ticket.</div>
-    {% for page in suggestions %}
-    <div class="suggested-article">
-      <a href="{{ page.get_absolute_url }}" class="suggested-article-title">{{ page.title }}</a>
-      <div class="suggested-article-summary">{{ page.summary|default:page.body|truncatewords:18 }}</div>
-      {% if page.permalink %}
-      <button type="button" class="btn btn-outline btn-sm insert-article-link"
-              data-insert-article
-              data-article-title="{{ page.title }}"
-              data-article-url="{{ page.permalink }}">Insert link</button>
-      {% else %}
-      <span class="tag tc-lav">Internal</span>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+  <div class="td-col td-main">
 
   {% if rating %}
   <div class="csat-card rated">
@@ -144,11 +94,8 @@
     <button type="submit" class="btn btn-mint" style="margin-top:12px;">Submit rating</button>
   </form>
   {% endif %}
-</div>
 
-<div class="divider"></div>
-
-<div>
+<div class="td-conversation">
   <div class="section-heading">
     <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     Conversation ({{ messages_thread|length }})
@@ -235,20 +182,68 @@
     </div>
   </form>
 </div>
-
-{% if user.role != "customer" %}
-<div class="divider"></div>
-
-<div class="ticket-detail-actions" style="margin-bottom: 32px;">
-  <button type="button" class="btn btn-lav" id="manage_trigger">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    Manage Ticket
-  </button>
-  {% if escalate_projects %}
-  <button type="button" class="btn btn-outline" data-modal-open="escalate_modal">Escalate to project</button>
+  </div>
+  <aside class="td-col td-side">
+    {% if user.role != "customer" %}
+    <div class="form-card td-actions">
+      <div class="ticket-detail-actions">
+        <button type="button" class="btn btn-lav" id="manage_trigger">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Manage Ticket
+        </button>
+        {% if escalate_projects %}
+        <button type="button" class="btn btn-outline" data-modal-open="escalate_modal">Escalate to project</button>
+        {% endif %}
+        {% if can_edit %}<a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-outline">Edit ticket</a>{% endif %}
+      </div>
+  {% if can_manage %}
+  <div class="sla-row">
+    {% sla_badge ticket "response" %}
+    {% sla_badge ticket "resolution" %}
+    {% if ticket.due_at %}
+    <span class="sla-badge sla-due">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Due {{ ticket.due_at|date:"M d, H:i" }}
+    </span>
+    {% endif %}
+  </div>
   {% endif %}
+  {% if user.role != "customer" and ticket.tags %}
+  <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px;">
+    {% for tag in ticket.tag_list %}
+    <span style="font-size: 11px; color: var(--text-3); background: var(--s2); padding: 3px 10px; border-radius: 14px;">{{ tag }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+    </div>
+    {% elif can_edit %}
+    <div class="ticket-detail-actions"><a href="{% url 'tickets:ticket_edit' ticket.pk %}" class="btn btn-outline">Edit ticket</a></div>
+    {% endif %}
+    {% links_panel "ticket" ticket.pk %}
+  {% if suggestions %}
+  <div class="form-card suggested-articles">
+    <div class="form-card-title">Suggested articles</div>
+    <div class="form-card-hint">Pages in the wiki that look like this ticket.</div>
+    {% for page in suggestions %}
+    <div class="suggested-article">
+      <a href="{{ page.get_absolute_url }}" class="suggested-article-title">{{ page.title }}</a>
+      <div class="suggested-article-summary">{{ page.summary|default:page.body|truncatewords:18 }}</div>
+      {% if page.permalink %}
+      <button type="button" class="btn btn-outline btn-sm insert-article-link"
+              data-insert-article
+              data-article-title="{{ page.title }}"
+              data-article-url="{{ page.permalink }}">Insert link</button>
+      {% else %}
+      <span class="tag tc-lav">Internal</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  </aside>
 </div>
-{% endif %}
+</div>
+
 
 {% if can_rate and not rating %}
 <script>

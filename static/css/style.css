@@ -2217,3 +2217,22 @@ a.dash-card { text-decoration: none; }
 .set-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
 .settings-content .card-header { justify-content: flex-start; gap: 14px; }
 .card-icon svg { width: 20px; height: 20px; fill: none; stroke: var(--on-accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Ticket detail (M8b): the conversation beside the ticket's details and actions. */
+.td-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr); grid-template-rows: auto 1fr; grid-template-areas: "head side" "main side"; column-gap: 22px; align-items: start; }
+.td-head { grid-area: head; }
+.td-main { grid-area: main; }
+.td-side { grid-area: side; }
+.td-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.td-col .form-card, .td-col .links-panel, .td-side .suggested-articles { margin: 0; max-width: none; }
+.td-head .ticket-detail-meta { margin-bottom: 18px; }
+.td-head .ticket-detail-body { margin-bottom: 0; }
+.td-head .ticket-custom-fields { margin: 16px 0 0; }
+.td-head { margin-bottom: 22px; }
+.td-solo { grid-template-columns: 1fr; grid-template-areas: "head" "side" "main"; }
+.td-solo .td-side { margin-bottom: 18px; }
+.td-conversation { margin-top: 4px; }
+.td-actions .ticket-detail-actions { margin-bottom: 0; }
+.td-actions .ticket-detail-actions .btn { flex: 1 1 auto; justify-content: center; }
+.td-actions .sla-row { margin: 16px 0 0; }
+.td-actions .sla-row:empty { display: none; }
+@media (max-width: 1000px) { .td-layout { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "head" "side" "main"; row-gap: 18px; } }
