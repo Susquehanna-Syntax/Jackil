@@ -2161,3 +2161,15 @@ a.dash-card { text-decoration: none; }
 
 /* Form fields inside a list-style modal body line up with its header. */
 .modal-body > .form-group, .modal-body > .muted-note, .modal-body > [data-links-results] { margin-left: 24px; margin-right: 24px; }
+
+/* ── Portals settings (M7 p01) ───────────────────────────────────────────── */
+.ps-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.ps-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ps-link { font-family: var(--font-mono); font-size: 12px; margin-bottom: 0; }
+.ps-locked { text-align: right; }
+.ps-pills { display: flex; gap: 6px; flex-shrink: 0; }
+.ps-actions { display: flex; gap: 8px; margin-top: 16px; }
+.ps-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); gap: 18px; align-items: start; }
+.ps-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ps-checks { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+@media (max-width: 1000px) { .ps-layout { grid-template-columns: 1fr; } }

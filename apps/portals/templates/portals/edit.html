@@ -1,0 +1,142 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="section-heading">{{ portal.name|default:"New portal" }}</div>
+{% if portal.pk %}
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 20px;">
+  Customers find this portal at <span class="pill mono">/portal/{{ portal.slug }}/</span>.
+</p>
+{% else %}
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 20px;">
+  Customers will find this portal at /portal/&lt;address&gt;/ once you save it.
+</p>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <div class="ps-layout">
+    <div class="ps-col">
+      <div class="form-card">
+        <div class="form-card-title">Portal</div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.name.id_for_label }}">Name</label>
+          {{ form.name }}
+          {% for error in form.errors.name %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.slug.id_for_label }}">Address</label>
+          {{ form.slug }}
+          <div class="form-card-hint">Customers find this portal at /portal/&lt;address&gt;/.</div>
+          {% for error in form.errors.slug %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.intro.id_for_label }}">Intro</label>
+          {{ form.intro }}
+          <div class="form-card-hint">Markdown. Shown under the portal name.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="check-field">{{ form.is_published }} <span>{{ form.is_published.label }}</span></label>
+        </div>
+
+        <div class="form-group">
+          <label class="check-field">{{ form.is_default }} <span>{{ form.is_default.label }}</span></label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.department.id_for_label }}">Department</label>
+          {{ form.department }}
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title">What it shows</div>
+
+        <div class="form-group">
+          <div class="form-label">Request forms</div>
+          {% if form.request_forms.field.choices %}
+          <div class="ps-checks">
+            {% for choice in form.request_forms %}
+            <label class="check-field">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="form-card-hint">Request forms are part of the Forms &amp; Fields app.</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">Help-center spaces</div>
+          <div class="ps-checks">
+            {% for choice in form.spaces %}
+            <label class="check-field">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+            {% endfor %}
+          </div>
+          <div class="form-card-hint">Choose none to show every space.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="check-field">{{ form.show_search }} <span>{{ form.show_search.label }}</span></label>
+        </div>
+
+        <div class="form-group">
+          <label class="check-field">{{ form.show_my_tickets }} <span>{{ form.show_my_tickets.label }}</span></label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.vigil_status_pages.id_for_label }}">Vigil status pages</label>
+          {{ form.vigil_status_pages }}
+          <div class="form-card-hint">{{ form.vigil_status_pages.help_text }}</div>
+          {% for error in form.errors.vigil_status_pages %}
+          <div class="field-error">{{ error }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="ps-col">
+      <div class="form-card">
+        <div class="form-card-title">Styling</div>
+        {% if styling %}
+        <div class="form-group">
+          <label class="form-label" for="{{ form.logo_url.id_for_label }}">Logo URL</label>
+          {{ form.logo_url }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.accent.id_for_label }}">Accent colour</label>
+          {{ form.accent }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.custom_css.id_for_label }}">Custom CSS</label>
+          {{ form.custom_css }}
+        </div>
+
+        <div class="form-group">
+          <label class="check-field">{{ form.hide_powered_by }} <span>{{ form.hide_powered_by.label }}</span></label>
+        </div>
+        {% else %}
+        <div class="form-card-hint">Logo, accent colour, custom CSS and removing "Powered by Jackil" are part of SQSY Business.</div>
+        {% endif %}
+      </div>
+
+      <div class="ps-actions">
+        <button type="submit" class="btn btn-lav">Save</button>
+        <a href="{% url 'console:portal_list' %}" class="btn btn-outline">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+{% if portal.pk %}
+<form method="post" action="{% url 'console:portal_delete' pk=portal.pk %}"
+      onsubmit="return confirm('Delete this portal?');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-rose">Delete portal</button>
+</form>
+{% endif %}
+{% endblock %}

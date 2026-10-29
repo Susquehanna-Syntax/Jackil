@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.portals import views as portal_views
 from apps.vigil import views as vigil_views
 from config.features import feature_enabled
 
@@ -13,6 +14,10 @@ urlpatterns = [
     path("email/new/", views.inbox_create, name="inbox_create"),
     path("email/<int:pk>/", views.inbox_edit, name="inbox_edit"),
     path("email/<int:pk>/delete/", views.inbox_delete, name="inbox_delete"),
+    path("portals/", portal_views.portal_list, name="portal_list"),
+    path("portals/new/", portal_views.portal_create, name="portal_create"),
+    path("portals/<int:pk>/", portal_views.portal_edit, name="portal_edit"),
+    path("portals/<int:pk>/delete/", portal_views.portal_delete, name="portal_delete"),
     path("vigil/", vigil_views.vigil_settings, name="vigil_settings"),
 ]
 
