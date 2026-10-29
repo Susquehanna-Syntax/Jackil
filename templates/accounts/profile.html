@@ -5,7 +5,9 @@
   <div class="hero-title">Your <span>Profile</span></div>
   <div class="hero-sub">Update your details and preferences.</div>
 
-  <form method="post" action="{% url 'accounts:upload_avatar' %}" enctype="multipart/form-data" style="max-width: 640px; margin-bottom: 20px;">
+  <div class="pf-layout">
+  <div class="pf-col">
+  <form method="post" action="{% url 'accounts:upload_avatar' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="form-card">
       <div class="form-card-title">Profile photo</div>
@@ -22,7 +24,7 @@
     </div>
   </form>
 
-  <form method="post" style="max-width: 640px;">
+  <form method="post">
     {% csrf_token %}
     <div class="form-card">
       <div class="form-card-title">Details</div>
@@ -50,7 +52,9 @@
     </div>
   </form>
 
-  <div class="form-card" style="max-width: 640px; margin-top: 20px;" id="appearance">
+  </div>
+  <div class="pf-col">
+  <div class="form-card" id="appearance">
     <div class="form-card-title">Appearance</div>
     <div class="form-card-hint">Your choice applies immediately and is remembered in this browser.</div>
     <div class="theme-cards">
@@ -73,6 +77,8 @@
     </div>
     <div class="set-row"><div><b>Follow system</b><small>Switch between Dark and Paper with your operating system</small></div><button type="button" class="toggle" role="switch" aria-checked="false" id="follow-system" aria-label="Follow system"></button></div>
     <div class="set-row"><div><b>Reduce motion</b><small>Collapse movement; colour and opacity changes still land</small></div><button type="button" class="toggle" role="switch" aria-checked="false" data-rm-toggle aria-label="Reduce motion"></button></div>
+  </div>
+  </div>
   </div>
 </div>
 {% endblock %}

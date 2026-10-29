@@ -2202,3 +2202,18 @@ a.dash-card { text-decoration: none; }
 .pt-status-up { color: var(--mint-ink); }
 .pt-status-down { color: var(--rose-ink); }
 .pt-uptime { font-size: 13px; color: var(--text-3); }
+
+/* ── Profile (M8b): details beside appearance, not one narrow column ─────── */
+.pf-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 8px; }
+.pf-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.pf-col .form-card { margin-bottom: 0; }
+@media (max-width: 1000px) { .pf-layout { grid-template-columns: 1fr; } }
+/* Item detail (M8b): the record beside what it links to. */
+.it-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); gap: 18px; align-items: start; }
+.it-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.it-col .form-card { margin-bottom: 0; }
+@media (max-width: 1000px) { .it-layout { grid-template-columns: 1fr; } }
+/* Settings overview (M8b): icon beside its words, cards side by side. */
+.set-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+.settings-content .card-header { justify-content: flex-start; gap: 14px; }
+.card-icon svg { width: 20px; height: 20px; fill: none; stroke: var(--on-accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

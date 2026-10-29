@@ -26,7 +26,9 @@
     </div>
   </div>
 
-  <div class="form-card fade-in d2" style="max-width: 720px;">
+  <div class="it-layout">
+  <div class="it-col">
+  <div class="form-card fade-in d2">
     <div class="form-card-title">{{ item.kind.name }}</div>
     <div class="form-card-hint">Details kept by hand in Jackil.</div>
 
@@ -78,7 +80,7 @@
     </div>
   </div>
 
-  <div class="form-card fade-in d2" style="max-width: 720px;">
+  <div class="form-card fade-in d2">
     <div class="form-card-title">Attributes</div>
     {% if attributes %}
     <div style="display:grid; grid-template-columns: 180px 1fr; gap: 8px 18px; font-size: 13px;">
@@ -95,8 +97,12 @@
     {% endif %}
   </div>
 
-  <div class="form-card fade-in d3" style="max-width: 720px;">
+  </div>
+  <div class="it-col">
+  <div class="form-card fade-in d3">
     {% links_panel "item" item.pk %}
+  </div>
+  </div>
   </div>
 </div>
 {% endblock %}
