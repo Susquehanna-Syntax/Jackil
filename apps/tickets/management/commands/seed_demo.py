@@ -6,6 +6,7 @@ departments (matched by username / name). Use ``--fresh`` to wipe tickets first.
 
 import datetime
 import random
+from decimal import Decimal
 from itertools import cycle
 
 from django.core.management.base import BaseCommand
@@ -17,7 +18,7 @@ from apps.links.models import DynamicLink
 from apps.links.service import LinkError, add_link
 from apps.portals.models import Portal
 from apps.projects import service as projects_service
-from apps.projects.models import Issue, IssueEvent, Project, Sprint
+from apps.projects.models import Issue, IssueEvent, PersonRate, Project, Sprint
 from apps.tickets.models import Ticket
 from apps.wiki.models import Page, Space
 from apps.wiki.service import save_version
@@ -473,6 +474,9 @@ SPACES = [
     ),
 ]
 
+#: Made-up hourly rates for the agents, so the project cost table has numbers.
+AGENT_RATES = [("aria", "48.00"), ("dev", "44.00"), ("sam", "52.00"), ("lena", "41.50")]
+
 AGENTS = [
     ("aria", "Aria", "Nakamura", "lavender"),
     ("dev", "Dev", "Okafor", "mint"),
@@ -895,6 +899,13 @@ class Command(BaseCommand):
         """The two demo boards: OPS with a sprint history, WEB as a Kanban."""
         if Project.objects.filter(key__in=[key for key, *_ in PROJECTS]).exists():
             return 0
+        # Before any issue is done: a done issue freezes its cost from the
+        # assignee's rate at that moment. Made-up figures; only admins see them.
+        for username, wage in AGENT_RATES:
+            PersonRate.objects.get_or_create(
+                user=users[username],
+                defaults={"hourly_wage": Decimal(wage), "sprint_hours": Decimal("60")},
+            )
         assignees = cycle([users[name] for name, *_ in AGENTS])
         created = 0
         for key, name, method, lead, department in PROJECTS:
