@@ -57,6 +57,10 @@
         <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7-6.5-4.5L5.5 20l2-7L2 9h7z"/></svg>
         Edition
       </a>
+      <a href="{% url 'console:saml_settings' %}" class="settings-nav-item tc-coral{% if section == 'saml' %} active{% endif %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        SSO
+      </a>
     </nav>
 
     <div class="settings-content">

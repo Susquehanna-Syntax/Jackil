@@ -8,6 +8,7 @@ from config.features import feature_enabled
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("apps.civilsso.urls")),
+    path("", include("apps.saml.urls")),
     path("", include("apps.tickets.urls", namespace="tickets")),
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("settings/", include("apps.console.urls", namespace="console")),

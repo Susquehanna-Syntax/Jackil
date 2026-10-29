@@ -38,6 +38,11 @@
     <a class="btn" style="width: 100%; justify-content: center; display: flex; margin-top: 12px;" href="{% url 'civil-login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Sign in with Civil</a>
     {% endif %}
 
+    {% if saml_enabled %}
+    {% if request.GET.saml == "failed" %}<div class="flash flash-error">Single sign-on didn't complete — use your local account or try again.</div>{% endif %}
+    <a class="btn" style="width: 100%; justify-content: center; display: flex; margin-top: 12px;" href="{% url 'saml-login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Sign in with SSO</a>
+    {% endif %}
+
     <div class="auth-link">Don't have an account? <a href="{% url 'accounts:register' %}">Register</a></div>
   </div>
 </div>

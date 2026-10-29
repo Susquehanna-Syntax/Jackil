@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.licensing import views as licensing_views
 from apps.portals import views as portal_views
+from apps.saml import views as saml_views
 from apps.vigil import views as vigil_views
 from config.features import feature_enabled
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path("portals/<int:pk>/delete/", portal_views.portal_delete, name="portal_delete"),
     path("vigil/", vigil_views.vigil_settings, name="vigil_settings"),
     path("edition/", licensing_views.edition_settings, name="edition_settings"),
+    path("saml/", saml_views.saml_settings, name="saml_settings"),
 ]
 
 if feature_enabled("sla"):
