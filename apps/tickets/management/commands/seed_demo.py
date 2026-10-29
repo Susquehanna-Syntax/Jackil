@@ -17,7 +17,7 @@ from apps.links.models import DynamicLink
 from apps.links.service import LinkError, add_link
 from apps.portals.models import Portal
 from apps.projects import service as projects_service
-from apps.projects.models import Issue, Project, Sprint
+from apps.projects.models import Issue, IssueEvent, Project, Sprint
 from apps.tickets.models import Ticket
 from apps.wiki.models import Page, Space
 from apps.wiki.service import save_version
@@ -911,6 +911,7 @@ class Command(BaseCommand):
                 created += self._scrum_board(admin, project, assignees)
             else:
                 created += self._issues(admin, project, assignees, WEB_ISSUES)
+                self._backdate_history(project, [])
         return created
 
     def _scrum_board(self, admin, project, assignees):
@@ -942,7 +943,7 @@ class Command(BaseCommand):
         self._issues(admin, project, assignees, OPS_BACKLOG)
         created += len(OPS_BACKLOG)
 
-        self._backdate_history(sprints[:3])
+        self._backdate_history(project, sprints)
         return created
 
     def _issues(self, admin, project, assignees, rows, sprint=None):
@@ -975,8 +976,12 @@ class Command(BaseCommand):
 
     @staticmethod
     def _issue(admin, project, assignee, row, sprint=None, parent=None):
+        """Create, then plan, the way the new-issue form does: the sprint is a
+        set_sprint call, which records the "added to sprint" event burndown and
+        velocity replay. A sub-task is created straight into its parent's sprint;
+        it follows the parent and the charts leave it out."""
         kind, title, description, priority, points = row[:5]
-        return projects_service.create_issue(
+        issue = projects_service.create_issue(
             admin,
             project,
             type=kind,
@@ -985,36 +990,77 @@ class Command(BaseCommand):
             priority=priority,
             story_points=points,
             assignee=assignee,
-            sprint=sprint,
+            sprint=sprint if kind == "subtask" else None,
             parent=parent,
         )
+        if sprint is not None and kind != "subtask":
+            projects_service.set_sprint(admin, issue, sprint)
+        return issue
 
     @staticmethod
-    def _backdate_history(sprints):
-        """Move the closed sprints into the past, now that the service stamped them.
+    def _backdate_history(project, sprints):
+        """Move the board's whole history into the past.
 
-        Velocity reads ``completed_at`` inside the sprint's own window, so each
-        done issue gets a moment between its sprint's start and close.
+        The service stamps every sprint and event "now", and burndown,
+        velocity and cumulative flow replay those events, so left alone every
+        chart is flat for weeks and jumps today. Each issue's events are laid
+        out along its own story instead: created and planned the day before its
+        first sprint starts, moved once that sprint runs, done at its
+        completion time, and carried over when the sprint closes. A sprint
+        closes at 08:00 and the next starts at 09:00, so carried-over work is
+        in scope when it starts.
         """
+        now = timezone.now()
+        windows = {}
         for position, sprint in enumerate(sprints, start=1):
             start = timezone.make_aware(
                 datetime.datetime.combine(_sprint_start(position), datetime.time(9, 0))
             )
-            end = timezone.make_aware(
-                datetime.datetime.combine(_sprint_end(position), datetime.time(16, 0))
-            )
-            Sprint.objects.filter(pk=sprint.pk).update(
-                start_date=_sprint_start(position),
-                end_date=_sprint_end(position),
-                started_at=start,
-                closed_at=end,
-            )
-            done = list(sprint.issues.filter(column__category="done"))
-            span = max((end - start).total_seconds() // (len(done) + 1), 1)
-            for number, issue in enumerate(done, start=1):
-                Issue.objects.filter(pk=issue.pk).update(
-                    completed_at=start + datetime.timedelta(seconds=span * number)
+            if position <= 3:
+                end = timezone.make_aware(
+                    datetime.datetime.combine(_sprint_end(position), datetime.time(8, 0))
                 )
+                Sprint.objects.filter(pk=sprint.pk).update(
+                    start_date=_sprint_start(position),
+                    end_date=_sprint_end(position),
+                    started_at=start,
+                    closed_at=end,
+                )
+            else:
+                end = now - datetime.timedelta(hours=1)
+                Sprint.objects.filter(pk=sprint.pk).update(
+                    start_date=_sprint_start(position), started_at=start
+                )
+            windows[sprint.pk] = (start, end)
+
+        issues = list(project.issues.order_by("number"))
+        for index, issue in enumerate(issues):
+            events = list(issue.events.order_by("created_at", "id"))
+            first = next((e for e in events if e.kind == "sprint_added"), None)
+            if first is not None:
+                start, end = windows[first.data["sprint"]]
+            else:
+                # Backlog and Kanban work arrives over the last four weeks.
+                start = now - datetime.timedelta(days=28) + datetime.timedelta(hours=16 * index)
+                end = now - datetime.timedelta(hours=2)
+            span = end - start
+            # Done work finishes somewhere in the back half of its window.
+            done_at = start + span * (0.4 + 0.1 * (index % 5)) if issue.completed_at else None
+            planned = start - datetime.timedelta(days=1)
+            moved_yet = False
+            stamp = planned
+            for step, event in enumerate(events):
+                if event.kind == "moved":
+                    to_done = (event.data or {}).get("to_category") == "done"
+                    moved_yet = True
+                    target = done_at if to_done and done_at else start + span * 0.25
+                elif moved_yet:
+                    target = end + datetime.timedelta(minutes=1)
+                else:
+                    target = planned + datetime.timedelta(minutes=step)
+                stamp = max(target, stamp + datetime.timedelta(seconds=1))
+                IssueEvent.objects.filter(pk=event.pk).update(created_at=stamp)
+            Issue.objects.filter(pk=issue.pk).update(created_at=planned, completed_at=done_at)
 
     def _portal(self, departments):
         """The published IT Support portal; the default portal stays as it is.
