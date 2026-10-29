@@ -4,6 +4,11 @@ Maps optional "pro" feature slugs to their Django app names and reports which
 are installed, so the open core degrades gracefully when a pro app is absent.
 The check is import-free: it only consults the app registry, never imports the
 pro app.
+
+The SQSY Business slugs are not apps at all — they follow the edition, worked
+out from the licence on the linked Vigil (``apps.licensing.service``). The set
+is duplicated here so this module stays importable at URL-import time without
+pulling in the licensing app; a test keeps the two copies equal.
 """
 
 from django.apps import apps as django_apps
@@ -17,9 +22,25 @@ FEATURE_APPS = {
     "customfields": "apps.customfields",
 }
 
+# Duplicated from apps.licensing.service.BUSINESS_FEATURES on purpose; keep equal.
+BUSINESS_FEATURES = frozenset(
+    {
+        "portal_branding",
+        "saml",
+        "csv_export",
+        "audit_log",
+        "csat",
+        "white_label",
+    }
+)
+
 
 def feature_enabled(slug):
-    """True if the pro app backing ``slug`` is installed."""
+    """True when ``slug`` is on: Business slugs follow the licence, app slugs the registry."""
+    if slug in BUSINESS_FEATURES:
+        from apps.licensing import service
+
+        return service.has_feature(slug)
     return django_apps.is_installed(FEATURE_APPS.get(slug, slug))
 
 

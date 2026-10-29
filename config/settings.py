@@ -3,6 +3,8 @@ from pathlib import Path
 
 from decouple import config
 
+from apps.licensing.keys import trusted_public_key
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-dev-key-change-in-production")
@@ -42,6 +44,8 @@ else:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+JACKIL_LICENSE_PUBLIC_KEY = trusted_public_key(BASE_DIR, debug=DEBUG, environ=os.environ)
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -69,6 +73,7 @@ INSTALLED_APPS = [
     "apps.projects",
     "apps.vigil",
     "apps.portals",
+    "apps.licensing",
 ]
 
 MIDDLEWARE = [

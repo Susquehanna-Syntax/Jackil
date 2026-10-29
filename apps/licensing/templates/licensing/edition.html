@@ -1,0 +1,53 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="section-heading">Edition</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 20px;">
+  Jackil's Business features come from the SQSY Business licence of the Vigil it
+  is linked to. Add or renew the licence in Vigil.
+</p>
+
+<div class="vg-layout">
+  <div class="form-card">
+    <div class="form-card-title">This Jackil</div>
+
+    <p style="margin: 12px 0;">
+      {% if business %}
+      <span class="pill tc-mint">SQSY Business</span>
+      {% else %}
+      <span class="pill off">Community</span>
+      {% endif %}
+    </p>
+
+    <p style="font-size: 13px; color: var(--text-2); margin-bottom: 14px;">{{ edition.detail }}</p>
+
+    {% if claims %}
+    <table class="sla-table">
+      <tbody>
+        <tr><th>Organisation</th><td>{{ claims.org|default:"—" }}</td></tr>
+        <tr><th>Licence id</th><td>{{ claims.lid|default:"—" }}</td></tr>
+        <tr><th>Expires</th><td>{% if claims.expiry_date %}{{ claims.expiry_date|date:"j M Y" }}{% else %}—{% endif %}</td></tr>
+      </tbody>
+    </table>
+    {% endif %}
+
+    <p class="form-card-hint" style="margin-top: 12px;">
+      {% if record.last_checked_at %}
+        Last checked {{ record.last_checked_at|date:"j M Y, H:i" }}.
+      {% else %}
+        Never checked.
+      {% endif %}
+      {% if record.last_verified_at %}
+        Last verified {{ record.last_verified_at|date:"j M Y, H:i" }}.
+      {% else %}
+        Never verified.
+      {% endif %}
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline">Check now</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

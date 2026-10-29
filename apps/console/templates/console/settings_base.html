@@ -53,6 +53,10 @@
         <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>
         Vigil
       </a>
+      <a href="{% url 'console:edition_settings' %}" class="settings-nav-item tc-mint{% if section == 'edition' %} active{% endif %}">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7-6.5-4.5L5.5 20l2-7L2 9h7z"/></svg>
+        Edition
+      </a>
     </nav>
 
     <div class="settings-content">

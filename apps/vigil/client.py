@@ -126,6 +126,9 @@ class VigilClient:
     def ping(self) -> dict:
         return self._get("ping/")
 
+    def licence(self) -> dict:
+        return self._get("licence/")
+
     def search(self, q: str, type: str | None = None) -> list[dict]:
         if type is not None:
             _check_type(type)
