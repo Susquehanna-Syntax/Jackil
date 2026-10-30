@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-{% load sla_tags %}
 
 {% block title %}All Tickets — Jackil{% endblock %}
 
@@ -8,7 +7,7 @@
 <div class="page-header fade-in d1">
   <div>
     <div class="page-title">All Tickets</div>
-    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ tickets|length }} ticket{{ tickets|length|pluralize }}</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;" data-live-count>{{ tickets|length }} ticket{{ tickets|length|pluralize }}</div>
   </div>
   <div style="display:flex; gap:8px;">
     {% if 'audit_log' in business_features %}
@@ -24,9 +23,9 @@
   </div>
 </div>
 
-<div class="filter-bar fade-in d2">
+<form method="get" class="filter-bar fade-in d2" data-live-filter>
   <input type="text" class="form-input" placeholder="Search tickets..." value="{{ search }}" name="search" id="search_input">
-  <select class="form-select" id="status_filter">
+  <select class="form-select" name="status" id="status_filter">
     <option value="">All Status</option>
     <option value="open" {% if status == "open" %}selected{% endif %}>Open</option>
     <option value="in_progress" {% if status == "in_progress" %}selected{% endif %}>In Progress</option>
@@ -34,19 +33,19 @@
     <option value="resolved" {% if status == "resolved" %}selected{% endif %}>Resolved</option>
     <option value="closed" {% if status == "closed" %}selected{% endif %}>Closed</option>
   </select>
-  <select class="form-select" id="priority_filter">
+  <select class="form-select" name="priority" id="priority_filter">
     <option value="">All Priority</option>
     <option value="critical" {% if priority == "critical" %}selected{% endif %}>Critical</option>
     <option value="high" {% if priority == "high" %}selected{% endif %}>High</option>
     <option value="medium" {% if priority == "medium" %}selected{% endif %}>Medium</option>
     <option value="low" {% if priority == "low" %}selected{% endif %}>Low</option>
   </select>
-  <select class="form-select" id="assigned_filter">
+  <select class="form-select" name="assigned" id="assigned_filter">
     <option value="">All Assignments</option>
     <option value="mine" {% if assigned == "mine" %}selected{% endif %}>Assigned to Me</option>
     <option value="unassigned" {% if assigned == "unassigned" %}selected{% endif %}>Unassigned</option>
   </select>
-</div>
+</form>
 
 <div class="saved-views-bar fade-in d2" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
   <span style="font-size:12px; color:var(--text-3); font-weight:600; letter-spacing:0.3px;">Saved views</span>
@@ -65,72 +64,12 @@
   {% endfor %}
   <form method="post" action="{% url 'tickets:saved_view_create' %}" style="display:inline-flex; gap:6px; align-items:center; margin-left:auto;">
     {% csrf_token %}
-    <input type="hidden" name="query" value="{{ current_query }}">
+    <input type="hidden" name="query" value="{{ current_query }}" data-live-query>
     <input type="text" name="name" class="form-input" placeholder="Name this view…" required style="height:34px; font-size:13px; max-width:180px;">
     <label style="font-size:12px; color:var(--text-2); display:inline-flex; gap:4px; align-items:center; white-space:nowrap;"><input type="checkbox" name="is_shared"> Share</label>
     <button type="submit" class="btn btn-outline" style="height:34px;">Save view</button>
   </form>
 </div>
 
-{% if tickets %}
-<div class="ticket-list fade-in d3">
-  {% for ticket in tickets %}
-  <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="ticket-list-item">
-    <div class="ticket-list-dot" style="background: var(--{{ ticket.color_class }});"></div>
-    <div class="ticket-list-content">
-      <div class="ticket-list-title">{{ ticket.title }}</div>
-      <div class="ticket-list-meta">
-        #{{ ticket.pk }} &middot; {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
-        &middot; {{ ticket.created_at|date:"M d, Y" }}
-      </div>
-      <div class="ticket-list-assignees" style="display: flex; gap: 4px; align-items: center; margin-top: 4px;">
-        {% for u in ticket.assigned_users.all %}
-        <span class="assignee-chip" title="{{ u.get_full_name|default:u.username }}">
-          {% if u.department %}{{ u.department.name }}{% else %}Support{% endif %}
-          &middot; {{ u.get_full_name|default:u.username }}
-        </span>
-        {% empty %}
-        <span style="font-size: 11px; color: var(--text-3);">Unassigned</span>
-        {% endfor %}
-      </div>
-    </div>
-    <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
-      {% sla_badge ticket "resolution" compact=True %}
-      <span class="tag tag-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
-      <span class="ticket-list-status tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
-    </div>
-  </a>
-  {% endfor %}
-</div>
-{% else %}
-<div class="empty-state fade-in d3">
-  <div class="empty-state-icon">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-  </div>
-  <h3>No tickets found</h3>
-  <p>Try adjusting your filters or create a new ticket.</p>
-</div>
-{% endif %}
-
-<script>
-function applyFilters() {
-  const params = new URLSearchParams();
-  const search = document.getElementById('search_input').value;
-  const status = document.getElementById('status_filter').value;
-  const priority = document.getElementById('priority_filter').value;
-  const assigned = document.getElementById('assigned_filter').value;
-  if (search) params.set('search', search);
-  if (status) params.set('status', status);
-  if (priority) params.set('priority', priority);
-  if (assigned) params.set('assigned', assigned);
-  window.location.search = params.toString();
-}
-
-document.getElementById('status_filter').addEventListener('change', applyFilters);
-document.getElementById('priority_filter').addEventListener('change', applyFilters);
-document.getElementById('assigned_filter').addEventListener('change', applyFilters);
-document.getElementById('search_input').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') applyFilters();
-});
-</script>
+<div class="fade-in d3">{% include "tickets/_results.html" %}</div>
 {% endblock %}

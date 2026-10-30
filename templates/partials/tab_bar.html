@@ -1,0 +1,5 @@
+<nav class="tab-bar" aria-label="{{ tabs_label|default:'Sections' }}">
+  {% for t in tabs %}
+  <a class="tab t-{{ t.colour|default:'all' }}" href="{{ t.url }}"{% if t.active %} aria-selected="true" aria-current="page"{% endif %}>{{ t.label }}{% if t.note %} <span class="tab-note">{{ t.note }}</span>{% endif %}{% if t.count is not None %} <span class="tab-count">{{ t.count }}</span>{% endif %}</a>
+  {% endfor %}
+</nav>

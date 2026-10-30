@@ -10,6 +10,7 @@ from django.utils.dateparse import parse_datetime
 
 from apps.accounts.models import Department, User
 from apps.licensing.gates import business_page
+from apps.ui.live import render_live
 from config.features import feature_enabled
 
 from . import permissions
@@ -82,7 +83,7 @@ def ticket_list(request):
         "saved_views": saved_views,
         "current_query": current_query,
     }
-    return render(request, "tickets/list.html", ctx)
+    return render_live(request, "tickets/list.html", "tickets/_results.html", ctx)
 
 
 @login_required

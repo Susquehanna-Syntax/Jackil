@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.ui.live import render_live
 from apps.vigil.client import VigilUnavailable, get_client
 from apps.vigil.hosts import host_for, suggest_host
 from apps.vigil.links import DOWN_KEY
@@ -41,7 +42,7 @@ def item_list(request):
         "kind_slug": kind_slug,
         "can_manage_kinds": can_manage_kinds(request.user),
     }
-    return render(request, "items/list.html", ctx)
+    return render_live(request, "items/list.html", "items/_results.html", ctx)
 
 
 @login_required

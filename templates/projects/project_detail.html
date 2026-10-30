@@ -13,7 +13,7 @@
       <div class="page-title">{{ project.name }}</div>
       <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
         <span class="issue-key">{{ project.key }}</span>
-        &middot; {{ issue_count }} issue{{ issue_count|pluralize }} matching
+        &middot; <span class="live-count" data-live-count>{{ issue_count }} issue{{ issue_count|pluralize }}</span> matching
         {% if project.department %}&middot; {{ project.department.name }}{% endif %}
       </div>
     </div>
@@ -31,7 +31,7 @@
     </div>
   </div>
 
-  <form method="get" class="filter-bar fade-in d2">
+  <form method="get" class="filter-bar fade-in d2" data-live-filter>
     <input type="text" class="form-input" placeholder="Search titles..." name="q" value="{{ query }}">
     <select class="form-select" name="type">
       <option value="">All types</option>
@@ -53,38 +53,8 @@
       <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <button type="submit" class="btn btn-outline">Filter</button>
   </form>
 
-  {% if issues %}
-  <div class="ticket-list fade-in d3">
-    {% for row in issues %}
-    <a href="{{ row.url }}" class="ticket-list-item">
-      <div class="ticket-list-content">
-        <div class="ticket-list-title">{{ row.issue.title }}</div>
-        <div class="ticket-list-meta">
-          <span class="issue-key">{{ row.key }}</span>
-          &middot; {{ row.assignee }}
-          {% if row.issue.sprint %}&middot; {{ row.issue.sprint.name }}{% endif %}
-          {% if row.issue.story_points %}&middot; {{ row.issue.story_points }} pts{% endif %}
-        </div>
-      </div>
-      <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
-        <span class="pill {{ row.type_tone }}">{{ row.type }}</span>
-        {% if row.issue.column %}<span class="pill off">{{ row.issue.column.name }}</span>{% endif %}
-        <span class="pill {{ row.priority_tone }}">{{ row.priority }}</span>
-      </div>
-    </a>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="empty-state fade-in d3">
-    <div class="empty-state-icon">
-      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    </div>
-    <h3>No issues match</h3>
-    <p>Change the filters, or create an issue in {{ project.key }}.</p>
-  </div>
-  {% endif %}
+  <div class="fade-in d3">{% include "projects/_issue_results.html" %}</div>
 </div>
 {% endblock %}

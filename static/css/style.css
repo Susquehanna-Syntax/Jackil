@@ -2302,3 +2302,22 @@ a.issue-key:hover { color: var(--text-1); text-decoration: underline; }
 .rb-side .form-group { margin-bottom: 16px; }
 .rb-side .form-group:last-child { margin-bottom: 0; }
 .rb-checks { margin-top: 8px; }
+
+/* ── M10: coloured tabs, live filters, links ── */
+a.tab { text-decoration: none; }
+.tab.t-rose[aria-selected="true"] { color: var(--rose-ink); }
+.tab.t-lav[aria-selected="true"] { color: var(--lavender-ink); }
+.tab.t-mint[aria-selected="true"] { color: var(--mint-ink); }
+.tab.t-peach[aria-selected="true"] { color: var(--peach-ink); }
+.tab.t-sky[aria-selected="true"] { color: var(--sky-ink); }
+.tab.t-lemon[aria-selected="true"] { color: var(--lemon-ink); }
+.tab .tab-note, .tab .tab-count { font-size: 12px; opacity: 0.7; margin-left: 4px; }
+a { text-decoration: none; }
+.markdown-body a { text-decoration: underline; text-underline-offset: 2px; }
+.filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px;
+  background: var(--s1); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background 0.25s var(--ease-out-expo), color 0.25s, border-color 0.25s; }
+.filter-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.filter-chip:has(input:checked) { background: rgba(var(--rgb-mint), var(--tint-a)); border-color: rgba(var(--rgb-mint), var(--tint-a-line)); color: var(--mint-ink); }
+.filter-chip:has(input:focus-visible) { outline: 2px solid var(--sky-ink); outline-offset: 2px; }
+.live-count { font-size: 13px; color: var(--text-3); }

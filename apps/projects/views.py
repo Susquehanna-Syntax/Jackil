@@ -7,6 +7,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from apps.ui.live import render_live
 from apps.wiki.markdown import render as render_markdown
 
 from . import permissions, service
@@ -234,7 +235,7 @@ def project_detail(request, key):
         "can_see_cost": permissions.can_see_cost(request.user),
         "can_admin": permissions.can_admin_projects(request.user),
     }
-    return render(request, "projects/project_detail.html", ctx)
+    return render_live(request, "projects/project_detail.html", "projects/_issue_results.html", ctx)
 
 
 @login_required
