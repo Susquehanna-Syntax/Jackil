@@ -1,6 +1,7 @@
 """The ``card`` and ``project`` link types."""
 
 import re
+from dataclasses import replace
 
 from django.urls import reverse
 
@@ -56,6 +57,39 @@ class IssueResolver(Resolver):
             issues = issues.filter(title__icontains=term)
         return [_issue_target(issue) for issue in issues[:limit]]
 
+    def recent(self, user, limit: int) -> list[LinkTarget]:
+        from .models import Issue
+
+        if not can_see_projects(user):
+            return []
+        return [_issue_target(issue) for issue in Issue.objects.order_by("-updated_at")[:limit]]
+
+    def preview(self, id: str, user) -> LinkTarget | None:
+        from .models import Issue
+
+        if not can_see_projects(user):
+            return None
+        issue = (
+            Issue.objects.select_related("assignee", "column", "sprint").filter(pk=id).first()
+            if id.isdigit()
+            else None
+        )
+        if issue is None:
+            return None
+        assignee = issue.assignee
+        return replace(
+            _issue_target(issue),
+            facts=(
+                ("Status", issue.column.name if issue.column else "No column"),
+                (
+                    "Assignee",
+                    (assignee.get_full_name() or assignee.username) if assignee else "Unassigned",
+                ),
+                ("Sprint", issue.sprint.name if issue.sprint else "Backlog"),
+                ("Points", str(issue.story_points) if issue.story_points else "Not estimated"),
+            ),
+        )
+
     def from_url(self, url: str) -> str | None:
         match = _ISSUE_URL.search(url)
         if match is None:
@@ -95,6 +129,30 @@ class ProjectResolver(Resolver):
             name__icontains=term
         )
         return [_project_target(project) for project in projects[:limit]]
+
+    def recent(self, user, limit: int) -> list[LinkTarget]:
+        from .models import Project
+
+        if not can_see_projects(user):
+            return []
+        return [_project_target(project) for project in Project.objects.order_by("name")[:limit]]
+
+    def preview(self, id: str, user) -> LinkTarget | None:
+        from .models import Project
+
+        if not can_see_projects(user):
+            return None
+        project = (
+            Project.objects.select_related("lead").filter(pk=id).first() if id.isdigit() else None
+        )
+        if project is None:
+            return None
+        lead = project.lead
+        lead_name = (lead.get_full_name() or lead.username) if lead else ""
+        return replace(
+            _project_target(project),
+            facts=(("Lead", lead_name or "No lead"), ("Key", project.key)),
+        )
 
     def from_url(self, url: str) -> str | None:
         match = _PROJECT_URL.search(url)

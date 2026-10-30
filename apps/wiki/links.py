@@ -1,4 +1,7 @@
 import re
+from dataclasses import replace
+
+from django.utils import timezone
 
 from apps.links.registry import LinkTarget, Resolver, register_type
 
@@ -6,6 +9,18 @@ from .models import Page
 
 #: A path ending /wiki/p/<slug>/, with or without a scheme and host.
 _PAGE_URL = re.compile(r"(?:^|/)wiki/p/([a-z0-9]+(?:-[a-z0-9]+)*)/$")
+
+#: Markdown markers stripped from a preview excerpt.
+_MARKDOWN_MARKERS = re.compile(r"[\*_`]|#|\[\[|\]\]")
+
+
+def plain_excerpt(markdown: str, length: int = 240) -> str:
+    """The first `length` characters of a page's text, Markdown markers gone."""
+    text = _MARKDOWN_MARKERS.sub("", markdown or "")
+    text = " ".join(text.split())
+    if len(text) <= length:
+        return text
+    return text[:length].rstrip() + "..."
 
 
 class PageResolver(Resolver):
@@ -20,6 +35,22 @@ class PageResolver(Resolver):
             return []
         pages = self._visible(user).filter(title__icontains=term)[:limit]
         return [_target(page) for page in pages]
+
+    def recent(self, user, limit: int) -> list[LinkTarget]:
+        return [_target(p) for p in self._visible(user).order_by("-updated_at")[:limit]]
+
+    def preview(self, id: str, user) -> LinkTarget | None:
+        page = self._visible(user).filter(pk=id).first() if id.isdigit() else None
+        if page is None:
+            return None
+        edited = timezone.localtime(page.updated_at).strftime("%-d %b %Y")
+        editor = page.updated_by
+        last_edit = f"{editor.get_full_name() or editor.username}, {edited}" if editor else edited
+        return replace(
+            _target(page),
+            facts=(("Space", page.space.name), ("Last edit", last_edit)),
+            excerpt=plain_excerpt(page.body),
+        )
 
     def from_url(self, url: str) -> str | None:
         match = _PAGE_URL.search(url)

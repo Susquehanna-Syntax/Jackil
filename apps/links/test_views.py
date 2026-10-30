@@ -173,7 +173,7 @@ class LinksApiTests(TestCase):
     def test_search_names_each_type_in_words(self):
         labels = {row["type"]: row["type_label"] for row in self._search("mail")}
         self.assertEqual(labels["ticket"], "Tickets")
-        self.assertEqual(labels["item"], "Items")
+        self.assertEqual(labels["item"], "Dynamic Items")
 
     def test_type_label_reads_vigil_kinds_and_unknown_types(self):
         from .registry import type_label

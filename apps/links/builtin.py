@@ -1,6 +1,8 @@
 import re
+from dataclasses import replace
 
 from django.urls import reverse
+from django.utils import timezone
 
 from .registry import LinkTarget, Resolver, register_type
 
@@ -8,6 +10,17 @@ from .registry import LinkTarget, Resolver, register_type
 _TICKET_URL = re.compile(r"(?:^|/)tickets/(\d+)/$")
 
 VIGIL_KINDS = ("host", "task", "playbook", "run", "automation")
+
+
+def person_name(user) -> str:
+    """How we name a person everywhere: full name, falling back to username."""
+    if user is None:
+        return ""
+    return user.get_full_name() or user.username
+
+
+def _months(value) -> str:
+    return timezone.localdate(value).strftime("%d %b %Y")
 
 
 class TicketResolver(Resolver):
@@ -36,6 +49,28 @@ class TicketResolver(Resolver):
             if exact is not None:
                 ordered = [exact] + [t for t in ordered if t.pk != exact.pk]
         return [_target(t) for t in ordered if _visible(t, user)][:limit]
+
+    def recent(self, user, limit: int) -> list[LinkTarget]:
+        from apps.tickets.models import Ticket
+
+        tickets = [t for t in Ticket.objects.order_by("-updated_at") if _visible(t, user)]
+        return [_target(t) for t in tickets[:limit]]
+
+    def preview(self, id: str, user) -> LinkTarget | None:
+        from apps.tickets.models import Ticket
+
+        ticket = Ticket.objects.filter(pk=id).first() if id.isdigit() else None
+        if ticket is None or not _visible(ticket, user):
+            return None
+        return replace(
+            _target(ticket),
+            facts=(
+                ("Status", ticket.get_status_display()),
+                ("Priority", ticket.get_priority_display()),
+                ("Assignee", person_name(ticket.assigned_to) or "Unassigned"),
+                ("Opened", _months(ticket.created_at) if ticket.created_at else ""),
+            ),
+        )
 
     def from_url(self, url: str) -> str | None:
         match = _TICKET_URL.search(url)

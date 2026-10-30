@@ -1,5 +1,7 @@
 """Real resolvers for the five ``vigil:*`` link types."""
 
+from dataclasses import replace
+
 from django.core.cache import cache
 
 from apps.dashboards.contract import TONES
@@ -36,6 +38,18 @@ def _target(kind: str, id_: str, item: dict) -> LinkTarget:
         url=str(item.get("url") or ""),
         status=str(item.get("status") or ""),
         tone=tone if tone in TONES else "",
+    )
+
+
+def _facts(item: dict) -> tuple[tuple[str, str], ...]:
+    """The preview facts from Vigil's payload, malformed pairs dropped."""
+    pairs = item.get("facts")
+    if not isinstance(pairs, list):
+        return ()
+    return tuple(
+        (str(pair[0]), str(pair[1]))
+        for pair in pairs
+        if isinstance(pair, (list, tuple)) and len(pair) == 2
     )
 
 
@@ -83,6 +97,28 @@ class VigilResolver(Resolver):
             cache.set(key, results, SEARCH_SECONDS)
         mine = [item for item in results if item.get("type") == self.kind][:limit]
         return [_target(self.link_type, str(item.get("id", "")), item) for item in mine]
+
+    def available(self, user) -> bool:
+        return get_client() is not None and not cache.get(DOWN_KEY)
+
+    def preview(self, id: str, user) -> LinkTarget | None:
+        if not can_see_links(user):
+            return None
+        client = get_client()
+        if client is None or cache.get(DOWN_KEY):
+            return self.resolve([id], user).get(id)
+        try:
+            payload = client.detail(self.kind, id)
+        except VigilUnavailable as exc:
+            cache.set(DOWN_KEY, str(exc), DOWN_SECONDS)
+            # The customer's answer is resolve()'s empty one; an agent gets the
+            # chip, and nothing reaches a Vigil that has just refused to answer.
+            if not can_see_links(user):
+                return None
+            return _unavailable(self.link_type, id, "Vigil unavailable")
+        if payload is None:
+            return None
+        return replace(_target(self.link_type, id, payload), facts=_facts(payload))
 
     def from_url(self, url: str) -> str | None:
         base_url = VigilConnection.get_solo().base_url
