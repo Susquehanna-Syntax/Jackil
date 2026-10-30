@@ -88,8 +88,14 @@ Permission helpers live in `apps/tickets/permissions.py` (extracted from the
   JavaScript over JSON endpoints.
 - **Wiki** (`apps/wiki`) — Space, Page (tree), PageVersion (history and diffs),
   PageTemplate, PageAttachment. Markdown rendered server-side and sanitised.
-- **Items** (`apps/items`) — admin-defined item kinds (`ItemKind`) with fields, and `Item` records:
-  what an organization tracks that is not a monitored machine.
+- **Dynamic Items** (`apps/items`) — admin-defined kinds (`ItemKind`, with
+  `is_device_like` and a Vigil device type) and `Item` records. Device-like
+  items live in Vigil once Vigil allows device writes (`apps/vigil/devices.py`,
+  `apps/vigil/move.py`): Jackil stores only links to `vigil:device` and
+  `vigil:host`.
+- **UI kit** (`apps/ui`, `static/js/jackil-filter.js`,
+  `templates/partials/tab_bar.html`) — lists filter as you type through
+  `?partial=1` fragments; coloured tabs as in Vigil.
 - **Dashboards and reports** (`apps/dashboards`, `apps/reports`) — a widget
   registry (kind, shape, settings) shared by dashboards and saved reports, and
   one drawing script, `static/js/jackil-widgets.js`, which Vigil also uses for
@@ -99,8 +105,11 @@ Permission helpers live in `apps/tickets/permissions.py` (extracted from the
 - **Vigil integration** (`apps/vigil`) — server to server. Jackil stores the
   Vigil address and a key (an integration key `vjk_`, or a Vigil SQSY
   Business scoped key `vsk_` limited to some sites), encrypted at rest, and
-  calls Vigil's read-only integration endpoints for search, detail and widget
-  data. No per-user mapping between the two apps.
+  calls Vigil's integration endpoints for search, detail and widget data.
+  `ping` lists capabilities (`devices`, `host_facts`, `device_write`), so an
+  older Vigil is never asked for what it lacks. The only writes are device
+  create, update and delete, and only when the key's `can_write_devices` flag
+  is set in Vigil. No per-user mapping between the two apps.
 - **Edition** (`apps/licensing`) — Jackil reads the signed SQSY licence blob
   from the linked Vigil and verifies it itself (Ed25519, instance binding, the
   `jackil` claim). A valid licence turns on the Business features (SAML,

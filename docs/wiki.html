@@ -238,9 +238,9 @@
     <a href="#notifications" class="nav-link"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications &amp; CSAT</a>
     <a href="#projects" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></svg>Projects</a>
     <a href="#wiki-pages" class="nav-link"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>Wiki</a>
-    <a href="#links-items" class="nav-link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>Links &amp; Items</a>
+    <a href="#links-items" class="nav-link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>Links &amp; Dynamic Items</a>
     <a href="#dashboards" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>Dashboards &amp; Reports</a>
-    <a href="#portals" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>Customer Portals</a>
+    <a href="#portals" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>Help Center &amp; Portals</a>
 
     <div class="nav-section-label">Advanced</div>
     <a href="#sla" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>SLA &amp; Escalation</a>
@@ -597,9 +597,9 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
       <div class="section-title">Projects &amp; <span style="color:var(--sky)">Sprints</span></div>
       <div class="section-desc">Boards, backlogs and sprints for the work that is not a ticket.</div>
       <div class="prose">
-        <p>A <strong>project</strong> has a short key (for example <code>OPS</code>) and its issues are numbered under it: <code>OPS-12</code>. Each project has its own columns, which the <strong>board</strong> shows left to right; drag a card to move it.</p>
-        <p>The <strong>backlog</strong> lists everything not yet in a sprint. Plan a <strong>sprint</strong> by moving issues into it, give each a story-point estimate, and start it. Sub-tasks sit indented under their parent. The Load bar compares a sprint&rsquo;s points with the team&rsquo;s past velocity once there is history to compare against.</p>
-        <p>Project settings hold the name, key and columns side by side. Costs from people&rsquo;s rates are shown to admins only.</p>
+        <p>A <strong>project</strong> has a short key (for example <code>OPS</code>) and its issues are numbered under it: <code>OPS-12</code>. Every project opens on one screen with three tabs: <strong>Board</strong>, <strong>Reports</strong> and <strong>Settings</strong> (admins only).</p>
+        <p>The <strong>Board</strong> tab shows the project&rsquo;s columns left to right; drag a card to move it. Switch to <strong>List</strong> to see every issue and filter it as you type. On a Scrum project, <strong>Backlog and sprints</strong> sits under the board: plan a <strong>sprint</strong> by moving issues into it, give each a story-point estimate, and start it. Sub-tasks sit indented under their parent, and the Load bar compares a sprint&rsquo;s points with the team&rsquo;s past velocity once there is history.</p>
+        <p><strong>Reports</strong> holds the burndown, velocity, cumulative flow and cost. <strong>Settings</strong> holds the name, key and columns. Costs from people&rsquo;s rates are shown to admins only.</p>
       </div>
     </div>
 
@@ -608,19 +608,20 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
       <div class="section-title">The <span style="color:var(--mint)">Wiki</span></div>
       <div class="section-desc">Spaces of Markdown pages with history, templates and attachments.</div>
       <div class="prose">
-        <p>The wiki is split into <strong>spaces</strong>, each a tree of <strong>pages</strong>. The editor shows the Markdown body beside a live preview; give the change a summary and save. Every save is kept, so <strong>History</strong> lists each version and shows a diff between any two.</p>
-        <p>Admins keep <strong>templates</strong> for pages people write often, such as a runbook or a meeting note. Files attach to a page, and code blocks are coloured on the theme.</p>
-        <p>A page&rsquo;s side rail lists what links to it (<strong>Linked from</strong>), its links, its child pages and its attachments. Tickets suggest wiki and help-center articles that match their title.</p>
+        <p>The wiki is split into <strong>spaces</strong>, each a tree of <strong>pages</strong>; a space&rsquo;s top-level pages are its sections. The <strong>wiki home</strong> searches every page (press <kbd>/</kbd>), shows each space with its latest pages, and lists <strong>Recently updated</strong> and <strong>Needs attention</strong>: pages linked to open tickets, pages not edited in six months, and pages with no owner. <strong>All pages, as a tree</strong> shows every space at once.</p>
+        <p>A page has the space&rsquo;s tree on the left (type to filter it, open and close its sections), the article in the middle with Previous and Next, and <strong>On this page</strong>, its links and <strong>Linked from</strong> on the right. Each page has an <strong>owner</strong>, who keeps it true.</p>
+        <p>The editor shows the Markdown body beside a live preview; give the change a summary and save. Every save is kept, so <strong>History</strong> lists each version and shows a diff between any two. Admins keep <strong>templates</strong> for pages people write often. Files attach to a page, and code blocks are coloured on the theme. Tickets suggest articles that match their title.</p>
       </div>
     </div>
 
     <div class="section" id="links-items">
       <div class="section-label">Backbone</div>
-      <div class="section-title">Dynamic Links &amp; <span style="color:var(--lavender)">Items</span></div>
-      <div class="section-desc">Link anything to anything, and keep an inventory of the things you track.</div>
+      <div class="section-title">Dynamic Links &amp; <span style="color:var(--lavender)">Dynamic Items</span></div>
+      <div class="section-desc">Link anything to anything, and keep track of the things your work is about.</div>
       <div class="prose">
-        <p>A <strong>Dynamic Link</strong> joins two objects with a relation such as <em>relates to</em>, <em>blocks</em> or <em>caused by</em>: a ticket and an issue, a page and an item, a ticket and a Vigil host. The link shows on both ends. Open <strong>Link</strong> on any of them, search, and pick a result; results are grouped by type, and the arrow keys and Enter work.</p>
-        <p><strong>Items</strong> are the records your organization tracks that are not monitored machines: laptops, licences, contracts, phones. Admins define item kinds with their own fields; each item carries an owner, a department, a vendor and a warranty end date, and can point at the Vigil host it is.</p>
+        <p>A <strong>Dynamic Link</strong> joins two objects with a relation such as <em>relates to</em>, <em>blocks</em> or <em>caused by</em>: a ticket and an issue, a page and a Dynamic Item, a ticket and a Vigil host. The link shows on both ends. Press <strong>Add link</strong>, choose how they are related, pick a coloured tab (Hosts and Devices from Vigil, Tickets, Wiki pages, Issues, Projects, Dynamic Items), and search or pick from what is recent. The right side previews what you picked, with what it is already linked to, before you press <strong>Link</strong>.</p>
+        <p><strong>Dynamic Items</strong> are the things your work is about: laptops, licences, services, applications. Each kind has a coloured tab; type to narrow the list, or use the quick filters <em>Warranty ending</em>, <em>Mine</em>, <em>No owner</em> and <em>Has open tickets</em>. Every list in Jackil filters this way, as you type.</p>
+        <p>With Vigil linked, the <strong>Hosts</strong> and <strong>Devices</strong> tabs come live from Vigil, which keeps the only copy. Kinds marked <em>Kept in Vigil as a device</em> (Server and Network device to start with) are created in Vigil, and <strong>Settings &rarr; Vigil &rarr; Move devices into Vigil</strong> moves existing ones there, matching names Vigil already knows and carrying their links. Without Vigil, or with a Vigil older than 2026.16, Dynamic Items are kept in Jackil.</p>
       </div>
     </div>
 
@@ -636,10 +637,12 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
 
     <div class="section" id="portals">
       <div class="section-label">Customers</div>
-      <div class="section-title">Customer <span style="color:var(--rose)">Portals</span></div>
-      <div class="section-desc">A portal for each department, with its own request forms.</div>
+      <div class="section-title">Help Center &amp; <span style="color:var(--rose)">Portals</span></div>
+      <div class="section-desc">Where customers start: search, open a ticket, or fill out a form.</div>
       <div class="prose">
-        <p>Each department can publish a <strong>portal</strong> with its own name, introduction and request forms. Customers sign in, raise requests, follow their own tickets and read the help center. They never see internal notes, Vigil data or costs.</p>
+        <p>The <strong>Help center</strong> opens with a search box: guides and forms appear as you type, with <em>Open a ticket about &hellip;</em> under them, which starts a ticket with what was typed. Beside it are <strong>Open a ticket</strong> and <strong>Fill out a form</strong>. Below are the forms and help sections admins have pinned, and the customer&rsquo;s own requests.</p>
+        <p>Admins arrange it on the page itself: <strong>Arrange</strong> marks every pinned card, lets you unpin or drag cards into order, and pin more forms or help sections. A help section is a wiki space; its guides are the pages published to the Help center.</p>
+        <p>Each department can publish a <strong>portal</strong> with its own name, introduction, colours and request forms; a portal&rsquo;s home is its Help center. Customers never see internal notes, Vigil data or costs.</p>
       </div>
     </div>
 
@@ -649,7 +652,8 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
       <div class="section-desc">Read hosts, tasks and runs from Vigil, server to server.</div>
       <div class="prose">
         <p>In Vigil, an admin mints a <strong>Jackil integration key</strong> (it starts with <code>vjk_</code>). In Jackil, <strong>Settings &rarr; Vigil</strong> takes the Vigil address and that key; the key is stored encrypted and never shown again. To limit what Jackil can see to some sites, use a Vigil SQSY Business <strong>scoped API key</strong> (<code>vsk_</code>) instead.</p>
-        <p>Agents can then search Vigil hosts, tasks, playbooks, runs and automations from the link picker, link them to tickets, issues and pages, and put Vigil widgets on dashboards. Vigil shows what links to its objects in a <strong>Related in Jackil</strong> panel. Jackil never runs anything in Vigil: the only control it shows on a Vigil object is <strong>Open in Vigil</strong>.</p>
+        <p>Agents can then search Vigil hosts, devices, tasks, playbooks, runs and automations from the link picker, see a host&rsquo;s CPU, memory and open alerts in its preview, link them to tickets, issues and pages, and put Vigil widgets on dashboards. Vigil shows what links to its objects in a <strong>Related in Jackil</strong> panel.</p>
+        <p>To let Jackil keep devices in Vigil, a Vigil admin ticks <strong>Can change devices</strong> on Jackil&rsquo;s key. Jackil then creates devices in Vigil and can move its own device items there. Jackil never runs tasks in Vigil: the only control it shows on a Vigil host is <strong>Open in Vigil</strong>.</p>
       </div>
     </div>
 

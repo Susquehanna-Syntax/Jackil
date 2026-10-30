@@ -32,36 +32,53 @@ for a single-page guide covering setup, day-to-day use, and the API.
 - Saved views, global search, in-app notifications
 
 ### Projects
-- Projects with a board, a backlog, sprints and sub-tasks
-- Issue keys (`OPS-12`), columns per project, story points and a velocity chart
+- One screen per project with **Board**, **Reports** and **Settings** tabs; the
+  backlog and sprint planning sit under the board, and a List view filters
+  every issue as you type
+- Issue keys (`OPS-12`), columns per project, story points, sub-tasks and a
+  velocity chart
 
 ### Wiki
-- Spaces and nested pages written in Markdown, with a side-by-side preview,
-  page history and diffs, templates and attachments
-- "Linked from" on every page, and suggested articles on tickets
+- Built like the SQSY website docs: a home with search, space cards,
+  Recently updated and Needs attention (stale pages, pages with no owner,
+  pages linked to open tickets)
+- Pages with an always-visible page tree you can filter, On this page, the
+  page's links, Previous and Next, and an owner
+- Markdown with a side-by-side preview, history and diffs, templates and
+  attachments; suggested articles on tickets
 
-### Dynamic Links and Items
-- Link anything to anything: a ticket to an issue, a page to an item, a host in
-  Vigil to a ticket. Each link has a relation and shows up on both ends
-- **Items:** an inventory of laptops, licences, contracts and anything else
-  your organization tracks, with custom types, fields and warranty dates
+### Dynamic Links and Dynamic Items
+- Link anything to anything: a ticket to an issue, a page to a Dynamic Item, a
+  Vigil host to a ticket. The link picker asks how things are related first,
+  has a coloured tab per type, and previews what you pick before you link it
+- **Dynamic Items:** what your organization tracks, with a coloured tab per
+  kind, quick filters (warranty ending, mine, no owner, open tickets) and
+  custom fields. With Vigil linked, hosts and devices come live from Vigil,
+  which keeps the only copy: new devices are created in Vigil, and existing
+  device items move there with their links
+- Every list filters as you type; there is no Filter button
 
 ### Dashboards and reports
 - Dashboards built from widgets: counts, charts, gauges and tables over
   tickets, projects and, when linked, Vigil hosts
 - Saved reports with sources, a date range and a grid of charts
 
-### Customer portals
+### Help center and portals
+- A Help center that starts with a search box (guides and forms appear as you
+  type), Open a ticket and Fill out a form
+- Admins pin the forms and help sections customers see before they search,
+  and drag them into order, on the page itself
 - A portal for each department with its own name, colours and request forms;
-  customers see their own tickets and the help center, and never see Vigil data
-  or costs
+  customers see their own requests and never see Vigil data or costs
 
 ### Vigil integration
 - With a Vigil integration key (`vjk_`), or a Vigil SQSY Business scoped API
   key (`vsk_`) to limit Jackil to some sites, Jackil reads hosts, tasks,
-  playbooks, runs and automations from Vigil. Agents link them to tickets and
-  put them on dashboards; Vigil shows what links to its objects. Jackil never
-  runs anything in Vigil.
+  playbooks, runs, automations and devices from Vigil. Agents link them to
+  tickets and put them on dashboards; Vigil shows what links to its objects.
+- When a Vigil admin ticks **Can change devices** on Jackil's key, Jackil
+  creates devices in Vigil and moves its own device items there. Jackil never
+  runs tasks in Vigil.
 
 ### SQSY Business
 Unlocked by an SQSY Business licence on the Vigil instance Jackil is linked
@@ -134,7 +151,7 @@ apps/
 ├── projects/       Projects, issues, boards, backlogs, sprints
 ├── wiki/           Spaces, pages, revisions, templates, attachments
 ├── links/          Dynamic Links: the link registry and the link picker
-├── items/          Items: inventory types, fields and records
+├── items/          Dynamic Items: kinds, fields and records
 ├── dashboards/     Dashboards and their widgets
 ├── reports/        Saved reports and CSV export
 ├── portals/        Customer portals per department

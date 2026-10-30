@@ -123,3 +123,32 @@ class SeedDemoTests(TestCase):
         assert " inc." not in lowered, text
         assert ".co.uk" not in lowered, text
         assert not re.search(r"\b(?!example)\w+\.com\b", lowered), text
+
+
+class SeedUxPassTests(TestCase):
+    """M18: the demo shows page owners, Needs attention, and pinned forms."""
+
+    def test_seed_pins_forms_and_gives_pages_owners(self):
+        from apps.portals.models import Portal
+        from apps.wiki.models import Page
+
+        call_command("seed_demo", stdout=StringIO())
+        portal = Portal.objects.get(slug="it-support")
+        self.assertEqual(len(portal.request_forms), 2)
+        self.assertTrue(portal.space_order)
+        self.assertTrue(Page.objects.filter(owner__isnull=False).exists())
+        self.assertTrue(
+            Page.objects.filter(title="Firewall change process", owner__isnull=True).exists()
+        )
+
+    def test_rearranged_pins_survive_a_second_seed(self):
+        from apps.portals.models import Portal
+
+        call_command("seed_demo", stdout=StringIO())
+        portal = Portal.objects.get(slug="it-support")
+        rearranged = portal.request_forms[::-1]
+        portal.request_forms = rearranged
+        portal.save()
+        call_command("seed_demo", stdout=StringIO())
+        portal.refresh_from_db()
+        self.assertEqual(portal.request_forms, rearranged)

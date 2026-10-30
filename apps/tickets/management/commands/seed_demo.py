@@ -13,6 +13,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.accounts.models import Department, User
+from apps.customfields.models import RequestForm
 from apps.items.models import Item, ItemKind
 from apps.links.models import DynamicLink
 from apps.links.service import LinkError, add_link
@@ -775,6 +776,15 @@ def _pk(obj):
     return None if obj is None else str(obj.pk)
 
 
+#: Request forms the IT Support portal pins on its Help center.
+DEMO_FORMS = [
+    ("Hardware or device issue", "A laptop, screen, printer or phone that stopped working."),
+    ("Software or licence request", "Ask for an app or a licence, and say who needs it."),
+]
+#: Seeded pages left without an owner, for the wiki's Needs attention.
+UNOWNED_PAGES = {"Firewall change process"}
+
+
 class Command(BaseCommand):
     help = "Seed demo data (departments, users, tickets, comments)."
 
@@ -1093,6 +1103,18 @@ class Command(BaseCommand):
         help_center = Space.objects.filter(name="Help Center").first()
         if help_center is not None:
             portal.spaces.add(help_center)
+        # Two request forms, pinned on the portal's Help center (first run only:
+        # an admin who re-arranges the pins keeps their order).
+        forms = []
+        for name, description in DEMO_FORMS:
+            form, _ = RequestForm.objects.get_or_create(
+                name=name, defaults={"description": description, "is_active": True}
+            )
+            forms.append(form.slug)
+        if not portal.request_forms:
+            portal.request_forms = forms
+            portal.space_order = [help_center.pk] if help_center is not None else []
+            portal.save(update_fields=["request_forms", "space_order", "updated_at"])
 
     def _items(self, departments):
         """The Items register: get_or_create by name, so re-running adds nothing."""
@@ -1148,6 +1170,9 @@ class Command(BaseCommand):
             is_published_to_help_center=spec.get("published", False),
             author=admin,
             updated_by=admin,
+            # One page is left without an owner so the wiki home's
+            # Needs attention has something to show.
+            owner=None if title in UNOWNED_PAGES else admin,
         )
         save_version(page, admin, "Seeded")
         pages[title] = page
