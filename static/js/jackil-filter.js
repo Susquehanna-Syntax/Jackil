@@ -9,7 +9,7 @@
 
 const FILTER_DEBOUNCE_MS = 250;
 
-JackilFilters = {
+const JackilFilters = {
   bind(form) {
     //: Per form, so two live filters on one page can't stamp on each other.
     let seq = 0;
