@@ -6,7 +6,7 @@
 {% block content %}
 <div class="fade-in d1">
   <a href="{% url 'items:item_list' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
-    &larr; Back to Items
+    &larr; Back to Dynamic Items
   </a>
 
   <div class="page-header">
@@ -92,7 +92,7 @@
     {% else %}
     <div class="empty-state" style="padding: 20px 0;">
       <h3>No attributes</h3>
-      <p>Add facts like Serial or Rack position when you edit this Item.</p>
+      <p>Add facts like Serial or Rack position when you edit this Dynamic Item.</p>
     </div>
     {% endif %}
   </div>

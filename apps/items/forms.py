@@ -78,7 +78,7 @@ def parse_attributes(text: str) -> dict[str, str]:
         if not sep or not key:
             continue
         if len(attributes) >= MAX_ATTRIBUTES:
-            raise ValueError(f"An Item can hold at most {MAX_ATTRIBUTES} attributes.")
+            raise ValueError(f"A Dynamic Item can hold at most {MAX_ATTRIBUTES} attributes.")
         if len(key) > MAX_KEY_LENGTH:
             raise ValueError(f"Attribute names are limited to {MAX_KEY_LENGTH} characters.")
         if len(value) > MAX_VALUE_LENGTH:
@@ -92,11 +92,28 @@ def render_attributes(attributes: dict[str, str]) -> str:
 
 
 class ItemKindForm(forms.ModelForm):
+    DEVICE_TYPE_CHOICES = [
+        ("", "Not a device"),
+        ("router", "Router"),
+        ("switch", "Switch"),
+        ("access_point", "Access point"),
+        ("firewall", "Firewall"),
+        ("printer", "Printer"),
+        ("nas", "NAS"),
+        ("server", "Server"),
+        ("camera", "Camera"),
+        ("iot", "IoT device"),
+        ("other", "Other"),
+    ]
+
+    vigil_device_type = forms.ChoiceField(choices=DEVICE_TYPE_CHOICES, required=False)
+
     class Meta:
         model = ItemKind
-        fields = ["name", "icon_color"]
+        fields = ["name", "icon_color", "is_device_like", "vigil_device_type"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-input"}),
+            "is_device_like": forms.CheckboxInput(attrs={"class": "form-checkbox"}),
             "icon_color": forms.Select(
                 attrs={"class": "form-select"},
                 choices=[
@@ -110,6 +127,12 @@ class ItemKindForm(forms.ModelForm):
                 ],
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["vigil_device_type"].widget = forms.Select(
+            attrs={"class": "form-select"}, choices=self.DEVICE_TYPE_CHOICES
+        )
 
     def save(self, commit=True):
         kind = super().save(commit=False)

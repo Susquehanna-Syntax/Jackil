@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Items — Jackil{% endblock %}
+{% block title %}Dynamic Items — Jackil{% endblock %}
 
 {% block content %}
 <div class="page-header fade-in d1">
   <div>
-    <div class="page-title">Items</div>
-    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;" data-live-count>{{ items|length }} item{{ items|length|pluralize }}</div>
+    <div class="page-title">Dynamic Items</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">Things your work is about, kept here.</div>
   </div>
   <div style="display:flex; gap:8px;">
     {% if can_manage_kinds %}
@@ -14,19 +14,21 @@
     {% endif %}
     <a href="{% url 'items:item_create' %}" class="btn btn-lav">
       <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      New Item
+      New Dynamic Item
     </a>
   </div>
 </div>
 
-<form method="get" class="filter-bar fade-in d2" data-live-filter>
-  <input type="text" class="form-input" placeholder="Search items..." name="q" value="{{ query }}">
-  <select class="form-select" name="kind">
-    <option value="">All Kinds</option>
-    {% for kind in kinds %}
-    <option value="{{ kind.slug }}" {% if kind_slug == kind.slug %}selected{% endif %}>{{ kind.name }}</option>
+<form method="get" data-live-filter class="items-filter fade-in d2">
+  <input type="hidden" name="kind" value="{{ kind_slug }}">
+  {% include "partials/tab_bar.html" with tabs=tabs tab_name="kind" tabs_label="Kinds" %}
+  <div class="items-filter-row">
+    <input type="text" class="form-input" placeholder="Type to narrow: name, vendor or notes" name="q" value="{{ query }}">
+    {% for c in chips %}
+    <label class="filter-chip"><input type="checkbox" name="{{ c.name }}" value="1"{% if c.checked %} checked{% endif %}> {{ c.label }}</label>
     {% endfor %}
-  </select>
+    <span class="live-count" data-live-count>{{ items|length }} item{{ items|length|pluralize }}</span>
+  </div>
 </form>
 
 <div class="fade-in d3">{% include "items/_results.html" %}</div>

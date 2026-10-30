@@ -184,7 +184,7 @@ class ItemViewTests(TestCase):
         url = reverse("items:kind_delete", args=[self.server.pk])
         response = self.client.post(url, follow=True)
         self.assertTrue(ItemKind.objects.filter(pk=self.server.pk).exists())
-        self.assertContains(response, "still has Items")
+        self.assertContains(response, "still has Dynamic Items")
 
         empty = ItemKind.objects.get(name="Licence")
         self.client.post(reverse("items:kind_delete", args=[empty.pk]))
@@ -287,7 +287,7 @@ class SidebarTests(TestCase):
     def test_staff_sidebar_has_items(self):
         self.client.force_login(self.agent)
         page = self.client.get(reverse("tickets:ticket_list"))
-        self.assertContains(page, 'data-tip="Items"')
+        self.assertContains(page, 'data-tip="Dynamic Items"')
         self.assertContains(page, "/items/")
 
     def test_customer_sidebar_has_no_items(self):

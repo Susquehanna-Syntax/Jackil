@@ -12,6 +12,10 @@ class ItemKind(models.Model):
     #: a pastel name — one of the ``tc-*`` classes in static/css/style.css
     icon_color = models.CharField(max_length=20, default="sky")
     order = models.PositiveIntegerField(default=0)
+    is_device_like = models.BooleanField(
+        default=False, help_text="Kept in Vigil as a device once Vigil is connected."
+    )
+    vigil_device_type = models.CharField(max_length=20, blank=True, default="")
 
     class Meta:
         ordering = ["order", "name"]

@@ -2368,3 +2368,29 @@ a { text-decoration: none; }
 }
 .link-picker .modal-header, .link-picker .lp-step, .link-picker .lp-tabs, .link-picker .lp-foot { flex: none; }
 .link-picker .lp-tabs { overflow-y: hidden; scrollbar-width: thin; }
+
+/* ── M12: Dynamic Items ── */
+.tc-lavender { --rgb: var(--rgb-lavender); --ink: var(--lavender-ink); --fill: var(--lavender); }
+.items-filter { margin-bottom: 4px; }
+.items-filter .tab-bar { margin-bottom: 16px; }
+.items-filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.items-filter-row .form-input { flex: 1; min-width: 220px; }
+.items-filter-row .live-count { margin-left: auto; }
+.item-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.item-grid > * { min-width: 0; }
+.item-card { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: var(--r-md);
+  background: rgba(var(--rgb, var(--rgb-grey)), var(--tint-a)); color: var(--text-1);
+  transition: transform 0.45s var(--ease-out-expo), background 0.3s; }
+.item-card:hover { transform: translateY(-3px); background: rgba(var(--rgb, var(--rgb-grey)), var(--tint-a-hover)); }
+.item-card:active { transform: translateY(-1px) scale(0.98); transition-duration: 0.12s; }
+.item-card-icon { width: 38px; height: 38px; border-radius: 11px; flex: none; display: grid; place-items: center;
+  font-weight: 700; font-size: 13px; background: rgba(var(--rgb, var(--rgb-grey)), 0.28); color: var(--ink, var(--text-1)); }
+.item-card-body { min-width: 0; display: flex; flex-direction: column; }
+.item-card-body b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-card-body small { color: var(--text-3); font-size: 12.5px; }
+.item-card-side { margin-left: auto; font-size: 12px; color: var(--text-3); text-align: right; flex: none; }
+.kind-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; align-content: start; }
+.kind-card { border-radius: var(--r-md); padding: 16px 18px; background: rgba(var(--rgb, var(--rgb-grey)), var(--tint-a)); }
+.kind-card b { color: var(--ink, var(--text-1)); }
+.kinds-layout { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .kinds-layout { grid-template-columns: 1fr; } }

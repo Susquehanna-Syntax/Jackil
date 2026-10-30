@@ -4,10 +4,10 @@
 
 {% block content %}
 <div class="fade-in d1" style="max-width: 560px;">
-  <div class="page-title">Delete Item</div>
+  <div class="page-title">Delete Dynamic Item</div>
   <div class="form-card" style="margin-top: 20px;">
     <div class="form-card-title">{{ item.name }}</div>
-    <div class="form-card-hint">This removes the Item and its attributes. Links pointing at it stay behind until they are removed.</div>
+    <div class="form-card-hint">This removes the Dynamic Item and its attributes. Links pointing at it stay behind until they are removed.</div>
     <form method="post">
       {% csrf_token %}
       <div style="display:flex; gap:8px;">

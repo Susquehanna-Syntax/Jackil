@@ -70,6 +70,28 @@ const JackilFilters = {
         });
     };
 
+    const selectTab = (tab) => {
+      const name = tab.getAttribute('data-live-tab-name') || 'kind';
+      const field = form.elements.namedItem(name);
+      if (field && field.tagName === 'INPUT') field.value = tab.getAttribute('data-live-tab') || '';
+      form.querySelectorAll('a.tab[data-live-tab]').forEach((other) => {
+        other.removeAttribute('aria-selected');
+        other.removeAttribute('aria-current');
+      });
+      tab.setAttribute('aria-selected', 'true');
+      tab.setAttribute('aria-current', 'page');
+    };
+
+    //: Kind tabs filter in place instead of reloading the page.
+    form.addEventListener('click', (event) => {
+      const tab = event.target.closest('a.tab[data-live-tab]');
+      if (!tab || !form.contains(tab)) return;
+      event.preventDefault();
+      selectTab(tab);
+      clearTimeout(timer);
+      run();
+    });
+
     form.addEventListener('input', (event) => {
       const type = (event.target.type || '').toLowerCase();
       if (!['text', 'search'].includes(type)) return;
