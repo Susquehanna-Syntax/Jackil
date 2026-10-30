@@ -15,7 +15,7 @@ HOST_END = "vigil:host"
 #: Shown on the settings page while Vigil has this key marked read-only.
 KEY_CANNOT_WRITE = (
     "Vigil does not let this key change devices yet. In Vigil, tick Can change "
-    "devices on Jackil's key (Settings > Integrations)."
+    "devices on Jackil's key (Settings > Jackil Tickets)."
 )
 
 
