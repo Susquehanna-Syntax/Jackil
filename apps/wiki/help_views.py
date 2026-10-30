@@ -11,7 +11,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .markdown import render as render_markdown
-from .models import Page, Space
+from .models import Page
 
 
 def _published():
@@ -46,26 +46,9 @@ def home(request):
             "spaces": [],
         }
     else:
-        published = _published()
-        children: dict[int | None, list[Page]] = {}
-        for page in published.filter(parent__isnull=False).order_by("order", "title", "pk"):
-            children.setdefault(page.parent_id, []).append(page)
-        sections = []
-        for space in Space.objects.all():
-            roots = [
-                page
-                for page in published.filter(space=space, parent__isnull=True).order_by(
-                    "order", "title", "pk"
-                )
-            ]
-            if roots:
-                sections.append((space, [(root, children.get(root.pk, [])) for root in roots]))
-        ctx = {
-            "query": "",
-            "results": None,
-            "total": published.count(),
-            "spaces": sections,
-        }
+        from apps.portals.public import help_center_context
+
+        return render(request, "help/home.html", help_center_context(request))
     return render(request, "help/home.html", ctx)
 
 
@@ -103,3 +86,11 @@ def legacy(request, slug):
     if getattr(request.user, "role", None) not in ("agent", "admin"):
         raise Http404("No such page.")
     return redirect("wiki:page_detail", slug=page.slug, permanent=True)
+
+
+@login_required
+def suggest(request):
+    """The hero search on the portal-less ``/help/`` page."""
+    from apps.portals.public import suggest as portal_suggest
+
+    return portal_suggest(request)

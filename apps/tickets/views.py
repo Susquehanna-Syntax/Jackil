@@ -341,6 +341,8 @@ def ticket_create(request):
         "request_forms": forms,
         "selected_form": selected_form,
         "form_fields": selected_form.ordered_fields() if selected_form else [],
+        # The Help center's "Open a ticket about ..." carries the search over.
+        "prefill_title": (request.POST.get("title") or request.GET.get("title") or "")[:200],
     }
     return render(request, "tickets/create.html", ctx)
 

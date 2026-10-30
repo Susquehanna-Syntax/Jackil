@@ -1,5 +1,6 @@
 """The public portal pages: what a customer sees at ``/portal/<slug>/``."""
 
+import json
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -152,27 +153,27 @@ class PortalHomeTests(TestCase):
     def test_portal_says_nothing_here_yet_when_it_has_no_pages(self):
         Page.objects.update(is_published_to_help_center=False)
         page = self.portal_page(self.customer)
-        self.assertContains(page, "Nothing here yet.")
+        self.assertContains(page, "No guides published yet.")
 
     def test_my_tickets_follows_show_my_tickets_and_the_role(self):
         Ticket.objects.create(title="Leaky tap", description="x", created_by=self.customer)
 
         page = self.portal_page(self.customer)
-        self.assertContains(page, "Your open tickets")
+        self.assertContains(page, "Your requests")
         self.assertContains(page, "Leaky tap")
 
         self.portal.show_my_tickets = False
         self.portal.save()
-        self.assertNotContains(self.portal_page(self.customer), "Your open tickets")
+        self.assertNotContains(self.portal_page(self.customer), "Your requests")
 
         self.portal.show_my_tickets = True
         self.portal.save()
-        self.assertNotContains(self.portal_page(self.agent), "Your open tickets")
+        self.assertNotContains(self.portal_page(self.agent), "Your requests")
 
     def test_you_have_no_open_tickets_when_the_customer_has_none(self):
         page = self.portal_page(self.customer)
-        self.assertContains(page, "Your open tickets")
-        self.assertContains(page, "You have no open tickets.")
+        self.assertContains(page, "Your requests")
+        self.assertContains(page, "You have no open requests.")
 
     def test_unpublished_portal_404_for_customers_preview_for_staff(self):
         self.portal.is_published = False
@@ -181,7 +182,7 @@ class PortalHomeTests(TestCase):
         self.assertEqual(self.portal_page(self.customer).status_code, 404)
         preview = self.portal_page(self.agent)
         self.assertEqual(preview.status_code, 200)
-        self.assertContains(preview, "Draft — only staff can see this")
+        self.assertContains(preview, "Draft: only staff can see this")
 
     def test_an_unknown_portal_is_404_for_everyone(self):
         for user in (self.customer, self.agent):
@@ -266,7 +267,7 @@ class StylingTests(TestCase):
 
         with patch("apps.portals.public.styling_enabled", return_value=True):
             page = self.home()
-        self.assertContains(page, '<div class="pt-root fade-in d1 pt-styled tc-coral">')
+        self.assertContains(page, '<section class="hc-hero tc-coral fade-in d1">')
         self.assertContains(page, STYLING["logo_url"])
         body = page.content.decode()
         self.assertIn(".hero-title { color: red; }", body)
@@ -277,7 +278,7 @@ class StylingTests(TestCase):
         self.portal.accent = "lavender"
         self.portal.save()
         with patch("apps.portals.public.styling_enabled", return_value=True):
-            self.assertContains(self.home(), '<div class="pt-root fade-in d1 pt-styled tc-lav">')
+            self.assertContains(self.home(), '<section class="hc-hero tc-lav fade-in d1">')
 
     def test_powered_by_hidden_only_when_styled(self):
         self.assertContains(self.home(), "Powered by Jackil")
@@ -304,3 +305,95 @@ class AccessTests(TestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 302)
                 self.assertIn("login", response.url)
+
+
+class HelpCenterRedesignTests(TestCase):
+    """M14: the Help center hero, live search, and staff-only pinning."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = User.objects.create_user("aria", password="x", role="agent")
+        cls.customer = User.objects.create_user("cust", password="x", role="customer")
+        cls.space = Space.objects.create(name="Getting connected")
+        cls.other = Space.objects.create(name="Your account")
+        Page.objects.create(
+            space=cls.space,
+            title="Connect to the office Wi-Fi",
+            body="wifi",
+            is_published_to_help_center=True,
+        )
+        Page.objects.create(space=cls.space, title="Internal VPN notes", body="wifi secrets")
+        cls.portal = Portal.objects.create(name="IT help", slug="it-help", is_published=True)
+
+    def test_hero_has_search_and_both_buttons(self):
+        self.client.force_login(self.customer)
+        page = self.client.get(reverse("portals:portal", args=["it-help"]))
+        self.assertContains(page, "How can we <em>help?</em>")
+        self.assertContains(page, "Open a ticket")
+        self.assertContains(page, 'data-suggest="/portal/it-help/suggest/"')
+
+    def test_customer_sees_no_pin_controls(self):
+        self.client.force_login(self.customer)
+        page = self.client.get(reverse("portals:portal", args=["it-help"]))
+        self.assertNotContains(page, "data-pin")
+        self.assertNotContains(page, "Arrange this page")
+
+    def test_staff_see_the_arrange_bar(self):
+        self.client.force_login(self.agent)
+        page = self.client.get(reverse("portals:portal", args=["it-help"]))
+        self.assertContains(page, "Arrange this page")
+        self.assertContains(page, 'data-pins-url="/portal/it-help/pins/"')
+
+    def test_suggest_returns_only_published_guides(self):
+        self.client.force_login(self.customer)
+        body = self.client.get(
+            reverse("portals:portal_suggest", args=["it-help"]), {"q": "wifi"}
+        ).json()
+        self.assertEqual([g["title"] for g in body["guides"]], ["Connect to the office Wi-Fi"])
+
+    def test_pins_save_order_and_spaces_for_staff(self):
+        self.client.force_login(self.agent)
+        response = self.client.post(
+            reverse("portals:portal_pins", args=["it-help"]),
+            data=json.dumps({"forms": [], "spaces": [self.other.pk, self.space.pk]}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.portal.refresh_from_db()
+        self.assertEqual(self.portal.space_order, [self.other.pk, self.space.pk])
+        self.assertEqual(
+            set(self.portal.spaces.values_list("pk", flat=True)), {self.other.pk, self.space.pk}
+        )
+
+    def test_pins_refuse_customers_and_anonymous(self):
+        url = reverse("portals:portal_pins", args=["it-help"])
+        payload = json.dumps({"forms": [], "spaces": [self.space.pk]})
+        self.assertNotEqual(
+            self.client.post(url, data=payload, content_type="application/json").status_code, 200
+        )
+        self.client.force_login(self.customer)
+        self.assertEqual(
+            self.client.post(url, data=payload, content_type="application/json").status_code, 403
+        )
+        self.portal.refresh_from_db()
+        self.assertFalse(self.portal.spaces.exists())
+
+    def test_open_a_ticket_about_prefills_the_title(self):
+        self.client.force_login(self.customer)
+        page = self.client.get(reverse("tickets:ticket_create"), {"title": "printer jams"})
+        self.assertContains(page, 'value="printer jams"')
+
+
+class SuggestHyphenTests(TestCase):
+    def test_wifi_finds_wi_fi(self):
+        customer = User.objects.create_user("cust2", password="x", role="customer")
+        space = Space.objects.create(name="Net")
+        Page.objects.create(
+            space=space, title="Connect to the Wi-Fi", body="x", is_published_to_help_center=True
+        )
+        Portal.objects.create(name="Desk", slug="desk", is_published=True)
+        self.client.force_login(customer)
+        body = self.client.get(
+            reverse("portals:portal_suggest", args=["desk"]), {"q": "wifi"}
+        ).json()
+        self.assertEqual([g["title"] for g in body["guides"]], ["Connect to the Wi-Fi"])

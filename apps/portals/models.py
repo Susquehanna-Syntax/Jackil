@@ -34,6 +34,8 @@ class Portal(models.Model):
     request_forms = models.JSONField(default=list, blank=True)
     #: Help-center spaces to show; none chosen means every space.
     spaces = models.ManyToManyField("wiki.Space", blank=True, related_name="+")
+    #: The pinned spaces' order on the portal home, as space ids.
+    space_order = models.JSONField(default=list, blank=True)
     show_search = models.BooleanField(default=True)
     show_my_tickets = models.BooleanField(default=True)
     #: Slugs of Vigil status pages (stored only until phase 03 embeds them).

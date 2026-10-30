@@ -1,42 +1,11 @@
-{% extends "portals/base.html" %}
+{% extends "base.html" %}
 
-{% block portal_body %}
-<div class="pt-layout">
-  <div class="pt-col">
-    <div class="kb-categories">
-      {% for space, roots in sections %}
-        {% for root, children in roots %}
-        <div class="kb-category">
-          <div class="kb-category-head">
-            <div class="kb-category-icon tc-{% if not space.icon_color or space.icon_color == 'lavender' %}lav{% else %}{{ space.icon_color }}{% endif %}" style="background: var(--fill);">
-              <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-            </div>
-            <div>
-              <a href="{% url 'help:article' root.slug %}" class="kb-category-name">{{ root.title }}</a>
-              {% if root.summary %}<div class="kb-category-desc">{{ root.summary }}</div>{% endif %}
-            </div>
-          </div>
-          <div class="kb-category-articles">
-            {% for page in children %}
-            <a href="{% url 'help:article' page.slug %}" class="kb-article-link">
-              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              {{ page.title }}
-            </a>
-            {% endfor %}
-          </div>
-        </div>
-        {% endfor %}
-      {% empty %}
-      <div class="empty-state">
-        <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17"/></svg></div>
-        <h3>Nothing here yet.</h3>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
+{% block title %}{{ portal.name }} — Jackil{% endblock %}
 
-  <div class="pt-col">
-    {% include "portals/_aside.html" %}
-  </div>
-</div>
+{% block extra_head %}
+  {% if styling %}<style>{{ styling.css }}</style>{% endif %}
+{% endblock %}
+
+{% block content %}
+{% include "portals/_helpcenter.html" %}
 {% endblock %}

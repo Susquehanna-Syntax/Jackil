@@ -21,6 +21,7 @@
 {% endfor %}
 {% endif %}
 
+{% if not status_only %}
 <div class="form-card">
   <div class="form-card-title">Ask for help</div>
   <div class="kb-category-articles">
@@ -53,4 +54,5 @@
   </div>
   <p class="pt-see-all"><a href="{% url 'tickets:customer_tickets' %}">See all your tickets</a></p>
 </div>
+{% endif %}
 {% endif %}

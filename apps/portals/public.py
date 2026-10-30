@@ -5,11 +5,17 @@ a search — narrowed to what one portal offers: its spaces, its request forms,
 the customer's own open tickets. Articles stay at ``/help/a/<slug>/``.
 """
 
+import json
+
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-from django.http import Http404
+from django.core.exceptions import PermissionDenied
+from django.db.models import Count, Q, Value
+from django.db.models.functions import Replace
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import urlencode
+from django.views.decorators.http import require_POST
 
 from apps.tickets.models import Ticket
 from apps.wiki.markdown import render as render_markdown
@@ -20,6 +26,10 @@ from .service import form_choices, styling_enabled
 from .status import status_embeds
 
 CLOSED_STATUSES = ["resolved", "closed"]
+#: Guides a help section shows on the home before "All N guides".
+SECTION_GUIDES = 3
+#: Hits per group in the live search under the hero.
+SUGGEST_LIMIT = 6
 
 
 def _is_staff(user):
@@ -93,23 +103,79 @@ def _styling(portal):
 
 
 def _my_tickets(request, portal):
-    if not portal.show_my_tickets or _is_staff(request.user):
+    if (portal is not None and not portal.show_my_tickets) or _is_staff(request.user):
         return None
     return Ticket.objects.filter(created_by=request.user).exclude(status__in=CLOSED_STATUSES)[:5]
 
 
+def _ordered_spaces(portal):
+    """The help sections a portal pins, in the admin's order; a portal that
+    pinned none shows every space with published guides."""
+    if portal is not None and portal.spaces.exists():
+        spaces = list(portal.spaces.all())
+        rank = {pk: i for i, pk in enumerate(portal.space_order or [])}
+        return sorted(spaces, key=lambda sp: (rank.get(sp.pk, len(rank)), sp.order, sp.name))
+    return list(
+        Space.objects.annotate(
+            guides=Count("pages", filter=Q(pages__is_published_to_help_center=True))
+        )
+        .filter(guides__gt=0)
+        .order_by("order", "name")
+    )
+
+
+def help_sections(portal):
+    """Per pinned space: its most-read published guides and how many it has."""
+    sections = []
+    for space in _ordered_spaces(portal):
+        guides = Page.objects.filter(space=space, is_published_to_help_center=True)
+        sections.append(
+            {
+                "space": space,
+                "tint": "lav" if space.icon_color in ("", "lavender") else space.icon_color,
+                "guides": list(guides.order_by("-views", "order", "title")[:SECTION_GUIDES]),
+                "count": guides.count(),
+            }
+        )
+    return sections
+
+
+def pinned_forms(portal):
+    """``[(slug, name)]``: the portal's pinned forms in order, or every active
+    form for the ``/help/`` page that has no portal."""
+    choices = form_choices()
+    if portal is None:
+        return choices
+    names = dict(choices)
+    return [(slug, names[slug]) for slug in portal.request_forms if slug in names]
+
+
 def _context(request, portal, query=""):
-    choices = dict(form_choices())
+    staff = _is_staff(request.user)
+    pinned_slugs = {slug for slug, _ in pinned_forms(portal)}
+    pinned_spaces = {entry["space"].pk for entry in help_sections(portal)}
     return {
         "portal": portal,
-        "intro_html": render_markdown(portal.intro, user=request.user),
-        "forms": [(slug, choices[slug]) for slug in portal.request_forms if slug in choices],
-        "sections": _sections(portal),
+        "intro_html": render_markdown(portal.intro, user=request.user) if portal else "",
+        "forms": pinned_forms(portal),
+        # A portal offers its own forms only (a department's portal must not
+        # list another department's); /help/ with no portal offers every one.
+        "all_forms": pinned_forms(portal),
+        "help": help_sections(portal),
+        "can_arrange": staff and portal is not None,
+        "unpinned_forms": [f for f in form_choices() if f[0] not in pinned_slugs] if staff else [],
+        "unpinned_spaces": list(Space.objects.exclude(pk__in=pinned_spaces)) if staff else [],
         "my_tickets": _my_tickets(request, portal),
-        "styling": _styling(portal),
-        "status_embeds": status_embeds(portal) if portal.vigil_status_pages else [],
+        "styling": _styling(portal) if portal else None,
+        "status_embeds": status_embeds(portal) if portal and portal.vigil_status_pages else [],
         "query": query,
     }
+
+
+def help_center_context(request):
+    """The ``/help/`` page for a site with no published portal: the same
+    Help center, offering every active form and every space with guides."""
+    return _context(request, None)
 
 
 @login_required
@@ -140,3 +206,74 @@ def default_portal(request):
     if target is None:
         raise Http404("No published default portal.")
     return target
+
+
+@login_required
+def suggest(request, slug=None):
+    """What the hero search finds as you type: guides first, then forms.
+    Customers only ever get published guides."""
+    portal = _get_portal(request, slug) if slug else None
+    query = request.GET.get("q", "").strip()[:100]
+    if len(query) < 2:
+        return JsonResponse({"guides": [], "forms": []})
+    spaces = [entry["space"].pk for entry in help_sections(portal)] if portal else None
+    # "wifi" should find "Wi-Fi": compare titles with their hyphens taken out too.
+    squashed = query.replace("-", "")
+    guides = (
+        Page.objects.filter(is_published_to_help_center=True)
+        .annotate(bare_title=Replace("title", Value("-"), Value("")))
+        .filter(
+            Q(title__icontains=query)
+            | Q(bare_title__icontains=squashed)
+            | Q(summary__icontains=query)
+            | Q(body__icontains=query)
+        )
+    )
+    if spaces is not None:
+        guides = guides.filter(space_id__in=spaces)
+    forms = [
+        {
+            "name": name,
+            "url": reverse("tickets:ticket_create") + "?" + urlencode({"form": form_slug}),
+        }
+        for form_slug, name in form_choices()
+        if query.lower() in name.lower()
+    ][:SUGGEST_LIMIT]
+    return JsonResponse(
+        {
+            "guides": [
+                {
+                    "title": page.title,
+                    "space": page.space.name,
+                    "url": reverse("help:article", args=[page.slug]),
+                }
+                for page in guides.select_related("space").order_by("-views", "title")[
+                    :SUGGEST_LIMIT
+                ]
+            ],
+            "forms": forms,
+        }
+    )
+
+
+@login_required
+@require_POST
+def save_pins(request, slug):
+    """Staff arrange a portal's home: which forms and help sections are pinned,
+    and in what order. Writes the same fields the portal settings page edits."""
+    if not _is_staff(request.user):
+        raise PermissionDenied
+    portal = get_object_or_404(Portal, slug=slug)
+    try:
+        body = json.loads(request.body or b"{}")
+    except ValueError:
+        return JsonResponse({"error": "Send JSON."}, status=400)
+    form_slugs = [str(x) for x in body.get("forms", []) if isinstance(x, str)]
+    known = {slug for slug, _ in form_choices()}
+    space_ids = [int(x) for x in body.get("spaces", []) if str(x).isdigit()]
+    spaces = list(Space.objects.filter(pk__in=space_ids))
+    portal.request_forms = [s for s in form_slugs if s in known]
+    portal.space_order = [pk for pk in space_ids if any(sp.pk == pk for sp in spaces)]
+    portal.save(update_fields=["request_forms", "space_order", "updated_at"])
+    portal.spaces.set(spaces)
+    return JsonResponse({"forms": portal.request_forms, "spaces": portal.space_order})
