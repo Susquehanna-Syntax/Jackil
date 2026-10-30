@@ -7,7 +7,7 @@ from django.core.cache import cache
 from apps.dashboards.contract import TONES
 from apps.links.registry import LinkTarget, Resolver, register_type
 from apps.links.service import can_see_links
-from apps.vigil.client import TYPES, VigilUnavailable, get_client
+from apps.vigil.client import TYPES, VigilUnavailable, get_client, vigil_capabilities
 from apps.vigil.models import VigilConnection
 
 DOWN_KEY = "vigil:down"
@@ -63,8 +63,14 @@ class VigilResolver(Resolver):
     def link_type(self) -> str:
         return f"vigil:{self.kind}"
 
+    def _missing_capability(self) -> bool:
+        """Devices only exist on a Vigil that says it has them."""
+        if self.kind != "device":
+            return False
+        return "devices" not in vigil_capabilities()
+
     def resolve(self, ids: list[str], user) -> dict[str, LinkTarget]:
-        if not can_see_links(user):
+        if not can_see_links(user) or self._missing_capability():
             return {}
         client = get_client()
         if client is None:
@@ -81,10 +87,10 @@ class VigilResolver(Resolver):
         }
 
     def listed(self, user) -> bool:
-        return get_client() is not None
+        return get_client() is not None and not self._missing_capability()
 
     def search(self, q: str, user, limit: int) -> list[LinkTarget]:
-        if not can_see_links(user):
+        if not can_see_links(user) or self._missing_capability():
             return []
         client = get_client()
         if client is None or cache.get(DOWN_KEY):
@@ -105,8 +111,9 @@ class VigilResolver(Resolver):
         return get_client() is not None and not cache.get(DOWN_KEY)
 
     def preview(self, id: str, user) -> LinkTarget | None:
-        if not can_see_links(user):
+        if not can_see_links(user) or self._missing_capability():
             return None
+
         client = get_client()
         if client is None or cache.get(DOWN_KEY):
             return self.resolve([id], user).get(id)

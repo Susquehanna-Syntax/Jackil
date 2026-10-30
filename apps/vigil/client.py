@@ -6,8 +6,10 @@ import urllib.error
 import urllib.parse
 from urllib.request import Request, urlopen
 
+from django.core.cache import cache
+
 TIMEOUT = 3  # seconds
-TYPES = ("host", "task", "playbook", "automation", "run")
+TYPES = ("host", "device", "task", "playbook", "automation", "run")
 
 MAX_IDS = 100
 MAX_BYTES = 2 * 1024 * 1024
@@ -126,6 +128,14 @@ class VigilClient:
     def ping(self) -> dict:
         return self._get("ping/")
 
+    def capabilities(self) -> set[str]:
+        """What this Vigil says it can do; an older Vigil lists nothing."""
+        answer = self.ping()
+        listed = answer.get("capabilities")
+        if not isinstance(listed, list):
+            return set()
+        return {str(item) for item in listed}
+
     def licence(self) -> dict:
         return self._get("licence/")
 
@@ -187,3 +197,28 @@ def get_client() -> VigilClient | None:
     if not connection.is_configured:
         return None
     return VigilClient(connection.base_url, connection.get_key())
+
+
+CAPABILITIES_KEY = "vigil:capabilities"
+CAPABILITIES_SECONDS = 300
+
+
+def vigil_capabilities() -> set[str]:
+    """What the connected Vigil says it can do, cached for a few minutes.
+
+    An older Vigil's ping has no ``capabilities`` key, and a Vigil that will
+    not answer gives nothing either — the latter is not cached, so the next
+    request asks again.
+    """
+    client = get_client()
+    if client is None:
+        return set()
+    cached = cache.get(CAPABILITIES_KEY)
+    if cached is not None:
+        return set(cached)
+    try:
+        found = client.capabilities()
+    except VigilUnavailable:
+        return set()
+    cache.set(CAPABILITIES_KEY, sorted(found), CAPABILITIES_SECONDS)
+    return found

@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from apps.console.decorators import admin_required
 
-from .client import VigilUnavailable, get_client
+from .client import VigilUnavailable, get_client, vigil_capabilities
 from .forms import VigilConnectionForm
 from .models import VigilConnection
 
@@ -34,6 +34,7 @@ def vigil_settings(request):
             "form": form,
             "connection": connection,
             "has_key": bool(connection.key_encrypted),
+            "older_vigil": connection.is_configured and "devices" not in vigil_capabilities(),
             "section": "vigil",
         },
     )

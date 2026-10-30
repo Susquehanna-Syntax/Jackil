@@ -9,6 +9,10 @@
   the key in Vigil under Settings, Jackil.
 </p>
 
+{% if older_vigil %}
+<p class="muted-note" style="margin: 0 0 16px;">This Vigil is older than 2026.16, so devices stay in Jackil. Update Vigil to keep them in Vigil.</p>
+{% endif %}
+
 <div class="vg-layout">
   <form method="post" class="form-card">
     {% csrf_token %}

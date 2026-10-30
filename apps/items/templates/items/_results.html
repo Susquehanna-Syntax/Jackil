@@ -1,3 +1,20 @@
+{% if vigil_kind %}
+<div data-live-results data-count-label="{{ vigil_rows|length }} from Vigil">
+  {% if vigil_rows %}
+  <div class="item-grid">
+    {% for row in vigil_rows %}
+    <a {% if row.url %}href="{{ row.url }}"{% endif %} class="item-card tc-{% if vigil_kind == 'vigil-host' %}sky{% else %}peach{% endif %}" target="_blank" rel="noopener">
+      <span class="item-card-icon">{{ row.label|first|upper }}</span>
+      <span class="item-card-body"><b>{{ row.label }}</b><small>{{ row.sub }}</small></span>
+      <span class="item-card-side"><span class="vigil-dot {% if row.tone == 'ok' %}on{% elif row.tone == 'bad' %}off{% endif %}"></span>{{ row.status }}<br>Vigil</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted-note">{{ vigil_hint }}</p>
+  {% endif %}
+</div>
+{% else %}
 {% if items %}
 <div data-live-results data-count-label="{{ items|length }} item{{ items|length|pluralize }}">
   <div class="item-grid">
@@ -12,15 +29,16 @@
   </div>
 </div>
 {% elif query or kind_slug %}
-<div data-live-results="" data-count-label="{{ items|length }} item{{ items|length|pluralize }}">
+<div data-live-results data-count-label="{{ items|length }} item{{ items|length|pluralize }}">
   {% include "partials/live_empty.html" with title="No items match" clear_url=request.path %}
 </div>
 {% else %}
-<div class="empty-state" data-live-results="" data-count-label="{{ items|length }} item{{ items|length|pluralize }}">
+<div class="empty-state" data-live-results data-count-label="{{ items|length }} item{{ items|length|pluralize }}">
   <div class="empty-state-icon">
     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1.5"/><rect x="2" y="15" width="20" height="6" rx="1.5"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
   </div>
   <h3>No items found</h3>
   <p>Try adjusting your filters, or add the first Dynamic Item.</p>
 </div>
+{% endif %}
 {% endif %}

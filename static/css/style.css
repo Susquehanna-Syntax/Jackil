@@ -2596,3 +2596,8 @@ a { text-decoration: none; }
 .pj-backlog { margin-top: 28px; scroll-margin-top: 20px; }
 .pj-backlog-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
 .pj-backlog-head h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.35rem; }
+
+/* ── M17: hosts and devices live from Vigil ── */
+.vigil-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--text-3); margin-right:5px; }
+.vigil-dot.on { background: var(--mint); }
+.vigil-dot.off { background: var(--rose); }

@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from apps.links.models import DynamicLink
 from apps.tickets.models import Ticket
 from apps.ui.live import render_live
-from apps.vigil.client import VigilUnavailable, get_client
+from apps.vigil.client import VigilUnavailable, get_client, vigil_capabilities
 from apps.vigil.hosts import host_for, suggest_host
 from apps.vigil.links import DOWN_KEY
 
@@ -37,12 +37,68 @@ CHIP_LABELS = [
     ("open_tickets", "Has open tickets"),
 ]
 
+#: The Vigil-backed tabs on the Dynamic Items list, in display order.
+VIGIL_TABS = {
+    "vigil-host": {"label": "Hosts", "type": "host", "hint": "Type to find hosts in Vigil"},
+    "vigil-device": {
+        "label": "Devices",
+        "type": "device",
+        "hint": "Type to find devices in Vigil",
+    },
+}
+
+
 #: Kind colours with no matching ``.t-*`` tab class of their own.
 TAB_COLOURS = {"lavender": "lav", "coral": "rose"}
 
 
 def _tab_colour(icon_color):
     return TAB_COLOURS.get(icon_color, icon_color)
+
+
+def _vigil_tab(slug: str) -> dict | None:
+    """The Hosts/Devices tab definition, or None when this Vigil lacks it."""
+    if get_client() is None:
+        return None
+    if slug == "vigil-device" and "devices" not in vigil_capabilities():
+        return None
+    tab = VIGIL_TABS[slug]
+    return {
+        "label": tab["label"],
+        "note": "from Vigil",
+        "colour": "sky" if slug == "vigil-host" else "peach",
+        "value": slug,
+        "url": f"?kind={slug}",
+    }
+
+
+def _vigil_rows(slug: str, q: str):
+    """Live Vigil rows for a Hosts or Devices tab: ``(rows, hint)``."""
+    if _vigil_tab(slug) is None:
+        return [], ""
+    client = get_client()
+    if client is None:
+        return [], ""
+    tab = VIGIL_TABS[slug]
+    if len(q) < 2:
+        return [], tab["hint"]
+    try:
+        found = client.search(q, type=tab["type"])
+    except VigilUnavailable:
+        return [], "Vigil unavailable"
+    rows = []
+    for item in found:
+        url = str(item.get("url") or "")
+        rows.append(
+            {
+                "label": str(item.get("label") or item.get("id") or ""),
+                "sub": str(item.get("sub") or ""),
+                "status": str(item.get("status") or ""),
+                "tone": str(item.get("tone") or ""),
+                "url": url if url.startswith(("http://", "https://")) else "",
+            }
+        )
+    return rows, ""
 
 
 def _open_ticket_item_ids():
@@ -83,30 +139,37 @@ def item_list(request):
 
     query = request.GET.get("q", "").strip()
     kind_slug = request.GET.get("kind", "").strip()
+    vigil_kind = kind_slug if kind_slug in VIGIL_TABS else ""
     chips = [
         {"name": name, "label": label, "checked": bool(request.GET.get(name))}
         for name, label in CHIP_LABELS
     ]
 
+    vigil_rows, vigil_hint = ([], "")
+    if vigil_kind:
+        vigil_rows, vigil_hint = _vigil_rows(vigil_kind, query)
+
     items = Item.objects.select_related("kind", "owner", "department")
-    if query:
-        items = items.filter(
-            Q(name__icontains=query) | Q(vendor__icontains=query) | Q(notes__icontains=query)
-        )
-    if kind_slug:
-        items = items.filter(kind__slug=kind_slug)
-    checked = {chip["name"] for chip in chips if chip["checked"]}
-    today = date.today()
-    if "warranty" in checked:
-        items = items.filter(
-            warranty_end__gte=today, warranty_end__lte=today + timedelta(days=WARRANTY_WINDOW_DAYS)
-        )
-    if "mine" in checked:
-        items = items.filter(owner=request.user)
-    if "unowned" in checked:
-        items = items.filter(owner__isnull=True)
-    if "open_tickets" in checked:
-        items = items.filter(pk__in=_open_ticket_item_ids())
+    if not vigil_kind:
+        if query:
+            items = items.filter(
+                Q(name__icontains=query) | Q(vendor__icontains=query) | Q(notes__icontains=query)
+            )
+        if kind_slug:
+            items = items.filter(kind__slug=kind_slug)
+        checked = {chip["name"] for chip in chips if chip["checked"]}
+        today = date.today()
+        if "warranty" in checked:
+            items = items.filter(
+                warranty_end__gte=today,
+                warranty_end__lte=today + timedelta(days=WARRANTY_WINDOW_DAYS),
+            )
+        if "mine" in checked:
+            items = items.filter(owner=request.user)
+        if "unowned" in checked:
+            items = items.filter(owner__isnull=True)
+        if "open_tickets" in checked:
+            items = items.filter(pk__in=_open_ticket_item_ids())
 
     kinds = list(ItemKind.objects.all())
     counts = {kind.pk: kind.items.count() for kind in kinds}
@@ -120,6 +183,11 @@ def item_list(request):
             "value": "",
         }
     ]
+    for slug in VIGIL_TABS:
+        tab = _vigil_tab(slug)
+        if tab is not None:
+            tab["active"] = vigil_kind == slug
+            tabs.append(tab)
     tabs += [
         {
             "label": kind.name,
@@ -138,8 +206,11 @@ def item_list(request):
         "query": query,
         "kind_slug": kind_slug,
         "tabs": tabs,
-        "chips": chips,
+        "chips": [] if vigil_kind else chips,
         "can_manage_kinds": can_manage_kinds(request.user),
+        "vigil_rows": vigil_rows,
+        "vigil_hint": vigil_hint,
+        "vigil_kind": vigil_kind,
     }
     return render_live(request, "items/list.html", "items/_results.html", ctx)
 
