@@ -446,22 +446,42 @@ from django.utils import timezone  # noqa: E402  (used by LoadTests)
 
 
 class BacklogPageTests(BacklogTest):
-    def test_backlog_page_renders_for_scrum(self):
+    def test_backlog_lives_under_the_board_for_scrum(self):
         self.login(self.agent)
-        response = self.client.get(reverse("projects:backlog", args=["NET"]))
-        self.assertEqual(response.status_code, 200)
-        page = response.content.decode()
+        old = self.client.get(reverse("projects:backlog", args=["NET"]))
+        self.assertRedirects(
+            old, reverse("projects:board", args=["NET"]) + "#backlog", fetch_redirect_response=False
+        )
+        page = self.client.get(reverse("projects:board", args=["NET"])).content.decode()
         self.assertIn('id="bl-lists"', page)
         self.assertIn(reverse("projects:backlog_data", args=["NET"]), page)
         self.assertIn("jackil-backlog.js", page)
 
-    def test_project_page_links_backlog_only_for_scrum(self):
+    def test_standalone_backlog_still_renders(self):
+        self.login(self.agent)
+        response = self.client.get(reverse("projects:backlog", args=["NET"]), {"standalone": "1"})
+        self.assertContains(response, 'id="bl-lists"')
+
+    def test_kanban_board_has_no_backlog(self):
         boards = service.create_project(self.admin, "BRD", "Board Room", "kanban")
         self.login(self.agent)
-        scrum = self.client.get(reverse("projects:project_detail", args=["NET"]))
-        self.assertContains(scrum, reverse("projects:backlog", args=["NET"]))
-        kanban = self.client.get(reverse("projects:project_detail", args=[boards.key]))
-        self.assertNotIn(reverse("projects:backlog", args=["BRD"]), kanban.content.decode())
+        kanban = self.client.get(reverse("projects:board", args=[boards.key])).content.decode()
+        self.assertNotIn('id="bl-lists"', kanban)
+        self.assertNotIn("jackil-backlog.js", kanban)
+
+    def test_project_screens_share_the_three_tabs(self):
+        self.login(self.admin)
+        for name in ("board", "project_detail", "reports", "project_settings"):
+            page = self.client.get(reverse(f"projects:{name}", args=["NET"])).content.decode()
+            self.assertIn('class="tab t-sky"', page, name)
+            self.assertIn('class="tab t-lav"', page, name)
+            self.assertIn('class="tab t-peach"', page, name)
+
+    def test_agents_do_not_get_the_settings_tab(self):
+        self.login(self.agent)
+        page = self.client.get(reverse("projects:board", args=["NET"])).content.decode()
+        self.assertIn('class="tab t-sky"', page)
+        self.assertNotIn('class="tab t-peach"', page)
 
     def test_customer_cannot_open_the_page(self):
         self.login(self.customer)

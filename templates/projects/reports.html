@@ -4,20 +4,8 @@
 {% block title %}{{ project.key }} Reports — Projects — Jackil{% endblock %}
 
 {% block content %}
-<div class="fade-in d1">
-  <a href="{% url 'projects:project_detail' project.key %}" class="btn btn-ghost" style="margin-bottom: 24px;">
-    &larr; Back to {{ project.key }}
-  </a>
-
-  <div class="page-header">
-    <div>
-      <div class="page-title">{{ project.name }}</div>
-      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
-        <span class="issue-key">{{ project.key }}</span> &middot; Reports
-      </div>
-    </div>
-  </div>
-
+{% include "projects/_shell.html" %}
+<div>
   <div class="rp-grid fade-in d2">
     <div class="form-card">
       <div class="form-card-title">Burndown</div>

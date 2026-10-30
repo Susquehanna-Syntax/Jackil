@@ -16,6 +16,7 @@ from django.urls import reverse
 
 from . import cost, permissions, service
 from .models import Issue, Project, Sprint
+from .shell import project_shell
 from .views import display_name, issue_url
 
 
@@ -27,6 +28,9 @@ def backlog_page(request, key):
     project = get_object_or_404(Project, key=key.upper())
     if project.method != "scrum":
         return redirect("projects:board", key=project.key)
+    if request.GET.get("standalone") != "1":
+        # Planning now sits under the board; old links land on it.
+        return redirect(reverse("projects:board", args=[project.key]) + "#backlog")
     return render(
         request,
         "projects/backlog.html",
@@ -36,6 +40,7 @@ def backlog_page(request, key):
             "data_url": reverse("projects:backlog_data", args=[project.key]),
             "rank_url": reverse("projects:backlog_rank", args=[project.key]),
             "create_url": reverse("projects:sprint_create", args=[project.key]),
+            **project_shell(request, project, "board"),
         },
     )
 

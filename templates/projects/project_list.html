@@ -27,7 +27,7 @@
 {% if cards %}
 <div class="project-grid fade-in d2">
   {% for card in cards %}
-  <a href="{% url 'projects:project_detail' card.project.key %}" class="project-card{% if card.project.is_archived %} archived{% endif %}">
+  <a href="{% url 'projects:board' card.project.key %}" class="project-card{% if card.project.is_archived %} archived{% endif %}">
     <div class="project-card-head">
       <span class="issue-key">{{ card.project.key }}</span>
       <span class="pill tc-lav">{{ card.method }}</span>

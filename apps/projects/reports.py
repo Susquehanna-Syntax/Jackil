@@ -11,6 +11,7 @@ from apps.dashboards.contract import envelope
 
 from . import metrics, permissions
 from .models import CostSettings, Project, Sprint
+from .shell import project_shell
 
 #: The days cumulative-flow accepts; anything else is clamped into this range.
 FLOW_DAYS = (7, 90)
@@ -39,6 +40,7 @@ def reports_page(request, key):
             "can_see_rates": can_see_rates,
             "currency": CostSettings.get_solo().currency,
             "groupings": groupings,
+            **project_shell(request, project, "reports"),
         },
     )
 

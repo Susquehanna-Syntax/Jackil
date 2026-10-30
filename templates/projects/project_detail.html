@@ -3,34 +3,13 @@
 {% block title %}{{ project.key }} — Projects — Jackil{% endblock %}
 
 {% block content %}
-<div class="fade-in d1">
-  <a href="{% url 'projects:project_list' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
-    &larr; Back to Projects
-  </a>
-
-  <div class="page-header">
-    <div>
-      <div class="page-title">{{ project.name }}</div>
-      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
-        <span class="issue-key">{{ project.key }}</span>
-        &middot; <span class="live-count" data-live-count>{{ issue_count }} issue{{ issue_count|pluralize }}</span> matching
-        {% if project.department %}&middot; {{ project.department.name }}{% endif %}
-      </div>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <a href="{% url 'projects:board' project.key %}" class="btn btn-outline">Board</a>
-      <a href="{% url 'projects:reports' project.key %}" class="btn btn-outline">Reports</a>
-      {% if project.method == "scrum" %}<a href="{% url 'projects:backlog' project.key %}" class="btn btn-outline">Backlog</a>{% endif %}
-      {% if can_admin %}
-      <a href="{% url 'projects:project_settings' project.key %}" class="btn btn-outline">Settings</a>
-      {% endif %}
-      <a href="{% url 'projects:issue_create' project.key %}" class="btn btn-lav">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New issue
-      </a>
-    </div>
+{% include "projects/_shell.html" %}
+<div class="fade-in d2">
+  <div class="pj-views" role="group" aria-label="Show the issues as">
+    <a href="{% url 'projects:board' project.key %}" class="pj-view">Board</a>
+    <a href="{% url 'projects:project_detail' project.key %}" class="pj-view" aria-current="page">List</a>
+    <span class="live-count pj-views-count" data-live-count>{{ issue_count }} issue{{ issue_count|pluralize }}</span>
   </div>
-
   <form method="get" class="filter-bar fade-in d2" data-live-filter>
     <input type="text" class="form-input" placeholder="Search titles..." name="q" value="{{ query }}">
     <select class="form-select" name="type">

@@ -11,6 +11,7 @@ from django.urls import reverse
 
 from . import permissions, service, views
 from .models import Column, Issue, Project
+from .shell import project_shell
 
 
 @login_required
@@ -19,18 +20,23 @@ def board_page(request, key):
     if not permissions.can_see_projects(request.user):
         raise PermissionDenied
     project = get_object_or_404(Project, key=key.upper())
-    return render(
-        request,
-        "projects/board.html",
-        {
-            "project": project,
-            "data_url": reverse("projects:board_data", args=[project.key]),
-            "move_url": reverse("projects:board_move", args=[project.key]),
-            "backlog_url": reverse("projects:backlog", args=[project.key])
-            if project.method == "scrum"
-            else "",
-        },
-    )
+    ctx = {
+        "project": project,
+        "data_url": reverse("projects:board_data", args=[project.key]),
+        "move_url": reverse("projects:board_move", args=[project.key]),
+        "board_view": "board",
+        **project_shell(request, project, "board"),
+    }
+    if project.method == "scrum":
+        # The backlog lives under the board (UX pass M15), with its own script.
+        ctx.update(
+            {
+                "backlog_data_url": reverse("projects:backlog_data", args=[project.key]),
+                "backlog_rank_url": reverse("projects:backlog_rank", args=[project.key]),
+                "backlog_create_url": reverse("projects:sprint_create", args=[project.key]),
+            }
+        )
+    return render(request, "projects/board.html", ctx)
 
 
 @login_required

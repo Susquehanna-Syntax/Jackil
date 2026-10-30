@@ -3,13 +3,8 @@
 {% block title %}{{ project.key }} settings — Projects — Jackil{% endblock %}
 
 {% block content %}
-<div class="fade-in d1">
-  <a href="{% url 'projects:project_detail' project.key %}" class="btn btn-ghost" style="margin-bottom: 24px;">
-    &larr; Back to {{ project.key }}
-  </a>
-
-  <div class="page-title">{{ project.key }} settings</div>
-
+{% include "projects/_shell.html" %}
+<div class="fade-in d2">
   <div class="ps-layout">
   <form method="post" class="form-card ps-project">
     {% csrf_token %}

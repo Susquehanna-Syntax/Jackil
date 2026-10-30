@@ -14,6 +14,7 @@ from . import permissions, service
 from .cost import issue_cost
 from .forms import ColumnForm, IssueForm, ProjectForm
 from .models import Column, CostSettings, Issue, IssueComment, Project, Sprint
+from .shell import project_shell
 
 #: Pill tint per issue type, on the design language's colour names.
 TYPE_TONE = {
@@ -131,6 +132,7 @@ def project_settings(request, key):
             "form": form,
             "column_rows": _column_rows(project),
             "new_column_form": new_column_form,
+            **project_shell(request, project, "settings"),
         },
     )
 
@@ -233,7 +235,7 @@ def project_detail(request, key):
         "types": Issue.TYPE_CHOICES,
         "staff": permissions.staff_users(),
         "can_see_cost": permissions.can_see_cost(request.user),
-        "can_admin": permissions.can_admin_projects(request.user),
+        **project_shell(request, project, "board"),
     }
     return render_live(request, "projects/project_detail.html", "projects/_issue_results.html", ctx)
 

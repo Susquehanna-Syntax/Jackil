@@ -1,0 +1,77 @@
+<div class="modal-overlay" id="bl-move-modal" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Move issue</div>
+      <button class="modal-close" type="button" data-modal-close>
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding: 16px 24px;">
+      <div class="form-group">
+        <label class="form-label" for="bl-move-target">Move to</label>
+        <select class="form-select" id="bl-move-target"></select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="bl-move-pos">Position</label>
+        <select class="form-select" id="bl-move-pos">
+          <option value="top">Top</option>
+          <option value="bottom">Bottom</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+      <button type="button" class="btn btn-lav" id="bl-move-ok">Move</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bl-start-modal" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Start sprint</div>
+      <button class="modal-close" type="button" data-modal-close>
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding: 16px 24px;">
+      <div class="form-group">
+        <label class="form-label" for="bl-start-from">Start date</label>
+        <input type="date" class="form-input" id="bl-start-from">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="bl-start-to">End date</label>
+        <input type="date" class="form-input" id="bl-start-to">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+      <button type="button" class="btn btn-mint" id="bl-start-ok">Start sprint</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bl-sprint-modal" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="bl-sprint-title">Create sprint</div>
+      <button class="modal-close" type="button" data-modal-close>
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding: 16px 24px;">
+      <div class="form-group">
+        <label class="form-label" for="bl-sprint-name">Name</label>
+        <input type="text" class="form-input" id="bl-sprint-name" placeholder="Leave empty to name it yourself">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="bl-sprint-goal">Goal</label>
+        <textarea class="form-textarea" id="bl-sprint-goal"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+      <button type="button" class="btn btn-lav" id="bl-sprint-ok">Save</button>
+    </div>
+  </div>
+</div>

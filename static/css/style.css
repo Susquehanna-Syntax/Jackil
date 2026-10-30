@@ -2580,3 +2580,19 @@ a { text-decoration: none; }
   .hc-hero { padding: 40px 16px 32px; }
   .hc-mine { grid-template-columns: 1fr; }
 }
+
+/* ── M15: one project shell with Board, Reports and Settings tabs ── */
+.pj-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 4px 0 16px; }
+.pj-head-main { min-width: 0; }
+.pj-key { font-size: 12px; }
+.pj-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(1.8rem, 3vw, 2.3rem); line-height: 1.1; margin: 2px 0 4px; overflow-wrap: anywhere; }
+.pj-meta { color: var(--text-3); font-size: 13.5px; }
+.pj-head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pj-views { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 999px; background: var(--s1); border: 1px solid var(--border); margin-bottom: 14px; }
+.pj-view { padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--text-2); transition: background 0.25s var(--ease-out-expo), color 0.2s; }
+.pj-view:hover { color: var(--text-1); }
+.pj-view[aria-current="page"] { background: rgba(var(--rgb-sky), var(--tint-a)); color: var(--sky-ink); }
+.pj-views-count { padding: 0 10px 0 6px; }
+.pj-backlog { margin-top: 28px; scroll-margin-top: 20px; }
+.pj-backlog-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.pj-backlog-head h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.35rem; }
