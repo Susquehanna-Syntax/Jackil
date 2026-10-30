@@ -313,6 +313,7 @@ class HelpCenterRedesignTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.agent = User.objects.create_user("aria", password="x", role="agent")
+        cls.admin = User.objects.create_user("boss", password="x", role="admin")
         cls.customer = User.objects.create_user("cust", password="x", role="customer")
         cls.space = Space.objects.create(name="Getting connected")
         cls.other = Space.objects.create(name="Your account")
@@ -338,8 +339,13 @@ class HelpCenterRedesignTests(TestCase):
         self.assertNotContains(page, "data-pin")
         self.assertNotContains(page, "Arrange this page")
 
-    def test_staff_see_the_arrange_bar(self):
+    def test_agents_do_not_get_the_arrange_bar(self):
         self.client.force_login(self.agent)
+        page = self.client.get(reverse("portals:portal", args=["it-help"]))
+        self.assertNotContains(page, "Arrange this page")
+
+    def test_admins_see_the_arrange_bar(self):
+        self.client.force_login(self.admin)
         page = self.client.get(reverse("portals:portal", args=["it-help"]))
         self.assertContains(page, "Arrange this page")
         self.assertContains(page, 'data-pins-url="/portal/it-help/pins/"')
@@ -351,8 +357,8 @@ class HelpCenterRedesignTests(TestCase):
         ).json()
         self.assertEqual([g["title"] for g in body["guides"]], ["Connect to the office Wi-Fi"])
 
-    def test_pins_save_order_and_spaces_for_staff(self):
-        self.client.force_login(self.agent)
+    def test_pins_save_order_and_spaces_for_admins(self):
+        self.client.force_login(self.admin)
         response = self.client.post(
             reverse("portals:portal_pins", args=["it-help"]),
             data=json.dumps({"forms": [], "spaces": [self.other.pk, self.space.pk]}),

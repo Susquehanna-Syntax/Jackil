@@ -151,7 +151,7 @@ def pinned_forms(portal):
 
 
 def _context(request, portal, query=""):
-    staff = _is_staff(request.user)
+    staff = getattr(request.user, "role", None) == "admin"
     pinned_slugs = {slug for slug, _ in pinned_forms(portal)}
     pinned_spaces = {entry["space"].pk for entry in help_sections(portal)}
     return {
@@ -259,9 +259,10 @@ def suggest(request, slug=None):
 @login_required
 @require_POST
 def save_pins(request, slug):
-    """Staff arrange a portal's home: which forms and help sections are pinned,
-    and in what order. Writes the same fields the portal settings page edits."""
-    if not _is_staff(request.user):
+    """Admins arrange a portal's home: which forms and help sections are pinned,
+    and in what order. Writes the same fields the portal settings page edits,
+    so it carries the same rule as that page: admins only."""
+    if getattr(request.user, "role", None) != "admin":
         raise PermissionDenied
     portal = get_object_or_404(Portal, slug=slug)
     try:
