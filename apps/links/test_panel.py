@@ -103,7 +103,7 @@ class LinksScriptTests(SimpleTestCase):
         # rows were once rendered without it, so picking a result did nothing.
         script = read("static", "js", "jackil-links.js")
         self.assertIn("closest('[data-links-result]')", script)
-        self.assertRegex(script, r'class="links-result"[^>]*data-links-result')
+        self.assertRegex(script, r'class="links-result[^"]*[^>]*data-links-result')
 
     def test_base_page_loads_the_script_after_the_modal(self):
         base = read("templates", "base.html")

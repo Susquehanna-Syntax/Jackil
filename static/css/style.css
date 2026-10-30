@@ -2321,3 +2321,50 @@ a { text-decoration: none; }
 .filter-chip:has(input:checked) { background: rgba(var(--rgb-mint), var(--tint-a)); border-color: rgba(var(--rgb-mint), var(--tint-a-line)); color: var(--mint-ink); }
 .filter-chip:has(input:focus-visible) { outline: 2px solid var(--sky-ink); outline-offset: 2px; }
 .live-count { font-size: 13px; color: var(--text-3); }
+/* ── M11: link picker ── */
+.modal.link-picker { width: min(1120px, 94vw); max-width: 94vw; max-height: 88vh; overflow: hidden; }
+.lp-step { padding: 4px 24px 12px; }
+.lp-step-tight { padding-bottom: 0; }
+.lp-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+.lp-relation { width: auto; min-width: 240px; max-width: 100%; }
+.link-picker .lp-tabs { padding: 0 24px; margin-bottom: 0; }
+.lp-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); min-height: 380px; flex: 1; overflow: hidden; }
+.lp-left { padding: 16px 24px; display: flex; flex-direction: column; min-height: 0; }
+.lp-left .links-results { flex: 1; max-height: none; overflow-y: auto; }
+.lp-right { padding: 20px 24px; overflow-y: auto; background: rgba(var(--rgb, var(--rgb-grey)), 0.06); transition: background 0.4s var(--ease-out-expo); }
+.lp-result { display: flex; gap: 12px; align-items: center; justify-content: flex-start; border: 1px solid transparent; background: none; color: var(--text-1); width: 100%; }
+.lp-result:hover { background: var(--wash); }
+.lp-result.active { background: rgba(var(--rgb, var(--rgb-grey)), var(--tint-a)); border-color: transparent; }
+.lp-icon { width: 32px; height: 32px; border-radius: 9px; flex: none; display: grid; place-items: center; font-weight: 700; font-size: 12px;
+  background: rgba(var(--rgb, var(--rgb-grey)), 0.24); color: var(--ink, var(--text-1)); }
+.lp-text { min-width: 0; display: flex; flex-direction: column; text-align: left; }
+.lp-text small { color: var(--text-3); }
+.lp-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; flex: none; background: var(--rose); }
+.lp-dot.on { background: var(--mint); }
+.lp-preview { animation: fadeUp 0.35s var(--ease-out-expo) both; }
+.lp-kind { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink, var(--text-2)); }
+.lp-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.45rem; margin: 6px 0 2px; overflow-wrap: anywhere; }
+.lp-status { color: var(--text-3); font-size: 13px; }
+.lp-excerpt { color: var(--text-2); margin: 12px 0 0; line-height: 1.6; }
+.lp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
+.lp-fact { background: var(--s1); border-radius: var(--r-sm); padding: 10px 12px; min-width: 0; }
+.lp-fact span { display: block; font-size: 12px; color: var(--text-3); }
+.lp-fact b { font-weight: 600; overflow-wrap: anywhere; }
+.lp-also { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.lp-also-label { color: var(--text-3); margin-right: 4px; }
+.lp-linked { background: var(--s2); color: var(--text-2); padding: 3px 10px; border-radius: 999px; }
+.lp-open { display: inline-block; margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--ink, var(--text-1)); }
+.lp-foot { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lp-sum { color: var(--text-2); font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+.lp-sum b { color: var(--text-1); }
+.lp-actions { display: flex; gap: 8px; margin-left: auto; }
+@media (max-width: 760px) {
+  .modal.link-picker { max-height: 92vh; overflow-y: auto; }
+  .lp-body { grid-template-columns: 1fr; overflow: visible; }
+  .lp-left { padding: 14px 16px; }
+  .lp-left .links-results { max-height: 40vh; }
+  .lp-right { padding: 16px; }
+  .lp-step, .link-picker .lp-tabs { padding-left: 16px; padding-right: 16px; }
+}
+.link-picker .modal-header, .link-picker .lp-step, .link-picker .lp-tabs, .link-picker .lp-foot { flex: none; }
+.link-picker .lp-tabs { overflow-y: hidden; scrollbar-width: thin; }

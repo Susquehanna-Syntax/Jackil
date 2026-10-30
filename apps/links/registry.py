@@ -36,6 +36,10 @@ class Resolver:
         """False while this type's source cannot answer (Vigil down or not connected)."""
         return True
 
+    def listed(self, user) -> bool:
+        """Whether the picker shows this type at all (Vigil's only once connected)."""
+        return True
+
     def recent(self, user, limit: int) -> list[LinkTarget]:
         """What the picker lists before anything is typed. Default: nothing."""
         return []

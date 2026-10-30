@@ -144,6 +144,13 @@ class PickerApiTests(TestCase):
         self.assertEqual(body["target"]["excerpt"], "Title Restart the spooler now.")
         self.assertIn(["Space", "Support"], body["target"]["facts"])
 
+    def test_preview_excerpt_skips_a_leading_title(self):
+        self.page.body = "# Printer care\n\nRestart the spooler."
+        self.page.save()
+        body = self._get(self.agent, "links:links-preview", "page", str(self.page.pk)).json()
+
+        self.assertEqual(body["target"]["excerpt"], "Restart the spooler.")
+
     def test_preview_hidden_ticket_is_404(self):
         # Every agent may see every ticket, so the one an agent cannot resolve
         # is a ticket that isn't there: an id whose object was deleted.
@@ -236,6 +243,14 @@ class VigilDownTests(TestCase):
         self.printer_ticket = Ticket.objects.create(
             title=PRINTER, description="body", created_by=self.agent
         )
+
+    def test_vigil_tabs_hidden_when_vigil_is_not_connected(self):
+        with patch.object(vigil_links, "get_client", return_value=None):
+            body = self._get(self.agent, "links:links-types").json()
+
+        names = [row["name"] for row in body["types"]]
+        self.assertNotIn("vigil:host", names)
+        self.assertIn("ticket", names)
 
     def test_vigil_down_marks_vigil_tabs_unavailable_others_work(self):
         fake = FakeVigilClient()

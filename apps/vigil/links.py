@@ -80,6 +80,9 @@ class VigilResolver(Resolver):
             i: _target(self.link_type, i, items[i]) for i in ids if isinstance(items.get(i), dict)
         }
 
+    def listed(self, user) -> bool:
+        return get_client() is not None
+
     def search(self, q: str, user, limit: int) -> list[LinkTarget]:
         if not can_see_links(user):
             return []

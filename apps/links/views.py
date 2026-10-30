@@ -79,6 +79,8 @@ def links_types(request):
     result = []
     for name in picker_types():
         resolver = get_resolver(name)
+        if not resolver.listed(request.user):
+            continue
         result.append(
             {
                 "name": name,
