@@ -53,6 +53,17 @@
         {% if errors.parent %}<div class="message message-error">{{ errors.parent }}</div>{% endif %}
       </div>
 
+      <div class="form-group">
+        <label class="form-label" for="id_owner">Owner</label>
+        <select name="owner" id="id_owner" class="form-select">
+          <option value="">Nobody yet</option>
+          {% for person in people %}
+          <option value="{{ person.pk }}" {% if page.owner_id == person.pk %}selected{% endif %}>{{ person.get_full_name|default:person.username }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.owner %}<div class="message message-error">{{ errors.owner }}</div>{% endif %}
+      </div>
+
       {% if is_new %}
       <div class="form-group">
         <label class="form-label" for="id_template">Start from</label>

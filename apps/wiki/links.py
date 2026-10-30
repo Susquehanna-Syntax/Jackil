@@ -49,7 +49,7 @@ class PageResolver(Resolver):
         return replace(
             _target(page),
             facts=(("Space", page.space.name), ("Last edit", last_edit)),
-            excerpt=_without_title(plain_excerpt(page.body), page.title),
+            excerpt=without_title(plain_excerpt(page.body), page.title),
         )
 
     def from_url(self, url: str) -> str | None:
@@ -75,7 +75,7 @@ class PageResolver(Resolver):
         return pages.filter(is_published_to_help_center=True)
 
 
-def _without_title(excerpt: str, title: str) -> str:
+def without_title(excerpt: str, title: str) -> str:
     """Pages usually open with their own title as a heading; the preview
     already shows the title, so the excerpt starts after it."""
     if title and excerpt.lower().startswith(title.lower()):

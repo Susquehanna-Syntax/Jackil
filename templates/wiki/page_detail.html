@@ -9,94 +9,81 @@
 {% endblock %}
 
 {% block content %}
-<div class="fade-in d1">
-  <div class="wiki-breadcrumbs">
-    <a href="{% url 'wiki:home' %}">Wiki</a> &rsaquo;
+<div class="wk-top fade-in d1">
+  <nav class="wk-crumb" aria-label="Breadcrumbs">
+    <a href="{% url 'wiki:home' %}">Wiki</a> /
     <a href="{% url 'wiki:space_detail' space.slug %}">{{ space.name }}</a>
-    {% for ancestor in ancestors %}
-    &rsaquo; <a href="{{ ancestor.get_absolute_url }}">{{ ancestor.title }}</a>
-    {% endfor %}
-    &rsaquo; {{ page.title }}
+    {% for ancestor in ancestors %} / <a href="{{ ancestor.get_absolute_url }}">{{ ancestor.title }}</a>{% endfor %}
+  </nav>
+  <div class="wk-top-actions">
+    <a href="{% url 'wiki:home' %}" class="btn btn-outline">Wiki home</a>
+    <a href="{% url 'wiki:tree' %}" class="btn btn-outline">All pages</a>
+    <a href="{% url 'wiki:page_history' page.slug %}" class="btn btn-outline">History</a>
+    <a href="{% url 'wiki:page_edit' page.slug %}" class="btn btn-lav">Edit</a>
   </div>
+</div>
 
-  <div class="page-header">
-    <div style="min-width:0;">
-      <div class="page-title">{{ page.title }}</div>
-      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
-        {% if page.updated_by %}Edited by {{ page.updated_by.get_full_name|default:page.updated_by.username }}{% else %}Last changed{% endif %}
-        {{ page.updated_at|timesince }} ago &middot; {{ page.views }} view{{ page.views|pluralize }}
-      </div>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <a href="{% url 'wiki:page_edit' page.slug %}" class="btn btn-outline">Edit</a>
-      <a href="{% url 'wiki:page_history' page.slug %}" class="btn btn-outline">History</a>
-      <a href="{% url 'wiki:page_new' %}?space={{ space.slug }}&amp;parent={{ page.slug }}" class="btn btn-outline">New child page</a>
-      {% if can_delete %}
-      <a href="{% url 'wiki:page_delete' page.slug %}" class="btn btn-outline">Delete</a>
-      {% endif %}
-    </div>
-  </div>
-
-  <div class="wiki-layout fade-in d2">
-    <nav class="wiki-tree" aria-label="Pages in {{ space.name }}">
-      {% if tree %}
-      <ul>{{ tree }}</ul>
-      {% else %}
-      <div class="form-card-hint">No pages yet.</div>
-      {% endif %}
+<div class="wk-doc">
+  <aside class="wk-side fade-in d2" aria-label="Pages in {{ space.name }}">
+    <a class="wk-side-space tc-{{ space.icon_color|default:'lavender' }}" href="{% url 'wiki:space_detail' space.slug %}"><i></i><b>{{ space.name }}</b></a>
+    <input type="search" class="form-input wk-tree-find" placeholder="Filter pages as you type" aria-label="Filter the pages in {{ space.name }}" data-wt-filter>
+    <nav class="wk-tree" data-wt-root>
+      {% if nodes %}{% include "wiki/_tree.html" with nodes=nodes current=page %}{% else %}<p class="muted-note">No pages yet.</p>{% endif %}
     </nav>
+    {% if other_spaces %}
+    <div class="wk-side-label">Other spaces</div>
+    {% for other in other_spaces %}<a class="wt-link" href="{% url 'wiki:space_detail' other.slug %}">{{ other.name }}</a>{% endfor %}
+    {% endif %}
+  </aside>
 
-    <div style="min-width:0;">
-      <article class="markdown-body" data-markdown>{{ html }}</article>
+  <div class="wk-article" data-wk-article>
+    <div class="wk-kicker">{{ space.name }}{% if section and section.pk != page.pk %} &middot; {{ section.title }}{% endif %}</div>
+    <h1 class="wk-title">{{ page.title }}</h1>
+    {% if page.summary %}<p class="wk-lead">{{ page.summary }}</p>{% endif %}
+    <div class="wk-meta">
+      <span>{% if page.updated_by %}{{ page.updated_by.get_full_name|default:page.updated_by.username }} edited{% else %}Last changed{% endif %} {{ page.updated_at|timesince }} ago</span>
+      <span>{{ read_minutes }} min read</span>
+      <span>Owner: {% if page.owner %}{{ page.owner.get_full_name|default:page.owner.username }}{% else %}nobody yet{% endif %}</span>
+      {% if page.is_published_to_help_center %}<span class="pill tc-lav">In the Help center</span>{% endif %}
+      <span class="wk-meta-acts">
+        <button type="button" class="btn btn-outline btn-sm" data-wk-copy="{{ request.build_absolute_uri }}">Copy link</button>
+        <a href="{% url 'wiki:page_new' %}?space={{ space.slug }}&amp;parent={{ page.slug }}" class="btn btn-outline btn-sm">New child page</a>
+        {% if can_delete %}<a href="{% url 'wiki:page_delete' page.slug %}" class="btn btn-outline btn-sm">Delete</a>{% endif %}
+      </span>
     </div>
+    <article class="markdown-body" data-markdown>{{ html }}</article>
 
-    <aside class="wiki-rail">
-      <section class="form-card">
-        <div class="form-card-title">Linked from</div>
-        {% if backlinks %}
-        <ul class="wiki-backlinks">
-          {% for backlink in backlinks %}
-          <li><a href="{{ backlink.get_absolute_url }}">{{ backlink.title }}</a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="form-card-hint">No pages link here yet.</div>
-        {% endif %}
-      </section>
+    {% if attachments %}
+    <section class="wk-attachments">
+      <h2>Attachments</h2>
+      {% for attachment in attachments %}<a href="{{ attachment.file.url }}">{{ attachment.original_name }}</a>{% endfor %}
+    </section>
+    {% endif %}
 
-      {% links_panel "page" page.pk %}
-
-      <div class="form-card">
-        <div class="form-card-title">Children</div>
-        {% if children %}
-        <ul style="list-style:none; margin-top:10px;">
-          {% for child in children %}
-          <li style="padding: 4px 0;"><a href="{{ child.get_absolute_url }}">{{ child.title }}</a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="form-card-hint">No pages underneath this one.</div>
-        {% endif %}
-      </div>
-
-      <div class="form-card">
-        <div class="form-card-title">Attachments</div>
-        {% if attachments %}
-        <ul style="list-style:none; margin-top:10px;">
-          {% for attachment in attachments %}
-          <li style="padding: 4px 0;"><a href="{{ attachment.file.url }}">{{ attachment.original_name }}</a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="form-card-hint">Nothing attached yet.</div>
-        {% endif %}
-      </div>
-    </aside>
+    {% if previous or next %}
+    <nav class="wk-pn" aria-label="Previous and next page">
+      {% if previous %}<a href="{{ previous.get_absolute_url }}"><small>Previous</small>{{ previous.title }}</a>{% else %}<span></span>{% endif %}
+      {% if next %}<a href="{{ next.get_absolute_url }}" class="wk-pn-next"><small>Next</small>{{ next.title }}</a>{% endif %}
+    </nav>
+    {% endif %}
   </div>
+
+  <aside class="wk-rail fade-in d3">
+    <nav class="wk-toc" aria-label="On this page" data-wk-toc hidden>
+      <div class="wk-side-label">On this page</div>
+    </nav>
+    <div class="wk-rail-links">{% links_panel "page" page.pk %}</div>
+    <section class="wk-backlinks">
+      <div class="wk-side-label">Linked from</div>
+      {% for backlink in backlinks %}<a class="wt-link" href="{{ backlink.get_absolute_url }}">{{ backlink.title }}</a>
+      {% empty %}<p class="muted-note">No pages link here yet.</p>{% endfor %}
+    </section>
+  </aside>
 </div>
 {% endblock %}
 
 {% block extra_body %}
 <script src="{% static 'js/vendor/katex/katex.min.js' %}"></script>
 <script src="{% static 'js/jackil-math.js' %}"></script>
+<script src="{% static 'js/jackil-wiki.js' %}" defer></script>
 {% endblock %}

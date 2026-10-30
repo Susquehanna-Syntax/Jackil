@@ -11,17 +11,38 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import FileResponse, Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
 
+from apps.accounts.models import User
+from apps.ui.live import render_live
 from apps.wiki.files import INLINE_IMAGE_TYPES, SAFE_HEADERS, sniff_image
 
+from .links import plain_excerpt, without_title
 from .markdown import render as render_markdown
 from .models import Page, PageAttachment, PageTemplate, Space
-from .service import backlinks_for, save_page_links, save_version
+from .service import (
+    backlinks_for,
+    needs_attention,
+    neighbours,
+    page_tree,
+    save_page_links,
+    save_version,
+)
+
+#: Pages a space card lists on the wiki home before "All N pages".
+CARD_PAGES = 3
+#: Search hits the wiki home shows.
+SEARCH_LIMIT = 30
+
+
+def _card_line(page) -> str:
+    """One line under a page's title: its summary, else the start of its body."""
+    return page.summary or without_title(plain_excerpt(page.body, 110), page.title)
+
 
 #: The colours a space icon may take — the same set Items offers.
 SPACE_COLOURS = ["lavender", "sky", "mint", "peach", "lemon", "rose", "coral"]
@@ -69,6 +90,11 @@ def _tree(space, current=None):
     return mark_safe(html)
 
 
+def _people():
+    """Who can own a page: the agents and admins."""
+    return User.objects.filter(role__in=("agent", "admin"), is_active=True).order_by("username")
+
+
 def _parents_of(space, page):
     if space is None:
         return []
@@ -78,12 +104,48 @@ def _parents_of(space, page):
 @login_required
 def home(request):
     _staff_or_403(request)
+    q = request.GET.get("q", "").strip()[:100]
+    cards = []
+    for space in Space.objects.all():
+        pages = list(space.pages.order_by("-updated_at")[:CARD_PAGES])
+        cards.append(
+            {
+                "space": space,
+                "pages": [(page, _card_line(page)) for page in pages],
+                "count": space.pages.count(),
+                "public": space.pages.filter(is_published_to_help_center=True).count(),
+            }
+        )
+    results = []
+    if q:
+        hits = (
+            Page.objects.filter(
+                Q(title__icontains=q) | Q(summary__icontains=q) | Q(body__icontains=q)
+            )
+            .select_related("space")
+            .order_by("-updated_at")[:SEARCH_LIMIT]
+        )
+        results = [(page, _card_line(page)) for page in hits]
     ctx = {
-        "spaces": Space.objects.all(),
-        "recent": Page.objects.select_related("space", "updated_by").order_by("-updated_at")[:10],
+        "cards": cards,
+        "space_count": len(cards),
+        "page_count": Page.objects.count(),
+        "public_count": Page.objects.filter(is_published_to_help_center=True).count(),
+        "recent": Page.objects.select_related("space", "updated_by").order_by("-updated_at")[:6],
+        "attention": needs_attention(),
         "can_manage_spaces": _is_admin(request),
+        "q": q,
+        "results": results,
     }
-    return render(request, "wiki/home.html", ctx)
+    return render_live(request, "wiki/home.html", "wiki/_home_results.html", ctx)
+
+
+@login_required
+def all_pages(request):
+    """Every space's page tree on one page: the wiki's table of contents."""
+    _staff_or_403(request)
+    spaces = [{"space": space, "nodes": page_tree(space)} for space in Space.objects.all()]
+    return render(request, "wiki/all_pages.html", {"spaces": spaces})
 
 
 @login_required
@@ -151,10 +213,20 @@ def page_detail(request, slug):
     page = get_object_or_404(Page.objects.select_related("space", "updated_by"), slug=slug)
     Page.objects.filter(pk=page.pk).update(views=F("views") + 1)
 
+    nodes = page_tree(page.space)
+    previous, following = neighbours(page, nodes)
+    ancestors = page.ancestors()
+    words = len(page.body.split())
     ctx = {
         "page": page,
         "space": page.space,
-        "ancestors": page.ancestors(),
+        "ancestors": ancestors,
+        "section": ancestors[0] if ancestors else None,
+        "nodes": nodes,
+        "previous": previous,
+        "next": following,
+        "read_minutes": max(1, round(words / 200)),
+        "other_spaces": Space.objects.exclude(pk=page.space_id),
         "html": render_markdown(page.body, user=request.user),
         "children": page.children.all().order_by("order", "title", "pk"),
         "attachments": page.attachments.all(),
@@ -199,8 +271,16 @@ def _read_post(request, page):
         if parent is None:
             errors["parent"] = "That parent page does not exist."
 
+    owner_id = (request.POST.get("owner") or "").strip()
+    owner = None
+    if owner_id:
+        owner = _people().filter(pk=owner_id).first() if owner_id.isdigit() else None
+        if owner is None:
+            errors["owner"] = "Pick someone on the team, or nobody."
+
     page.title = title[:200]
     page.body = body
+    page.owner = owner
     if space is not None:
         page.space = space
     page.parent = parent
@@ -219,6 +299,7 @@ def _editor_context(request, page, *, errors, submit_label, is_new):
         "space": page.space,
         "spaces": Space.objects.all(),
         "parents": _parents_of(page.space, page),
+        "people": _people(),
         "templates": PageTemplate.objects.all(),
         "errors": errors,
         "submit_label": submit_label,
@@ -270,6 +351,7 @@ def page_new(request):
         body=body,
         space=space,
         parent=parent,
+        owner=request.user,
     )
     ctx = _editor_context(request, page, errors={}, submit_label="Create Page", is_new=True)
     ctx["selected_template"] = template_pk

@@ -54,6 +54,14 @@ class Page(models.Model):
         on_delete=models.SET_NULL,
         related_name="+",
     )
+    #: Who keeps this page true. "Needs attention" lists pages without one.
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="owned_pages",
+    )
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 

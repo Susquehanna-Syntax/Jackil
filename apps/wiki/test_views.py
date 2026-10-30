@@ -357,7 +357,7 @@ class PageViewTest(TestCase):
         self.client.force_login(self.agent)
         response = self.client.get(self.page.get_absolute_url())
 
-        self.assertContains(response, 'class="current"')
+        self.assertContains(response, 'class="wt-link current" aria-current="page"')
 
 
 class EditorPreviewTest(TestCase):

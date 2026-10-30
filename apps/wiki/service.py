@@ -1,8 +1,11 @@
 """The wiki service: versioning a page, what points at it, and what to suggest."""
 
 import re
+from dataclasses import dataclass, field
+from datetime import timedelta
 
 from django.db.models import Q
+from django.utils import timezone
 
 from apps.links.service import LinkError, add_link, links_for
 
@@ -249,3 +252,91 @@ def _title_words(title: str) -> list[str]:
         for word in _WORDS.findall((title or "").lower())
         if len(word) >= MIN_WORD and word not in STOP_WORDS
     ]
+
+
+# ── The wiki's shape: trees, reading order, what needs a look ────────────────
+
+#: A page untouched this long is listed under "Needs attention".
+STALE_DAYS = 180
+
+
+@dataclass
+class TreeNode:
+    page: Page
+    children: list["TreeNode"] = field(default_factory=list)
+    depth: int = 0
+
+
+def page_tree(space) -> list[TreeNode]:
+    """The space's pages as nested nodes, each level in the editor's order."""
+    by_parent: dict[int | None, list[Page]] = {}
+    for page in space.pages.all().order_by("order", "title", "pk"):
+        by_parent.setdefault(page.parent_id, []).append(page)
+
+    def build(parent_id, depth, seen):
+        nodes = []
+        for page in by_parent.get(parent_id, []):
+            if page.pk in seen:  # a cycle the model forbids; never loop on one
+                continue
+            node = TreeNode(page=page, depth=depth)
+            node.children = build(page.pk, depth + 1, seen | {page.pk})
+            nodes.append(node)
+        return nodes
+
+    return build(None, 0, frozenset())
+
+
+def reading_order(nodes: list[TreeNode]) -> list[Page]:
+    """The tree read top to bottom: a page, then everything under it."""
+    pages = []
+    for node in nodes:
+        pages.append(node.page)
+        pages.extend(reading_order(node.children))
+    return pages
+
+
+def neighbours(page: Page, nodes: list[TreeNode] | None = None) -> tuple[Page | None, Page | None]:
+    """The pages before and after ``page`` in its space's reading order."""
+    order = reading_order(nodes if nodes is not None else page_tree(page.space))
+    ids = [p.pk for p in order]
+    if page.pk not in ids:
+        return None, None
+    at = ids.index(page.pk)
+    return (order[at - 1] if at > 0 else None, order[at + 1] if at + 1 < len(order) else None)
+
+
+def needs_attention(limit: int = 6) -> list[tuple[Page, str]]:
+    """Pages worth a look, each with the reason in plain words: linked to an
+    open ticket first, then the stalest, then those nobody owns."""
+    from apps.links.models import DynamicLink
+    from apps.tickets.models import Ticket
+
+    open_ids = {
+        str(pk)
+        for pk in Ticket.objects.exclude(status__in=("resolved", "closed")).values_list(
+            "pk", flat=True
+        )
+    }
+    counts: dict[int, int] = {}
+    for src_type, src_id, _dst_type, dst_id in DynamicLink.objects.filter(
+        Q(source_type="page", target_type="ticket") | Q(source_type="ticket", target_type="page")
+    ).values_list("source_type", "source_id", "target_type", "target_id"):
+        page_id, ticket_id = (src_id, dst_id) if src_type == "page" else (dst_id, src_id)
+        if ticket_id in open_ids and page_id.isdigit():
+            counts[int(page_id)] = counts.get(int(page_id), 0) + 1
+
+    found: list[tuple[Page, str]] = []
+    seen: set[int] = set()
+    pages = Page.objects.select_related("space")
+    for page in pages.filter(pk__in=counts).order_by("-updated_at"):
+        n = counts[page.pk]
+        found.append((page, f"linked to {n} open ticket{'s' if n != 1 else ''}"))
+        seen.add(page.pk)
+    cutoff = timezone.now() - timedelta(days=STALE_DAYS)
+    for page in pages.filter(updated_at__lt=cutoff).exclude(pk__in=seen).order_by("updated_at"):
+        months = max(1, (timezone.now() - page.updated_at).days // 30)
+        found.append((page, f"not edited in {months} month{'s' if months != 1 else ''}"))
+        seen.add(page.pk)
+    for page in pages.filter(owner__isnull=True).exclude(pk__in=seen).order_by("title"):
+        found.append((page, "no owner"))
+    return found[:limit]
