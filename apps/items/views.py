@@ -6,11 +6,15 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from apps.links.models import DynamicLink
 from apps.tickets.models import Ticket
 from apps.ui.live import render_live
-from apps.vigil.client import VigilUnavailable, get_client, vigil_capabilities
+from apps.vigil import client as vigil_client
+from apps.vigil.client import VigilRejected, VigilUnavailable, get_client, vigil_capabilities
+from apps.vigil.devices import can_write_devices, device_payload
+from apps.vigil.errors import error_lines
 from apps.vigil.hosts import host_for, suggest_host
 from apps.vigil.links import DOWN_KEY
 
@@ -264,10 +268,37 @@ def item_create(request):
         raise PermissionDenied
     form = ItemForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
+        kind = form.cleaned_data["kind"]
+        # The connection is looked up once, so the answer cannot change
+        # between the question and the write it authorises.
+        client = vigil_client.get_client() if can_write_devices() else None
+        if kind.is_device_like and client is not None:
+            return _create_in_vigil(request, form, client)
+
         item = form.save()
         messages.success(request, f"Dynamic Item “{item.name}” created.")
         return redirect(item.get_absolute_url())
     return render_form(request, "New Dynamic Item", form, "Create Dynamic Item")
+
+
+def _create_in_vigil(request, form, client):
+    """A device-like item is created in Vigil; Jackil keeps no row for it.
+
+    A refusal leaves the same form on screen with Vigil's own reasons and the
+    answers still in it — nothing was saved either way, so what Vigil objected
+    to can be fixed and sent again.
+    """
+    try:
+        client.create_device(device_payload(form.save(commit=False)))
+    except (VigilRejected, VigilUnavailable) as failure:
+        for line in error_lines(failure.errors) if isinstance(failure, VigilRejected) else []:
+            form.add_error(None, line)
+        messages.error(request, f"Vigil could not take it right now: {failure}. Nothing was saved.")
+        return render_form(request, "New Dynamic Item", form, "Create Dynamic Item")
+
+    name = form.cleaned_data["name"]
+    messages.success(request, f"Created “{name}” in Vigil.")
+    return redirect(f"{reverse('items:item_list')}?kind=vigil-device")
 
 
 @login_required

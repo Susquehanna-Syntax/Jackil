@@ -26,6 +26,9 @@
         {% if field.help_text %}
         <div class="form-card-hint" style="margin-top:6px; margin-bottom:0;">{{ field.help_text }}</div>
         {% endif %}
+        {% if field.name == "kind" and form.kind_note %}
+        <div class="form-card-hint" style="margin-top:6px; margin-bottom:0;">{{ form.kind_note }}</div>
+        {% endif %}
         {% for error in field.errors %}
         <div class="message message-error">{{ error }}</div>
         {% endfor %}

@@ -76,4 +76,43 @@
     </form>
   </div>
 </div>
+
+{% if movable.items %}
+<div class="form-card" style="margin-top:18px;">
+  <div class="form-card-title">Move devices into Vigil</div>
+  {% if movable.can_write %}
+  <p class="form-card-hint">
+    Vigil holds devices from now on. These {{ movable.items|length }} Dynamic
+    Item{{ movable.items|length|pluralize }} still live in Jackil. Each one is
+    matched to a Vigil host or device that already exists, or created there,
+    and its links follow it. Jackil keeps no copy.
+  </p>
+  <ul class="mv-list">
+    {% for row in movable.items %}
+    <li class="mv-row">
+      <b>{{ row.name }}</b>
+      {% if row.error %}
+      <span class="mv-note">{{ row.error }}</span>
+      {% elif row.match.id %}
+      <span class="mv-note">matches the Vigil {{ row.match.type }} {{ row.match.label }}</span>
+      {% else %}
+      <span class="mv-note">will be created</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="{% url 'console:vigil_move_devices' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-lav">Move {{ movable.items|length }} device{{ movable.items|length|pluralize }} into Vigil</button>
+  </form>
+  {% else %}
+  <p class="muted-note" style="margin:0;">{{ movable.reason }}</p>
+  <ul class="mv-list">
+    {% for row in movable.items %}
+    <li class="mv-row"><b>{{ row.name }}</b></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
 {% endblock %}

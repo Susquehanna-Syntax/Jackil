@@ -52,6 +52,9 @@ class Item(models.Model):
     #: Optional: the Vigil host this Item is. Filled by hand in M3; M6 adds
     #: the picker and live data.
     vigil_host_id = models.CharField(max_length=64, blank=True, default="")
+    #: The Vigil device this Item became. Set once Vigil has the device, so a
+    #: move interrupted before the delete never creates a second one.
+    vigil_device_id = models.CharField(max_length=64, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

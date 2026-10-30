@@ -1,4 +1,4 @@
-"""Read-only client for Vigil's Jackil integration endpoints."""
+"""Client for Vigil's Jackil integration endpoints: reads, and device writes."""
 
 import json
 import ssl
@@ -7,6 +7,8 @@ import urllib.parse
 from urllib.request import Request, urlopen
 
 from django.core.cache import cache
+
+from .errors import error_message
 
 TIMEOUT = 3  # seconds
 TYPES = ("host", "device", "task", "playbook", "automation", "run")
@@ -19,6 +21,18 @@ BASE_PATH = "api/v1/jackil/integration"
 
 class VigilUnavailable(Exception):
     """Vigil could not be read; str(exc) is a sentence for the page."""
+
+
+class VigilRefused(VigilUnavailable):
+    """Vigil will not let this key change devices (403 on a write)."""
+
+
+class VigilRejected(VigilUnavailable):
+    """Vigil did not accept the device (400); ``errors`` holds its field errors."""
+
+    def __init__(self, message: str, errors: dict | None = None):
+        super().__init__(message)
+        self.errors = errors or {}
 
 
 class _NotFound(Exception):
@@ -187,6 +201,98 @@ class VigilClient:
             return self._fetch(url)
         except _NotFound:
             return None
+
+    # -- writes ---------------------------------------------------------
+
+    def _send(self, method: str, path: str, payload: dict | None) -> dict | None:
+        """A JSON write to the integration API.
+
+        Same timeout, size cap and address as ``_fetch``, except a 403 is this
+        key not being allowed to change devices and a 400 carries Vigil's own
+        field errors — both ordinary answers the screens show, in ``VigilRefused``
+        and ``VigilRejected``. A 204 (and any empty body) is ``None``.
+        """
+        url = f"{self.base_url}/{BASE_PATH}/{path}"
+        # Only a create or a change has a body; a delete sends nothing at all.
+        body = None if payload is None else json.dumps(payload).encode("utf-8")
+        headers = {
+            "Authorization": f"Bearer {self.key}",
+            "Accept": "application/json",
+        }
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+        request = Request(url, data=body, method=method, headers=headers)  # noqa: S310
+        try:
+            with urlopen(request, timeout=self.timeout) as response:
+                answer_body = response.read(MAX_BYTES)
+        except TimeoutError:
+            raise VigilUnavailable("Vigil did not answer in time.") from None
+        except ssl.SSLError:
+            raise VigilUnavailable("Vigil's certificate was not accepted.") from None
+        except urllib.error.HTTPError as exc:
+            if exc.code == 403:
+                raise VigilRefused("Vigil does not let this key change devices.") from None
+            if exc.code == 400:
+                raise self._rejected(exc) from None
+            if exc.code == 404:
+                raise _NotFound() from None
+            raise self._http_failure(exc) from None
+        except urllib.error.URLError as exc:
+            reason = exc.reason
+            if isinstance(reason, TimeoutError):
+                raise VigilUnavailable("Vigil did not answer in time.") from None
+            if isinstance(reason, ssl.SSLError):
+                raise VigilUnavailable("Vigil's certificate was not accepted.") from None
+            raise VigilUnavailable(f"Can't reach Vigil at {self.host}.") from None
+        except OSError:
+            raise VigilUnavailable(f"Can't reach Vigil at {self.host}.") from None
+
+        if not answer_body.strip():
+            return None
+        try:
+            answer = json.loads(answer_body.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            raise VigilUnavailable("Vigil sent an answer Jackil could not read.") from None
+        if not isinstance(answer, dict):
+            raise VigilUnavailable("Vigil sent an answer Jackil could not read.")
+        return answer
+
+    @staticmethod
+    def _rejected(exc) -> VigilRejected:
+        """Vigil's 400 body as field errors, with a sentence naming the first."""
+        try:
+            payload = json.loads(exc.read().decode("utf-8"))
+        except (ValueError, UnicodeDecodeError, OSError):
+            payload = None
+        errors: dict = {}
+        detail = ""
+        if isinstance(payload, dict):
+            detail = str(payload.get("error") or "")
+            errors = {key: value for key, value in payload.items() if key != "error"}
+        return VigilRejected(
+            f"Vigil did not accept the device: {error_message(detail, errors)}.",
+            errors if isinstance(errors, dict) else {},
+        )
+
+    def create_device(self, payload: dict) -> dict:
+        """A new device in Vigil; Vigil's answer names the one it made."""
+        created = self._send("POST", "devices/", payload)
+        if created is None or not str(created.get("id") or ""):
+            raise VigilUnavailable("Vigil did not say which device it created.")
+        return created
+
+    def update_device(self, id: str, payload: dict) -> dict:
+        return (
+            self._send("PATCH", f"devices/{urllib.parse.quote(str(id), safe='')}/", payload) or {}
+        )
+
+    def delete_device(self, id: str) -> None:
+        """Delete a Vigil device; one that is already gone is nothing to do."""
+        try:
+            self._send("DELETE", f"devices/{urllib.parse.quote(str(id), safe='')}/", None)
+        except _NotFound:
+            return None
+        return None
 
 
 def get_client() -> VigilClient | None:

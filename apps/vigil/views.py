@@ -5,8 +5,10 @@ from django.utils import timezone
 from apps.console.decorators import admin_required
 
 from .client import VigilUnavailable, get_client, vigil_capabilities
+from .devices import can_write_devices
 from .forms import VigilConnectionForm
 from .models import VigilConnection
+from .move import KEY_CANNOT_WRITE, SuggestionUnavailable, movable_items, move_all, suggest_match
 
 
 @admin_required
@@ -35,9 +37,83 @@ def vigil_settings(request):
             "connection": connection,
             "has_key": bool(connection.key_encrypted),
             "older_vigil": connection.is_configured and "devices" not in vigil_capabilities(),
+            "movable": _movable(),
             "section": "vigil",
         },
     )
+
+
+def _movable() -> dict:
+    """Every device-like item Jackil still holds, with the Vigil thing it matches.
+
+    ``can_write`` is whether this key may move them at all; without it the
+    card says what to tick in Vigil instead of offering a button. A Vigil that
+    cannot be asked what an item matches is named on that item's row.
+    """
+    can_write = can_write_devices()
+    client = get_client() if can_write else None
+    rows = []
+    for item in movable_items():
+        match, error = {}, ""
+        if client is not None:
+            try:
+                match = suggest_match(client, item) or {}
+            except SuggestionUnavailable as failure:
+                error = str(failure)
+        rows.append({"name": item.name, "match": match, "error": error})
+    return {
+        "can_write": can_write,
+        "reason": "" if can_write else KEY_CANNOT_WRITE,
+        "items": rows,
+    }
+
+
+@admin_required
+def vigil_move_devices(request):
+    """Move every device-like Dynamic Item into Vigil, and say what happened."""
+    if request.method != "POST":
+        return redirect("console:vigil_settings")
+
+    results = move_all(request.user)
+    moved = sum(1 for _, status, _ in results if status == "moved")
+    failed = [name for name, status, _ in results if status == "failed"]
+    if moved:
+        messages.success(request, f"Moved {moved} device{'' if moved == 1 else 's'} into Vigil.")
+    if failed:
+        messages.error(
+            request, f"{len(failed)} could not be moved: {', '.join(failed)}. Try again."
+        )
+    if not results:
+        messages.info(request, "There was nothing to move.")
+
+    client = get_client()
+    return render(
+        request,
+        "vigil/move_results.html",
+        {
+            "results": [
+                {
+                    "name": name,
+                    "status": status,
+                    "detail": detail,
+                    "device": status == "moved" and detail.startswith("vigil:device:"),
+                    "host": status == "moved" and detail.startswith("vigil:host:"),
+                    "open_url": _open_url(client, detail) if status == "moved" else "",
+                }
+                for name, status, detail in results
+            ],
+            "moved": moved,
+            "failed": len(failed),
+            "section": "vigil",
+        },
+    )
+
+
+def _open_url(client, target: str) -> str:
+    """The Vigil page for a device we just created there; a host was already there."""
+    if client is None or not target.startswith("vigil:device:"):
+        return ""
+    return f"{client.base_url.rstrip('/')}/#open/device/{target.split(':', 2)[2]}"
 
 
 def _save(connection, request):

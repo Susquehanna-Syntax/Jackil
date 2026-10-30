@@ -1,7 +1,9 @@
 from django import forms
+from django.utils.functional import cached_property
 from django.utils.text import slugify
 
 from apps.accounts.models import User
+from apps.vigil.devices import can_write_devices
 
 from .models import Item, ItemKind
 
@@ -52,6 +54,13 @@ class ItemForm(forms.ModelForm):
         self.fields["department"].required = False
         if self.instance.pk:
             self.initial["attributes_text"] = render_attributes(self.instance.attributes)
+
+    @cached_property
+    def kind_note(self) -> str:
+        """The line under Kind on a new item, while Vigil can take devices."""
+        if self.instance.pk or not can_write_devices():
+            return ""
+        return "Device kinds are kept in Vigil."
 
     def clean(self):
         cleaned = super().clean()
