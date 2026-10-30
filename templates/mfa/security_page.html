@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Security — Jackil{% endblock %}
+
+{% block extra_head %}
+<style>
+  .mfa-code-input { max-width: 224px; }
+  .mfa-key-list { list-style: none; margin: 0 0 16px; padding: 0; }
+  .mfa-key-list li { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .mfa-key-name { font-weight: 600; }
+  .mfa-key-when { color: var(--text-3); font-size: 13px; margin-right: auto; }
+  .mfa-key-actions { display: flex; gap: 8px; }
+  .mfa-key-add { display: grid; gap: 10px; }
+  .mfa-key-add .mfa-code-input, .mfa-key-add input[type=text] { max-width: none; width: 100%; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+  <div>
+    <div class="page-title">Security</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">Two-factor sign-in protects this account even if someone else learns your password.</div>
+  </div>
+</div>
+
+<div class="pf-layout fade-in d1">
+  <div class="pf-col">
+    <div class="form-card">
+      <div class="form-card-title">Your second factors</div>
+      {% if has_authenticator %}
+        <p class="muted-note">{% if recovery_remaining %}An authenticator app is set up. {{ recovery_remaining }} recovery {{ recovery_remaining|pluralize:"code,codes" }} left.{% else %}An authenticator app is set up, but you have no recovery codes left — make a new set while you can.{% endif %}</p>
+      {% else %}
+        <p class="muted-note"><strong>No authenticator is set up.</strong> Set one up before your next sign-in, or ask an admin to reset two-factor sign-in for you.</p>
+      {% endif %}
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Security keys and passkeys</div>
+      {% if security_keys %}
+      <ul class="mfa-key-list" id="mfa-key-list">
+        {% for k in security_keys %}
+        <li>
+          <span class="mfa-key-name">{{ k.name }}</span>
+          <span class="mfa-key-when">added {{ k.created_at|date:"M j, Y" }}{% if k.last_used_at %} · last used {{ k.last_used_at|date:"M j, Y" }}{% endif %}</span>
+          <span class="mfa-key-actions">
+            <button class="btn btn-outline" type="button" data-remove="{{ k.pk }}" data-name="{{ k.name }}">Remove</button>
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted-note" id="mfa-key-none">No security keys yet. A key or a passkey can sign you in and confirm changes here, with a touch.</p>
+      {% endif %}
+
+      {% if keys_available %}
+      <div id="key-error" class="message message-error" hidden></div>
+
+      {# The ceremony that asks for the factor you already have. The key button
+         below stands in for the code field — one is enough either way. #}
+      <div class="form-card" id="mfa-confirm-card" hidden style="margin-bottom: 16px;">
+        <div class="form-card-title" id="mfa-confirm-title">Confirm with your current factor</div>
+        <p class="form-card-hint" id="mfa-confirm-reason"></p>
+        <div class="form-group">
+          <label class="form-label" for="id_confirm_code">Your current code</label>
+          <input class="form-input mfa-code-input" type="text" id="id_confirm_code" inputmode="numeric"
+                 maxlength="12" placeholder="123456" autocomplete="one-time-code">
+          <div class="field-help">A six-digit code, a recovery code — or touch the key button.</div>
+        </div>
+        <div class="mfa-key-actions">
+          <button class="btn btn-lav" type="button" id="mfa-confirm-go">Confirm</button>
+          <button class="btn btn-outline" type="button" id="mfa-key-confirm">Touch your security key</button>
+          <button class="btn btn-ghost" type="button" id="mfa-confirm-cancel">Cancel</button>
+        </div>
+      </div>
+
+      <div class="mfa-key-add">
+        <div class="form-group">
+          <label class="form-label" for="id_key_name">Name the key</label>
+          <input type="text" id="id_key_name" class="form-input" maxlength="60"
+                 placeholder="YubiKey on my keyring" autocomplete="off">
+        </div>
+        <button class="btn btn-lav" type="button" id="mfa-key-add"
+                data-options="{% url 'mfa:key-options' %}" data-register="{% url 'mfa:key-register' %}">
+          Add a security key
+        </button>
+      </div>
+      <p class="muted-note" style="margin-top: 10px;">Adding a factor asks for the one you already have — a stolen session cannot enrol a key of its own.</p>
+      {% else %}
+      <p class="muted-note">{{ keys_reason }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="pf-col">
+    {% if has_authenticator %}
+    <form method="post" class="form-card">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="codes">
+      <div class="form-card-title">Make new recovery codes</div>
+      <p class="form-card-hint">This replaces the codes you have. The new ones are shown once.</p>
+      <div class="form-group"><label class="form-label" for="id_code_codes">Your current code</label>
+        <input class="form-input mfa-code-input" type="text" name="code" id="id_code_codes" inputmode="numeric"
+               maxlength="12" placeholder="123456" autocomplete="one-time-code" required>
+        <div class="field-help">A six-digit code from your authenticator app, or a recovery code.</div>
+      </div>
+      <button type="submit" class="btn btn-mint" style="margin-top: 14px;">Make new recovery codes</button>
+    </form>
+
+    <form method="post" class="form-card">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="setup">
+      <div class="form-card-title">Set up a new authenticator</div>
+      <p class="form-card-hint">Your current authenticator keeps working until the new one is confirmed.</p>
+      <div class="form-group"><label class="form-label" for="id_code_setup">Your current code</label>
+        <input class="form-input mfa-code-input" type="text" name="code" id="id_code_setup" inputmode="numeric"
+               maxlength="12" placeholder="123456" autocomplete="one-time-code" required>
+      </div>
+      <button type="submit" class="btn btn-mint" style="margin-top: 14px;">Set up a new authenticator</button>
+    </form>
+    {% endif %}
+
+    <div class="form-card">
+      <div class="form-card-title">Lost your phone and your codes?</div>
+      <p class="muted-note">Ask a Jackil admin to reset two-factor sign-in for you from your user page in the admin. You set it up again at your next sign-in.</p>
+    </div>
+  </div>
+</div>
+
+{# The assertion ceremony runs against the signed-in account, so these are the
+   sign-in step's endpoints with ?confirm=1 — same options and verify calls. #}
+{% if keys_available %}
+<script type="application/json" id="mfa-key-urls">
+  {"options": "{% url 'mfa:verify-key-options' %}?confirm=1",
+   "verify": "{% url 'mfa:verify-key' %}?confirm=1",
+   "remove": [{% for k in security_keys %}"{% url 'mfa:key-delete' k.pk %}"{% if not forloop.last %},{% endif %}{% endfor %}]}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'mfa/mfa-keys.js' %}" defer></script>
+{% endblock %}

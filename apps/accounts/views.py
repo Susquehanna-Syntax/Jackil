@@ -3,7 +3,12 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
+from apps.mfa.totp import has_second_factor
+from apps.mfa.views import begin
+
+from .mfa_policy import required
 from .models import User
 
 
@@ -52,9 +57,22 @@ def user_login(request):
         form = LoginForm(request.POST)
         if form.is_valid():
             user = authenticate(
-                username=form.cleaned_data["username"], password=form.cleaned_data["password"]
+                request,
+                username=form.cleaned_data["username"],
+                password=form.cleaned_data["password"],
             )
             if user:
+                # A staff password only starts the sign-in; the second factor
+                # finishes it in apps.mfa. Customers sign in as before.
+                if required(user):
+                    return begin(
+                        request,
+                        user,
+                        request.POST.get("next")
+                        or request.GET.get("next")
+                        or reverse("tickets:dashboard"),
+                        user.backend,
+                    )
                 login(request, user)
                 messages.success(request, f"Welcome back, {user.get_full_name() or user.username}!")
                 return redirect("tickets:dashboard")
@@ -123,5 +141,9 @@ def profile(request):
     return render(
         request,
         "accounts/profile.html",
-        {"avatar_colors": AVATAR_COLORS},
+        {
+            "avatar_colors": AVATAR_COLORS,
+            "mfa_required": required(user),
+            "mfa_set_up": has_second_factor(user),
+        },
     )

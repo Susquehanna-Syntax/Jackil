@@ -54,6 +54,16 @@
 
   </div>
   <div class="pf-col">
+  {% if mfa_required %}
+  <div class="form-card">
+    <div class="form-card-title">Two-factor sign-in</div>
+    <div class="form-card-hint">Staff accounts need a second factor at every sign-in.</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span class="muted-note" style="margin-right:auto;">{% if mfa_set_up %}It&rsquo;s set up for your account.{% else %}It isn&rsquo;t set up yet — set it up before your next sign-in.{% endif %}</span>
+      <a href="{% url 'mfa:security' %}" class="btn btn-outline">Two-factor sign-in</a>
+    </div>
+  </div>
+  {% endif %}
   <div class="form-card" id="appearance">
     <div class="form-card-title">Appearance</div>
     <div class="form-card-hint">Your choice applies immediately and is remembered in this browser.</div>

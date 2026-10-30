@@ -3,9 +3,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.mfa.admin_guard import admin_login_redirect
 from config.features import feature_enabled
 
 urlpatterns = [
+    # Ahead of admin/: Django's own admin sign-in would skip the second factor.
+    path("admin/login/", admin_login_redirect),
+    path("mfa/", include("apps.mfa.urls")),
     path("admin/", admin.site.urls),
     path("", include("apps.civilsso.urls")),
     path("", include("apps.saml.urls")),

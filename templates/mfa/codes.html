@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Recovery codes — Jackil{% endblock %}
+
+{% block extra_head %}
+<style>
+  .mfa-codes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; padding: 0; list-style: none; margin: 0; }
+  .mfa-codes li { font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .04em; font-size: 14px; }
+</style>
+{% endblock %}
+
+{# Shown to a signed-in user too, right after they made a new set — the card
+   layout is what makes them readable, and the sidebar would only crowd them. #}
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card fade-in">
+    <div class="auth-title">Recovery codes</div>
+    <div class="auth-sub">Save these recovery codes somewhere safe. Each one works once, and this is the only time they are shown.</div>
+
+    <ul class="mfa-codes">{% for c in codes %}<li>{{ c }}</li>{% endfor %}</ul>
+
+    <form method="post" style="margin-top: 24px;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-lav" style="width: 100%; justify-content: center; display: flex;">I have saved these</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

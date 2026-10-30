@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verify it's you — Jackil{% endblock %}
+
+{% block extra_head %}
+<style>
+  .mfa-key-offer { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .mfa-key-offer .btn { margin-right: auto; }
+  .mfa-or { color: var(--text-3); font-size: 13px; }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+  <div class="auth-card fade-in">
+    <div class="auth-title">Verify it&rsquo;s you</div>
+    <div class="auth-sub">Signing in as <strong>{{ username }}</strong>.</div>
+
+    {% if error %}
+    <div class="message message-error" style="margin-bottom: 16px;">{{ error }}</div>
+    {% endif %}
+    <div id="key-error" class="message message-error" style="margin-bottom: 16px;" hidden></div>
+
+    {% if keys %}
+    <div class="mfa-key-offer">
+      <button class="btn btn-outline" type="button" id="mfa-key-signin"
+              data-options="{% url 'mfa:verify-key-options' %}"
+              data-verify="{% url 'mfa:verify-key' %}">Use a security key</button>
+      <span class="mfa-or">or use a code</span>
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="id_code">Code</label>
+        <input type="text" name="code" id="id_code" class="form-input" inputmode="numeric" maxlength="7"
+               placeholder="123456" autocomplete="one-time-code" autofocus required>
+        <div class="field-help">Enter the six-digit code from your authenticator app, or a recovery code.</div>
+      </div>
+      <button type="submit" class="btn btn-lav" style="width: 100%; justify-content: center; display: flex;">Verify and sign in</button>
+    </form>
+
+    <div class="auth-link"><a href="{{ login_url }}">Start over</a></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'mfa/mfa-keys.js' %}" defer></script>
+{% endblock %}

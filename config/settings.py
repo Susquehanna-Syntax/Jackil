@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "apps.vigil",
     "apps.portals",
     "apps.licensing",
+    "apps.mfa",
 ]
 
 MIDDLEWARE = [
@@ -187,3 +188,11 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 # Civil SSO (opt-in shared identity for the SQSY family). Unset = off.
 CIVIL_URL = os.environ.get("CIVIL_URL", "")
 CIVIL_APP_SLUG = os.environ.get("CIVIL_APP_SLUG", "jackil")
+
+# Two-factor sign-in (apps.mfa, copied from Civil). Staff only; see
+# apps/accounts/mfa_policy.py. Keys need the address people open Jackil at.
+MFA_ISSUER = "Jackil"
+MFA_RP_NAME = "Jackil"
+MFA_PUBLIC_URL = config("MFA_PUBLIC_URL", default="")
+MFA_REQUIRED = "apps.accounts.mfa_policy.required"
+MFA_LOGIN_TEMPLATE = "accounts/login.html"
