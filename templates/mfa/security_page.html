@@ -56,8 +56,8 @@
       {% if keys_available %}
       <div id="key-error" class="message message-error" hidden></div>
 
-      {# The ceremony that asks for the factor you already have. The key button
-         below stands in for the code field — one is enough either way. #}
+      {% comment %} The ceremony that asks for the factor you already have. The key button
+         below stands in for the code field — one is enough either way. {% endcomment %}
       <div class="form-card" id="mfa-confirm-card" hidden style="margin-bottom: 16px;">
         <div class="form-card-title" id="mfa-confirm-title">Confirm with your current factor</div>
         <p class="form-card-hint" id="mfa-confirm-reason"></p>
@@ -127,8 +127,8 @@
   </div>
 </div>
 
-{# The assertion ceremony runs against the signed-in account, so these are the
-   sign-in step's endpoints with ?confirm=1 — same options and verify calls. #}
+{% comment %} The assertion ceremony runs against the signed-in account, so these are the
+   sign-in step's endpoints with ?confirm=1 — same options and verify calls. {% endcomment %}
 {% if keys_available %}
 <script type="application/json" id="mfa-key-urls">
   {"options": "{% url 'mfa:verify-key-options' %}?confirm=1",

@@ -12,7 +12,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils.timezone import now
 
@@ -374,3 +374,18 @@ class RaceTests(TestCase):
 
         with mock.patch.object(recovery, "check_password", side_effect=check_then_lose_the_race):
             self.assertFalse(recovery.use_code(self.user, code))
+
+
+class TemplateCommentTests(SimpleTestCase):
+    def test_no_template_comment_spans_lines(self):
+        """``{# #}`` only works on one line; a longer one prints as page text."""
+        from pathlib import Path
+
+        from django.conf import settings
+
+        roots = [Path(__file__).parent / "templates", Path(settings.BASE_DIR) / "templates" / "mfa"]
+        for root in roots:
+            for path in root.rglob("*.html"):
+                for number, line in enumerate(path.read_text().splitlines(), 1):
+                    if "{#" in line:
+                        self.assertIn("#}", line, f"{path}:{number}")

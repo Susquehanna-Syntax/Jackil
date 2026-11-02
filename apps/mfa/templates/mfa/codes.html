@@ -4,8 +4,8 @@
   .codes { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem 1.5rem; padding: 0; list-style: none; }
   .codes li { font-family: var(--mono, ui-monospace, monospace); letter-spacing: .04em; }
 {% endblock %}
-{# Shown to a signed-in user too, right after they made a new set — the card
-   layout is what makes them readable, and the sidebar would only crowd them. #}
+{% comment %} Shown to a signed-in user too, right after they made a new set — the card
+   layout is what makes them readable, and the sidebar would only crowd them. {% endcomment %}
 {% block content %}
 <div class="card" style="max-width:34rem;margin:0 auto">
   <h1>Recovery codes</h1>
