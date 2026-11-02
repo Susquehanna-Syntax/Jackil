@@ -17,3 +17,5 @@ python3-saml>=1.16,<2
 # image needs no compiler or libxmlsec1 packages; move these two together.
 xmlsec==1.3.18
 lxml==6.1.3
+qrcode>=8.0,<9
+webauthn>=3.0,<4
