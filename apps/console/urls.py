@@ -1,5 +1,9 @@
 from django.urls import path
 
+from apps.licensing import views as licensing_views
+from apps.portals import views as portal_views
+from apps.saml import views as saml_views
+from apps.vigil import views as vigil_views
 from config.features import feature_enabled
 
 from . import views
@@ -12,10 +16,18 @@ urlpatterns = [
     path("email/new/", views.inbox_create, name="inbox_create"),
     path("email/<int:pk>/", views.inbox_edit, name="inbox_edit"),
     path("email/<int:pk>/delete/", views.inbox_delete, name="inbox_delete"),
-    path("kb/", views.kb_list, name="kb_list"),
-    path("kb/new/", views.kb_create, name="kb_create"),
-    path("kb/<int:pk>/", views.kb_edit, name="kb_edit"),
-    path("kb/<int:pk>/delete/", views.kb_delete, name="kb_delete"),
+    path("portals/", portal_views.portal_list, name="portal_list"),
+    path("portals/new/", portal_views.portal_create, name="portal_create"),
+    path("portals/<int:pk>/", portal_views.portal_edit, name="portal_edit"),
+    path("portals/<int:pk>/delete/", portal_views.portal_delete, name="portal_delete"),
+    path("vigil/", vigil_views.vigil_settings, name="vigil_settings"),
+    path(
+        "vigil/move-devices/",
+        vigil_views.vigil_move_devices,
+        name="vigil_move_devices",
+    ),
+    path("edition/", licensing_views.edition_settings, name="edition_settings"),
+    path("saml/", saml_views.saml_settings, name="saml_settings"),
 ]
 
 if feature_enabled("sla"):

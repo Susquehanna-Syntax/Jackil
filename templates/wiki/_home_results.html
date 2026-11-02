@@ -1,0 +1,38 @@
+<div data-live-results>
+{% if q %}
+  <section class="wk-panel wk-results">
+    <h2>{{ results|length }} page{{ results|length|pluralize }} match &ldquo;{{ q }}&rdquo;</h2>
+    {% for page, line in results %}
+    <a class="wk-row" href="{{ page.get_absolute_url }}">
+      <span class="wk-row-title">{{ page.title }}</span>
+      <span class="wk-row-meta">{{ page.space.name }}{% if line %} &middot; {{ line }}{% endif %}</span>
+    </a>
+    {% empty %}
+    <p class="muted-note">Nothing matches. Try fewer words, or <a href="{% url 'wiki:page_new' %}?title={{ q|urlencode }}">start a page called &ldquo;{{ q }}&rdquo;</a>.</p>
+    {% endfor %}
+  </section>
+{% elif cards %}
+  <div class="wk-spaces">
+    {% for card in cards %}
+    <a class="wk-space tc-{{ card.space.icon_color|default:'lavender' }}" href="{% url 'wiki:space_detail' card.space.slug %}">
+      <span class="wk-space-head">
+        <span class="wk-space-label">{{ card.space.name }}</span>
+        <span class="wk-space-count">{{ card.count }} page{{ card.count|pluralize }}{% if card.public %} &middot; {{ card.public }} public{% endif %}</span>
+      </span>
+      {% if card.space.description %}<span class="wk-space-desc">{{ card.space.description }}</span>{% endif %}
+      {% for page, line in card.pages %}
+      <span class="wk-space-page"><b>{{ page.title }}</b>{% if line %}<small>{{ line }}</small>{% endif %}</span>
+      {% empty %}
+      <span class="wk-space-page"><small>No pages yet.</small></span>
+      {% endfor %}
+      {% if card.count > card.pages|length %}<span class="wk-space-more">All {{ card.count }} pages</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h3>No spaces yet</h3>
+    <p>A space is a shelf of pages: Networking, Servers, Onboarding.</p>
+  </div>
+{% endif %}
+</div>

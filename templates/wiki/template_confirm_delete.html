@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ editing.name }} — Wiki — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1" style="max-width: 640px;">
+  <a href="{% url 'wiki:template_list' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to Templates
+  </a>
+
+  <div class="page-title">Delete “{{ editing.name }}”?</div>
+
+  <div class="form-card" style="margin-top: 16px;">
+    <div class="form-card-hint">
+      Pages already written from this template keep their text. Only the template goes.
+    </div>
+  </div>
+
+  <form method="post" style="display:flex; gap:8px; margin-top:18px;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline">Delete template</button>
+    <a href="{% url 'wiki:template_list' %}" class="btn btn-ghost">Cancel</a>
+  </form>
+</div>
+{% endblock %}

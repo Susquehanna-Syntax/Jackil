@@ -1,0 +1,406 @@
+"""The data behind every Jackil widget, in its contract shape.
+
+One function per registry kind, keyed in ``DATA``; ``widget_data`` is the
+entry point the API view calls. Each returns the *inner* payload — the
+envelope and its validation are the contract's job — except
+``report_chart``, which hands back the report card's own finished envelope.
+The project widgets reach into ``apps.projects`` lazily, so importing
+dashboards never imports projects; ditto the reports widget and
+``apps.reports``.
+"""
+
+from datetime import datetime, time, timedelta
+
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db.models import Count, Q
+from django.db.models.functions import TruncDate
+from django.http import QueryDict
+from django.urls import reverse
+from django.utils import timezone
+
+from apps.tickets.filters import filter_tickets
+from apps.tickets.models import SavedView, Ticket
+
+from .contract import envelope
+from .widgets import WIDGET_REGISTRY, clean_settings
+
+#: Statuses a ticket is still "live" in. Resolved and closed are out of the
+#: operational counts.
+OPEN = ("open", "in_progress", "pending")
+RESOLVED = ("resolved", "closed")
+
+#: How close to its resolution due time makes a ticket "needs attention".
+ATTENTION_WINDOW = timedelta(hours=4)
+
+#: What a project widget says before anyone has picked a project.
+PICK = "Pick a project in this widget's settings."
+
+#: What a burndown with nothing to plot draws: the series is there, with no
+#: points on it.
+EMPTY_BURNDOWN = {"kind": "line", "labels": [], "series": [{"name": "Remaining", "values": []}]}
+
+
+def _project(settings):
+    """The non-archived ``Project`` a ``project`` setting names, else None."""
+    from apps.projects.models import Project
+
+    if not settings["project"]:
+        return None
+    return Project.objects.filter(key=settings["project"], is_archived=False).first()
+
+
+def _open_tickets():
+    return Ticket.objects.filter(status__in=OPEN)
+
+
+def _ticket_item(ticket, meta, tone=None, badge=None):
+    item = {
+        "title": f"#{ticket.pk} {ticket.title}",
+        "href": reverse("tickets:ticket_detail", args=[ticket.pk]),
+        "meta": meta,
+    }
+    if tone is not None:
+        item["tone"] = tone
+    if badge is not None:
+        item["badge"] = badge
+    return item
+
+
+_STAT_LABELS = {
+    "open": "Open",
+    "unassigned": "Unassigned",
+    "overdue": "Overdue",
+    "breached": "SLA breached",
+    "critical": "Critical",
+    "created_week": "Created this week",
+    "resolved_week": "Resolved this week",
+}
+
+#: Stats where a non-zero number is itself the bad news.
+_ALARM_STATS = ("overdue", "breached", "critical")
+
+
+def stat_tile(settings, user):
+    which = settings["stat"]
+    now = timezone.now()
+    qs = _open_tickets()
+    if which == "unassigned":
+        qs = qs.filter(assigned_to__isnull=True)
+    elif which == "overdue":
+        qs = qs.filter(resolution_due__lt=now)
+    elif which == "breached":
+        qs = qs.filter(resolution_breached=True)
+    elif which == "critical":
+        qs = qs.filter(priority="critical")
+    elif which == "created_week":
+        qs = Ticket.objects.filter(created_at__gte=now - timedelta(days=7))
+    elif which == "resolved_week":
+        qs = Ticket.objects.filter(status__in=RESOLVED, closed_at__gte=now - timedelta(days=7))
+
+    value = qs.count()
+    if which in _ALARM_STATS:
+        tone = "bad" if value else "ok"
+    else:
+        tone = "info"
+
+    href = reverse("tickets:ticket_list")
+    extra = {"unassigned": "assigned=unassigned", "critical": "priority=critical"}.get(which)
+    if extra:
+        href = f"{href}?{extra}"
+
+    return {"value": value, "label": _STAT_LABELS[which], "tone": tone, "href": href}
+
+
+def needs_attention(settings, user):
+    now = timezone.now()
+    tickets = (
+        _open_tickets()
+        .filter(resolution_due__lte=now + ATTENTION_WINDOW)
+        .order_by("resolution_due")[: settings["limit"]]
+    )
+    items = []
+    for t in tickets:
+        overdue = t.resolution_due is not None and t.resolution_due <= now
+        items.append(
+            _ticket_item(
+                t,
+                meta="Overdue" if overdue else "Due soon",
+                tone="bad" if overdue else "warn",
+                badge=t.get_priority_display(),
+            )
+        )
+    return {"items": items, "empty": "Nothing is close to its due time."}
+
+
+def my_work(settings, user):
+    open_qs = _open_tickets()
+    tickets = (open_qs.filter(assigned_to=user) | open_qs.filter(assigned_users=user)).distinct()
+    items = [
+        _ticket_item(t, meta=t.get_status_display())
+        for t in tickets.order_by("-created_at")[: settings["limit"]]
+    ]
+    return {"items": items, "empty": "Nothing is assigned to you."}
+
+
+_EMPTY_VIEW = "That saved view no longer exists, or is not shared with you."
+
+
+def ticket_list(settings, user):
+    limit = settings["limit"]
+    if settings["saved_view"]:
+        view = SavedView.objects.filter(
+            Q(owner=user) | Q(is_shared=True), pk=settings["saved_view"]
+        ).first()
+        if view is None:
+            return {"items": [], "empty": _EMPTY_VIEW}
+        qs = filter_tickets(Ticket.objects.all(), QueryDict(view.query), user)
+    else:
+        qs = _open_tickets()
+
+    items = [
+        _ticket_item(t, meta=t.get_status_display(), badge=t.get_priority_display())
+        for t in qs.order_by("-created_at")[:limit]
+    ]
+    return {"items": items, "empty": "No tickets match."}
+
+
+def sla_compliance(settings, user):
+    now = timezone.now()
+    since = now - timedelta(days=settings["range_days"])
+    resolved = Ticket.objects.filter(status__in=RESOLVED, closed_at__gte=since).exclude(
+        resolution_due=None
+    )
+    total = resolved.count()
+    if total == 0:
+        return {
+            "value": None,
+            "label": "Resolved within SLA",
+            "sub": f"No resolved tickets with an SLA in the last {settings['range_days']} days",
+        }
+    within = resolved.filter(resolution_breached=False).count()
+    value = round(within * 100 / total, 1)
+    if value >= 90:
+        tone = "ok"
+    elif value >= 75:
+        tone = "warn"
+    else:
+        tone = "bad"
+    return {
+        "value": value,
+        "label": "Resolved within SLA",
+        "tone": tone,
+        "sub": f"{total} tickets, last {settings['range_days']} days",
+    }
+
+
+def _counts_by_choice(qs, field: str, choices) -> list[int]:
+    """Count *qs* per choice value, in ``choices`` order, zeros included."""
+    counts = dict(qs.values_list(field).annotate(n=Count("pk")))
+    return [counts.get(value, 0) for value, _label in choices]
+
+
+def tickets_by_status(settings, user):
+    labels = [label for _value, label in Ticket.STATUS_CHOICES]
+    values = _counts_by_choice(Ticket.objects.all(), "status", Ticket.STATUS_CHOICES)
+    return {"kind": "bar", "labels": labels, "series": [{"name": "Tickets", "values": values}]}
+
+
+def tickets_by_priority(settings, user):
+    labels = [label for _value, label in Ticket.PRIORITY_CHOICES]
+    values = _counts_by_choice(_open_tickets(), "priority", Ticket.PRIORITY_CHOICES)
+    return {"kind": "bar", "labels": labels, "series": [{"name": "Tickets", "values": values}]}
+
+
+def volume_trend(settings, user):
+    today = timezone.localdate()
+    days = [today - timedelta(days=offset) for offset in range(settings["range_days"] - 1, -1, -1)]
+
+    # The window is the local calendar range; datetimes are filtered against
+    # its UTC instant (USE_TZ is on), not a naive date string.
+    since = timezone.make_aware(datetime.combine(days[0], time.min))
+
+    def per_day(qs, date_field):
+        rows = qs.annotate(day=TruncDate(date_field)).values("day").annotate(n=Count("pk"))
+        counts = {row["day"]: row["n"] for row in rows}
+        return [counts.get(d, 0) for d in days]
+
+    created = per_day(Ticket.objects.filter(created_at__gte=since), "created_at")
+    resolved = per_day(
+        Ticket.objects.filter(status__in=RESOLVED, closed_at__gte=since), "closed_at"
+    )
+    return {
+        "kind": "line",
+        "labels": [d.isoformat() for d in days],
+        "series": [
+            {"name": "Created", "values": created},
+            {"name": "Resolved", "values": resolved},
+        ],
+    }
+
+
+def agent_load(settings, user):
+    User = get_user_model()
+    agents = User.objects.filter(role__in=("agent", "admin"))
+    rows = []
+    for agent in agents:
+        name = agent.get_full_name() or agent.username
+        assigned = _open_tickets().filter(assigned_to=agent)
+        rows.append([name, assigned.count(), assigned.filter(priority="critical").count()])
+    rows.sort(key=lambda row: (-row[1], row[0]))
+    return {"columns": ["Agent", "Open", "Critical"], "rows": rows}
+
+
+def sprint_burndown(settings, user):
+    from apps.projects import backlog, metrics
+
+    project = _project(settings)
+    if project is None:
+        return dict(EMPTY_BURNDOWN)
+    sprint = backlog._planning_sprint(project, backlog._sprint_rows(project))
+    if sprint is None or sprint.state != "active":
+        return dict(EMPTY_BURNDOWN)
+    return metrics.burndown(sprint)
+
+
+def team_load(settings, user):
+    from apps.projects import backlog
+
+    columns = ["Person", "Committed", "Usual"]
+    project = _project(settings)
+    if project is None:
+        return {"columns": columns, "rows": [[PICK, 0, "—"]]}
+    sprint = backlog._planning_sprint(project, backlog._sprint_rows(project))
+    rows = [
+        [
+            person["name"],
+            person["committed"],
+            "—" if person["velocity"] is None else f"{person['velocity']:.1f}",
+        ]
+        for person in backlog._people(project, sprint)
+    ]
+    return {"columns": columns, "rows": rows}
+
+
+def my_issues(settings, user):
+    from apps.projects.models import Issue
+    from apps.projects.views import issue_url
+
+    issues = (
+        Issue.objects.filter(assignee=user, project__is_archived=False)
+        .exclude(type="subtask")
+        .exclude(column__category="done")
+        .select_related("column", "project")
+        .order_by("-created_at", "-id")[: settings["limit"]]
+    )
+    items = [
+        {
+            "title": f"{issue.key} {issue.title}",
+            "href": issue_url(issue),
+            "meta": "" if issue.column is None else issue.column.name,
+        }
+        for issue in issues
+    ]
+    return {"items": items, "empty": "No open project issues are assigned to you."}
+
+
+def project_cost(settings, user):
+    from apps.projects.cost import total_cost
+    from apps.projects.models import CostSettings
+    from apps.projects.permissions import can_see_cost
+
+    project = _project(settings)
+    if project is None:
+        return {"value": 0, "label": PICK, "tone": "muted"}
+    if not can_see_cost(user):
+        return {"value": 0, "label": "Cost hidden", "tone": "muted"}
+    done = project.issues.exclude(type="epic").filter(column__category="done")
+    total, left = total_cost(done)
+    payload = {
+        "value": int(total),
+        "label": f"Spent on {project.key} ({CostSettings.get_solo().currency})",
+        "tone": "info",
+    }
+    if left:
+        payload["sub"] = f"{left} issue{'' if left == 1 else 's'} left out"
+    return payload
+
+
+# ── Reports ───────────────────────────────────────────────────────────────
+
+#: What the tile says when it has nothing to draw — a whole envelope each, so
+#: the failure renders as an ordinary muted stat.
+REPORT_REMOVED = {
+    "version": 1,
+    "shape": "stat",
+    "data": {"value": 0, "label": "This report was removed", "tone": "muted"},
+}
+PICK_A_CARD = {
+    "version": 1,
+    "shape": "stat",
+    "data": {
+        "value": 0,
+        "label": "Pick a report card in this widget's settings.",
+        "tone": "muted",
+    },
+}
+
+
+def report_chart(settings, user):
+    """The whole envelope for one saved report's card, from the reports compute.
+
+    Unlike every other widget this returns an envelope, not an inner payload:
+    ``compute`` builds and validates the card as it goes, and its shape is the
+    card's own rather than anything the registry can say up front — so a
+    missing report or a removed card must answer with an envelope too. The
+    title rides along at the top level so the dashboard can name the tile.
+    """
+    from apps.reports.compute import compute, visible_reports
+    from apps.reports.widgets import REPORT_WIDGETS
+
+    ref = settings.get("card", "")
+    if not ref:
+        return dict(PICK_A_CARD)
+    report_id, _, index_str = ref.partition(":")
+    try:
+        index = int(index_str)
+    except ValueError:
+        return dict(REPORT_REMOVED)
+    try:
+        report = visible_reports(user).get(id=report_id)
+    except (ValueError, ObjectDoesNotExist):
+        return dict(REPORT_REMOVED)
+    try:
+        payload = compute(report, index, user)
+    except (IndexError, ValueError, PermissionDenied):
+        return dict(REPORT_REMOVED)
+    card = report.widgets[index]
+    payload["title"] = card.get("title") or REPORT_WIDGETS[card["kind"]]["title"]
+    return payload
+
+
+DATA = {
+    "stat_tile": stat_tile,
+    "ticket_list": ticket_list,
+    "needs_attention": needs_attention,
+    "my_work": my_work,
+    "sla_compliance": sla_compliance,
+    "tickets_by_status": tickets_by_status,
+    "tickets_by_priority": tickets_by_priority,
+    "volume_trend": volume_trend,
+    "agent_load": agent_load,
+    "sprint_burndown": sprint_burndown,
+    "team_load": team_load,
+    "my_issues": my_issues,
+    "project_cost": project_cost,
+    "report_chart": report_chart,
+}
+
+
+def widget_data(kind: str, raw_settings, user) -> dict:
+    """The versioned envelope for one widget. ``KeyError`` on unknown kind."""
+    settings = clean_settings(kind, raw_settings)
+    data = DATA[kind](settings, user)
+    if kind == "report_chart":
+        return data
+    return envelope(WIDGET_REGISTRY[kind]["shape"], data)

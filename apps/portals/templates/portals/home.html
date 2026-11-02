@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}{{ portal.name }} — Jackil{% endblock %}
+
+{% block extra_head %}
+  {% if styling %}<style>{{ styling.css }}</style>{% endif %}
+{% endblock %}
+
+{% block content %}
+{% include "portals/_helpcenter.html" %}
+{% endblock %}

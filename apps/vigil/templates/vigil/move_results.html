@@ -1,0 +1,47 @@
+{% extends "console/settings_base.html" %}
+
+{% block title %}Move devices into Vigil — Jackil{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in d1">
+  <div>
+    <div class="page-title">Moved into Vigil</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+      {{ moved }} moved, {{ failed }} failed. Devices are kept in Vigil from now on.
+    </div>
+  </div>
+  <a href="{% url 'console:vigil_settings' %}" class="btn btn-ghost">Back to Vigil</a>
+</div>
+
+<div class="form-card fade-in d2">
+  {% if results %}
+  <ul class="mv-list">
+    {% for row in results %}
+    <li class="mv-row">
+      <b>{{ row.name }}</b>
+      {% if row.status == "moved" %}
+        <span class="mv-moved">
+          moved — now a Vigil {{ row.host|yesno:"host,device" }}{% if row.open_url %} ·
+          <a href="{{ row.open_url }}" target="_blank" rel="noopener">open in Vigil</a>{% endif %}
+        </span>
+      {% else %}
+        <span class="mv-failed">still in Jackil — {{ row.detail }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% if failed %}
+  <p class="form-card-hint" style="margin:14px 0 0;">
+    A device that could not be moved stays exactly where it was, links and all.
+    Run the move again once Vigil answers.
+  </p>
+  <form method="post" action="{% url 'console:vigil_move_devices' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-lav" style="margin-top:14px;">Move them again</button>
+  </form>
+  {% endif %}
+  {% else %}
+  <p class="muted-note" style="margin:0;">There was nothing to move.</p>
+  {% endif %}
+</div>
+{% endblock %}

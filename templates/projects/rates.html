@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Rates — Projects — Jackil{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in d1">
+  <div>
+    <a href="{% url 'projects:project_list' %}" class="btn btn-ghost" style="margin-bottom: 16px;">&larr; Projects</a>
+    <div class="page-title">Rates</div>
+    <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+      What an hour costs, for every agent and admin. Only admins see this page.
+    </div>
+  </div>
+</div>
+
+<div class="rt-layout fade-in d2">
+  <div class="form-card">
+    <div class="form-card-title">People</div>
+    <div class="form-card-hint">Wages are blank until you enter them. Hours per point comes from sprint history.</div>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="rates">
+      <table class="rt-table">
+        <thead>
+          <tr>
+            <th>Person</th>
+            <th>Hourly wage ({{ currency }})</th>
+            <th>Hours per sprint</th>
+            <th>Hours per point</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>
+              {{ row.form.hourly_wage }}
+              {% for error in row.form.hourly_wage.errors %}
+              <div class="message message-error">{{ error }}</div>
+              {% endfor %}
+            </td>
+            <td>
+              {{ row.form.sprint_hours }}
+              {% for error in row.form.sprint_hours.errors %}
+              <div class="message message-error">{{ error }}</div>
+              {% endfor %}
+            </td>
+            <td style="white-space:nowrap;">
+              {{ row.hours_per_point|floatformat:"2" }}
+              {% if row.is_default %}<span class="muted-note">default</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-lav" style="margin-top:14px;">Save rates</button>
+    </form>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">Cost settings</div>
+    <div class="form-card-hint">
+      Hours per point falls back to this until someone has three closed sprints of history.
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="settings">
+      {% for field in settings_form %}
+      <div class="form-group">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}
+        <div class="message message-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-lav">Save settings</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

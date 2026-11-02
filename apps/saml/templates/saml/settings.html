@@ -1,0 +1,77 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="section-heading">Single sign-on</div>
+<p style="color: var(--text-3); font-size: 13px; margin: 4px 0 20px;">
+  Connect Jackil to your identity provider — Entra ID, Okta, Google Workspace,
+  Keycloak — and people sign in with <strong>Sign in with SSO</strong>. Local
+  sign-in keeps working, so an admin can always get in if the identity provider
+  is down.
+</p>
+
+<div class="vg-layout">
+  <form method="post" class="form-card">
+    {% csrf_token %}
+    <div class="form-card-title">Identity provider</div>
+
+    <div class="form-group">
+      <label class="check-field">{{ form.enabled }} <span>{{ form.enabled.label }}</span></label>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_idp_entity_id">IdP entity ID</label>
+      {{ form.idp_entity_id }}
+      {% for error in form.errors.idp_entity_id %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_idp_sso_url">IdP sign-in (SSO) URL</label>
+      {{ form.idp_sso_url }}
+      {% for error in form.errors.idp_sso_url %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_idp_x509_cert">IdP certificate</label>
+      {{ form.idp_x509_cert }}
+      <div class="form-card-hint">The signing certificate, with or without the BEGIN/END lines.</div>
+      {% for error in form.errors.idp_x509_cert %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_email_attribute">Email attribute</label>
+      {{ form.email_attribute }}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_name_attribute">Name attribute</label>
+      {{ form.name_attribute }}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="id_new_user_role">Role for new sign-ins</label>
+      {{ form.new_user_role }}
+    </div>
+
+    <div class="form-group">
+      <label class="check-field">{{ form.allow_new_users }} <span>{{ form.allow_new_users.label }}</span></label>
+    </div>
+
+    <button type="submit" class="btn btn-lav">Save</button>
+  </form>
+
+  <div class="form-card">
+    <div class="form-card-title">Give your identity provider these</div>
+    <p class="form-card-hint">The values the IdP needs to trust Jackil.</p>
+
+    <p style="font-size:13px; color:var(--text-2); margin:14px 0 4px;">Entity ID</p>
+    <div style="font-size:13px; word-break:break-all;">{{ entity_id }}</div>
+
+    <p style="font-size:13px; color:var(--text-2); margin:14px 0 4px;">ACS URL</p>
+    <div style="font-size:13px; word-break:break-all;">{{ acs_url }}</div>
+
+    <p style="margin:18px 0 0;">
+      <a class="btn btn-outline" href="{{ metadata_url }}">Metadata XML</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

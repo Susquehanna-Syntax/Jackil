@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}All pages — Wiki — Jackil{% endblock %}
+
+{% block content %}
+<div class="wk-top fade-in d1">
+  <span class="wk-crumb"><a href="{% url 'wiki:home' %}">Wiki</a> / All pages</span>
+  <div class="wk-top-actions">
+    <input type="search" class="form-input wk-tree-find" placeholder="Filter pages as you type" aria-label="Filter pages" data-wt-filter>
+    <a href="{% url 'wiki:page_new' %}" class="btn btn-lav">New page</a>
+  </div>
+</div>
+<h1 class="wk-page-h1 fade-in d1">All pages</h1>
+<div class="wk-tree-grid fade-in d2" data-wt-root>
+  {% for entry in spaces %}
+  <section class="wk-panel wk-tree-space tc-{{ entry.space.icon_color|default:'lavender' }}">
+    <h2><a href="{% url 'wiki:space_detail' entry.space.slug %}">{{ entry.space.name }}</a></h2>
+    {% if entry.nodes %}{% include "wiki/_tree.html" with nodes=entry.nodes current=None %}{% else %}<p class="muted-note">No pages yet.</p>{% endif %}
+  </section>
+  {% empty %}
+  <div class="empty-state"><h3>No spaces yet</h3></div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_body %}{% load static %}<script src="{% static 'js/jackil-wiki.js' %}" defer></script>{% endblock %}

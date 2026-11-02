@@ -33,7 +33,7 @@
 
     <div class="form-group">
       <label class="form-label" for="id_title">Title</label>
-      <input type="text" name="title" id="id_title" class="form-input" placeholder="e.g. WiFi not working in floor 3" required>
+      <input type="text" name="title" id="id_title" class="form-input" placeholder="e.g. WiFi not working in floor 3" value="{{ prefill_title }}" required>
     </div>
 
     <div class="form-group">
@@ -69,7 +69,7 @@
     </div>
     {% endif %}
 
-    <button type="submit" class="btn btn-filled-lav">
+    <button type="submit" class="btn btn-lav">
       <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Create Ticket
     </button>

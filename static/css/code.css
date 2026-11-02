@@ -1,0 +1,46 @@
+/* Pygments token colours on the design tokens, so code reads on every theme. */
+
+.markdown-body .w { color: inherit; }
+.markdown-body .l, .markdown-body .ld, .markdown-body .n, .markdown-body .ni, .markdown-body .nl, .markdown-body .nx, .markdown-body .py, .markdown-body .x { color: inherit; }
+
+/* keywords */
+.markdown-body .k, .markdown-body .kc, .markdown-body .kd, .markdown-body .kn, .markdown-body .kp, .markdown-body .kr, .markdown-body .kt { color: var(--lavender-ink); }
+.markdown-body .kc { font-weight: 600; }
+
+/* strings */
+.markdown-body .s, .markdown-body .s1, .markdown-body .s2, .markdown-body .sa, .markdown-body .sb, .markdown-body .sc, .markdown-body .sd, .markdown-body .sh, .markdown-body .sx, .markdown-body .dl { color: var(--mint-ink); }
+.markdown-body .se, .markdown-body .si { color: var(--peach-ink); }
+.markdown-body .sr, .markdown-body .ss { color: var(--lemon-ink); }
+
+/* numbers */
+.markdown-body .m, .markdown-body .mb, .markdown-body .mf, .markdown-body .mh, .markdown-body .mi, .markdown-body .mo, .markdown-body .il { color: var(--peach-ink); }
+
+/* names */
+.markdown-body .nb, .markdown-body .bp { color: var(--sky-ink); }
+.markdown-body .nf, .markdown-body .fm { color: var(--sky-ink); font-weight: 600; }
+.markdown-body .nc, .markdown-body .nn, .markdown-body .ne { color: var(--coral-ink); }
+.markdown-body .nd, .markdown-body .na { color: var(--rose-ink); }
+.markdown-body .nt { color: var(--lavender-ink); }
+.markdown-body .nv, .markdown-body .vc, .markdown-body .vg, .markdown-body .vi, .markdown-body .vm { color: var(--text-1); }
+.markdown-body .no { color: var(--peach-ink); }
+
+/* comments */
+.markdown-body .c, .markdown-body .c1, .markdown-body .ch, .markdown-body .cm, .markdown-body .cpf, .markdown-body .cs { color: var(--text-3); font-style: italic; }
+.markdown-body .cp { color: var(--rose-ink); }
+
+/* operators and punctuation */
+.markdown-body .o, .markdown-body .ow, .markdown-body .p, .markdown-body .pm { color: var(--text-2); }
+.markdown-body .ow { font-weight: 700; }
+
+/* generic output tokens */
+.markdown-body .gd { color: var(--rose-ink); background: rgba(var(--rgb-rose), var(--tint-a)); }
+.markdown-body .gi { color: var(--mint-ink); background: rgba(var(--rgb-mint), var(--tint-a)); }
+.markdown-body .gh, .markdown-body .gu { color: var(--sky-ink); font-weight: 700; }
+.markdown-body .ge { font-style: italic; }
+.markdown-body .gs { font-weight: 700; }
+.markdown-body .gr, .markdown-body .gt { color: var(--rose-ink); }
+.markdown-body .gp, .markdown-body .go { color: var(--text-3); }
+.markdown-body .ges { font-style: italic; }
+
+/* errors */
+.markdown-body .err { color: var(--rose-ink); text-decoration: underline wavy; }

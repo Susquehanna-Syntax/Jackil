@@ -1,0 +1,45 @@
+{% load static %}
+{% load sla_tags %}
+{% if tickets %}
+<div class="ticket-list" data-live-results data-count-label="{{ tickets|length }} ticket{{ tickets|length|pluralize }}">
+  {% for ticket in tickets %}
+  <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="ticket-list-item">
+    <div class="ticket-list-dot" style="background: var(--{{ ticket.color_class }});"></div>
+    <div class="ticket-list-content">
+      <div class="ticket-list-title">{{ ticket.title }}</div>
+      <div class="ticket-list-meta">
+        #{{ ticket.pk }} &middot; {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
+        &middot; {{ ticket.created_at|date:"M d, Y" }}
+      </div>
+      <div class="ticket-list-assignees" style="display: flex; gap: 4px; align-items: center; margin-top: 4px;">
+        {% for u in ticket.assigned_users.all %}
+        <span class="assignee-chip" title="{{ u.get_full_name|default:u.username }}">
+          {% if u.department %}{{ u.department.name }}{% else %}Support{% endif %}
+          &middot; {{ u.get_full_name|default:u.username }}
+        </span>
+        {% empty %}
+        <span style="font-size: 11px; color: var(--text-3);">Unassigned</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+      {% sla_badge ticket "resolution" compact=True %}
+      <span class="tag tag-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
+      <span class="ticket-list-status tag tag-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% elif search or status or priority or assigned %}
+<div data-live-results="" data-count-label="{{ tickets|length }} ticket{{ tickets|length|pluralize }}">
+  {% include "partials/live_empty.html" with title="No tickets match" clear_url=request.path %}
+</div>
+{% else %}
+<div class="empty-state" data-live-results="" data-count-label="{{ tickets|length }} ticket{{ tickets|length|pluralize }}">
+  <div class="empty-state-icon">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </div>
+  <h3>No tickets found</h3>
+  <p>Try adjusting your filters or create a new ticket.</p>
+</div>
+{% endif %}

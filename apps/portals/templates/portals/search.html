@@ -1,0 +1,25 @@
+{% extends "portals/base.html" %}
+
+{% block portal_body %}
+<div class="section-heading pt-results">{{ total }} result{{ total|pluralize }} for “{{ query }}”</div>
+<div class="kb-article-list">
+  {% for page in results %}
+  {% if page.is_published_to_help_center %}
+  <a href="{% url 'help:article' page.slug %}" class="kb-article-row">
+  {% else %}
+  {# Only staff search internal pages; those live in the wiki, not the portal. #}
+  <a href="{% url 'wiki:page_detail' page.slug %}" class="kb-article-row">
+  {% endif %}
+    <div class="kb-article-row-title">{{ page.title }}</div>
+    <div class="kb-article-row-summary">{{ page.summary|default:page.body|truncatewords:24 }}</div>
+    <span class="kb-chip">{% if page.is_published_to_help_center %}{{ page.space.name }}{% else %}Internal · {{ page.space.name }}{% endif %}</span>
+  </a>
+  {% empty %}
+  <div class="empty-state">
+    <div class="empty-state-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+    <h3>No results</h3>
+    <p>Try a different search, or <a href="{% url 'tickets:ticket_create' %}" style="color: var(--lavender-ink);">open a ticket</a>.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

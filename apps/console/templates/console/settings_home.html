@@ -14,6 +14,7 @@
   </div>
 </div>
 
+<div class="set-cards">
 <div class="card">
   <div class="card-header">
     <div class="card-icon" style="background: var(--sky);">
@@ -31,7 +32,7 @@
     </div>
   </div>
   <div class="card-footer">
-    <a href="{% url 'console:inbox_list' %}" class="btn btn-filled-lav">Manage inboxes</a>
+    <a href="{% url 'console:inbox_list' %}" class="btn btn-lav">Manage inboxes</a>
   </div>
 </div>
 
@@ -46,7 +47,8 @@
     </div>
   </div>
   <div class="card-footer">
-    <a href="{% url 'civil-settings-page' %}" class="btn btn-filled-lav">Civil SSO settings</a>
+    <a href="{% url 'civil-settings-page' %}" class="btn btn-lav">Civil SSO settings</a>
   </div>
+</div>
 </div>
 {% endblock %}

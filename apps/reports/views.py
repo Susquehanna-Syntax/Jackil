@@ -1,140 +1,78 @@
-from datetime import timedelta
+"""The two reports pages: the list of reports you can see, and one report."""
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
-from django.db.models.functions import TruncDate
+from django.http import Http404
 from django.shortcuts import redirect, render
-from django.utils import timezone
+from django.urls import reverse
 
-from apps.accounts.models import User
-from apps.sla.service import resolution_status, response_status
-from apps.tickets.models import Ticket
+from apps.reports.api import DEFAULT_CARDS
+from apps.reports.compute import visible_reports
+from apps.reports.models import Report
+from apps.reports.widgets import REPORT_WIDGETS
 
-STATUS_COLORS = {
-    "open": "sky",
-    "in_progress": "peach",
-    "pending": "lemon",
-    "resolved": "mint",
-    "closed": "text-3",
-}
-PRIORITY_COLORS = {"critical": "coral", "high": "rose", "medium": "lavender", "low": "mint"}
-
-
-def _avg_hours(deltas):
-    if not deltas:
-        return None
-    total = sum(d.total_seconds() for d in deltas)
-    return round(total / len(deltas) / 3600, 1)
+STAFF_ROLES = ("agent", "admin")
 
 
 @login_required
 def reports_home(request):
-    if request.user.role not in ("agent", "admin"):
+    """The Reports page: every report the caller owns or that is shared."""
+    if request.user.role not in STAFF_ROLES:
         return redirect("tickets:dashboard")
+    ctx = {"reports": list(visible_reports(request.user))}
+    return render(request, "reports/list.html", ctx)
 
-    tickets = Ticket.objects.all()
-    total = tickets.count()
-    now = timezone.now()
 
-    # Status + priority breakdowns
-    status_counts = dict(tickets.values_list("status").annotate(n=Count("id")))
-    priority_counts = dict(tickets.values_list("priority").annotate(n=Count("id")))
-    status_rows = [
-        {
-            "label": dict(Ticket.STATUS_CHOICES)[s],
-            "count": status_counts.get(s, 0),
-            "color": STATUS_COLORS.get(s, "lavender"),
-            "pct": round(status_counts.get(s, 0) / total * 100) if total else 0,
-        }
-        for s, _ in Ticket.STATUS_CHOICES
-    ]
-    priority_rows = [
-        {
-            "label": dict(Ticket.PRIORITY_CHOICES)[p],
-            "count": priority_counts.get(p, 0),
-            "color": PRIORITY_COLORS.get(p, "lavender"),
-            "pct": round(priority_counts.get(p, 0) / total * 100) if total else 0,
-        }
-        for p, _ in Ticket.PRIORITY_CHOICES
-    ]
-
-    # 14-day created volume
-    start = (now - timedelta(days=13)).date()
-    per_day = dict(
-        tickets.filter(created_at__date__gte=start)
-        .annotate(d=TruncDate("created_at"))
-        .values_list("d")
-        .annotate(n=Count("id"))
+@login_required
+def report_create(request):
+    """The New report button: a default card set, straight to its page."""
+    if request.user.role not in STAFF_ROLES:
+        return redirect("tickets:dashboard")
+    report = Report.objects.create(
+        name="Untitled report", owner=request.user, widgets=DEFAULT_CARDS
     )
-    volume = []
-    peak = max(per_day.values()) if per_day else 1
-    for i in range(14):
-        day = start + timedelta(days=i)
-        n = per_day.get(day, 0)
-        volume.append({"day": day, "n": n, "pct": round(n / peak * 100) if peak else 0})
+    return redirect("reports:report_page", report_id=report.pk)
 
-    # SLA compliance
-    resp_met = resp_breached = res_met = res_breached = 0
-    first_response_deltas = []
-    resolution_deltas = []
-    for t in tickets.only(
-        "first_response_due",
-        "first_responded_at",
-        "resolution_due",
-        "status",
-        "closed_at",
-        "created_at",
-    ):
-        rs = response_status(t, now)
-        if rs == "met":
-            resp_met += 1
-        elif rs == "breached":
-            resp_breached += 1
-        res = resolution_status(t, now)
-        if res == "met":
-            res_met += 1
-        elif res == "breached":
-            res_breached += 1
-        if t.first_responded_at and t.created_at:
-            first_response_deltas.append(t.first_responded_at - t.created_at)
-        if t.status in ("resolved", "closed") and t.closed_at and t.created_at:
-            resolution_deltas.append(t.closed_at - t.created_at)
 
-    from apps.tickets.models import TicketRating
+@login_required
+def report_page(request, report_id):
+    """One report: a twelve-column grid with one card box per saved card."""
+    if request.user.role not in STAFF_ROLES:
+        return redirect("tickets:dashboard")
+    report = visible_reports(request.user).filter(id=report_id).first()
+    if report is None:
+        raise Http404("No such report.")
 
-    ratings = TicketRating.objects.all()
-    csat_count = ratings.count()
-    csat_avg = round(sum(r.score for r in ratings) / csat_count, 1) if csat_count else None
+    cards = _cards(report)
+    return render(request, "reports/report.html", {"report": report, "cards": cards})
 
-    resp_total = resp_met + resp_breached
-    res_total = res_met + res_breached
 
-    # Top agents by assigned ticket load
-    top_agents = list(
-        User.objects.filter(role__in=["agent", "admin"])
-        .annotate(load=Count("assigned_tickets"))
-        .values("first_name", "last_name", "username", "avatar_color", "load")
-        .order_by("-load")[:6]
-    )
+def _cards(report):
+    """The saved cards that still name a known kind, each with its CSV link.
 
-    ctx = {
-        "total": total,
-        "resolved_total": status_counts.get("resolved", 0) + status_counts.get("closed", 0),
-        "open_total": status_counts.get("open", 0),
-        "status_rows": status_rows,
-        "priority_rows": priority_rows,
-        "volume": volume,
-        "volume_total": sum(v["n"] for v in volume),
-        "resp_met": resp_met,
-        "resp_total": resp_total,
-        "resp_pct": round(resp_met / resp_total * 100) if resp_total else 0,
-        "res_met": res_met,
-        "res_total": res_total,
-        "res_pct": round(res_met / res_total * 100) if res_total else 0,
-        "avg_first_response_h": _avg_hours(first_response_deltas),
-        "avg_resolution_h": _avg_hours(resolution_deltas),
-        "top_agents": top_agents,
-        "csat_avg": csat_avg,
-        "csat_count": csat_count,
-    }
-    return render(request, "reports/home.html", ctx)
+    The index is the card's position in ``report.widgets``, so a retired kind
+    leaves a hole rather than shifting every later card onto the wrong data.
+    """
+    cards = []
+    for position, card in enumerate(report.widgets):
+        entry = REPORT_WIDGETS.get(card.get("kind"))
+        if entry is None:
+            continue
+        size = entry["size"]
+        cards.append(
+            {
+                "index": position,
+                "title": card.get("title") or entry["title"],
+                "how": entry["how"],
+                "w": _grid(card, "w", size["w"]),
+                "h": _grid(card, "h", size["h"]),
+                "csv_url": reverse("reports:report_data_csv", args=[report.pk, position]),
+            }
+        )
+    return cards
+
+
+def _grid(card, key, fallback):
+    value = card.get(key)
+    if isinstance(value, bool) or not isinstance(value, int):
+        return fallback
+    return value

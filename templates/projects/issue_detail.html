@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load links_tags %}
+{% load static %}
+
+{% block title %}{{ issue.key }} — {{ issue.title }} — Jackil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/vendor/katex/katex.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'projects:project_detail' issue.project.key %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to {{ issue.project.key }}
+  </a>
+
+  <div class="page-header">
+    <div style="min-width:0;">
+      <div class="page-title">{{ issue.title }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        <span class="issue-key">{{ issue.key }}</span>
+        &middot; reported {{ issue.created_at|timesince }} ago
+        {% if issue.updated_at %}&middot; updated {{ issue.updated_at|timesince }} ago{% endif %}
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span class="pill {{ type_tone }}">{{ issue.get_type_display }}</span>
+      {% if issue.column %}<span class="pill {% if is_done %}tc-mint{% else %}off{% endif %}">{{ issue.column.name }}</span>{% endif %}
+      <span class="pill {{ priority_tone }}">{{ issue.get_priority_display }}</span>
+      <a href="{{ edit_url }}" class="btn btn-outline">Edit</a>
+    </div>
+  </div>
+
+  <div class="issue-layout fade-in d2">
+    <div style="min-width:0;">
+      {% if description_html %}
+      <article class="markdown-body" data-markdown>{{ description_html }}</article>
+      {% else %}
+      <div class="form-card"><div class="form-card-hint" style="margin:0;">No description yet.</div></div>
+      {% endif %}
+
+      {% if children %}
+      <div class="form-card">
+        <div class="form-card-title">{% if is_epic %}Issues in this epic{% else %}Sub-tasks{% endif %}</div>
+        {% if is_epic %}
+        <div class="form-card-hint">{{ epic_points }} point{{ epic_points|pluralize }} &middot; {{ epic_done }} of {{ children|length }} done</div>
+        {% endif %}
+        <div class="issue-children">
+          {% for child in children %}
+          <a href="{{ child.url }}" class="issue-child-row">
+            <span class="issue-key">{{ child.key }}</span>
+            <span class="issue-child-title">{{ child.issue.title }}</span>
+            {% if child.issue.story_points %}<span class="pill off">{{ child.issue.story_points }} pts</span>{% endif %}
+            {% if child.issue.column %}<span class="pill off">{{ child.issue.column.name }}</span>{% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="form-card">
+        <div class="form-card-title">Activity</div>
+        {% if events %}
+        <ul class="activity-list">
+          {% for row in events %}
+          <li>
+            <span>{{ row.line }}</span>
+            <span class="activity-meta">{% if row.actor %}{{ row.actor }} &middot; {% endif %}{{ row.event.created_at|timesince }} ago</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="form-card-hint" style="margin:0;">Nothing has happened yet.</div>
+        {% endif %}
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title">Comments</div>
+        {% if comments %}
+        {% for comment in comments %}
+        <div class="comment">
+          <div class="comment-head">{{ comment.author }} &middot; {{ comment.created_at|timesince }} ago</div>
+          <div class="markdown-body" data-markdown>{{ comment.body_html }}</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="form-card-hint" style="margin-bottom:14px;">No comments yet.</div>
+        {% endif %}
+        <form method="post" action="{{ comment_url }}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label" for="comment-body">Add a comment</label>
+            <textarea class="form-textarea" id="comment-body" name="body" rows="3" placeholder="Markdown, LaTeX and [[links]]."></textarea>
+          </div>
+          <button type="submit" class="btn btn-lav btn-sm">Comment</button>
+        </form>
+      </div>
+
+      <div class="form-card">
+        {% links_panel "card" issue.pk %}
+      </div>
+    </div>
+
+    <aside class="issue-side">
+      <div class="form-card" style="margin-bottom:0;">
+        <div class="form-card-title">Details</div>
+        <div class="issue-side-grid">
+          <div class="issue-side-label">Assignee</div>
+          <div>{{ assignee }}</div>
+
+          <div class="issue-side-label">Reporter</div>
+          <div>{{ reporter }}</div>
+
+          <div class="issue-side-label">Points</div>
+          <div>
+            {% if issue.type == 'subtask' %}Rolls up into parent
+            {% else %}{{ issue.story_points|default:"—" }}{% endif %}
+          </div>
+
+          <div class="issue-side-label">Sprint</div>
+          <div>{{ issue.sprint.name|default:"—" }}</div>
+
+          <div class="issue-side-label">Labels</div>
+          <div>
+            {% if labels %}
+            <div class="chip-row">
+              {% for label in labels %}<span class="chip">{{ label }}</span>{% endfor %}
+            </div>
+            {% else %}&mdash;{% endif %}
+          </div>
+
+          {% if issue.parent %}
+          <div class="issue-side-label">Parent</div>
+          <div><a href="{{ parent_url }}">{{ issue.parent.key }}</a> {{ issue.parent.title }}</div>
+          {% endif %}
+
+
+          {% if can_see_cost %}
+          <div class="issue-side-label">Cost</div>
+          <div>{{ cost }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title">Move</div>
+        <div class="form-card-hint">Pick the column this issue belongs in.</div>
+        <form method="post" action="{{ move_url }}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label" for="move-column">Column</label>
+            <select class="form-select" id="move-column" name="column">
+              {% for column in columns %}
+              <option value="{{ column.pk }}" {% if issue.column_id == column.pk %}selected{% endif %}>{{ column.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm">Move issue</button>
+        </form>
+        <div style="margin-top:14px;">
+          <a class="btn btn-outline btn-sm" href="{% url 'projects:issue_create' issue.project.key %}?type=subtask&amp;parent={{ issue.key }}">Add sub-task</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/vendor/katex/katex.min.js' %}"></script>
+<script src="{% static 'js/jackil-math.js' %}"></script>
+{% endblock %}

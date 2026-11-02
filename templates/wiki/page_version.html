@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Version {{ version.number }} — {{ page.title }} — Jackil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/vendor/katex/katex.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'wiki:page_history' page.slug %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to history
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">{{ version.title }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        Version {{ version.number }} &middot;
+        {% if version.author %}{{ version.author.get_full_name|default:version.author.username }}{% else %}nobody{% endif %},
+        {{ version.created_at|timesince }} ago{% if version.summary %} &middot; {{ version.summary }}{% endif %}
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      {% if version.number > 1 %}
+      <a class="btn btn-outline" href="{% url 'wiki:page_diff' page.slug %}?a={{ version.number|add:'-1' }}&amp;b={{ version.number }}">Compare with previous</a>
+      {% endif %}
+      <form method="post" action="{% url 'wiki:page_restore' page.slug version.number %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-lav">Restore this version</button>
+      </form>
+    </div>
+  </div>
+
+  <article class="markdown-body fade-in d2" data-markdown>{{ html }}</article>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="{% static 'js/vendor/katex/katex.min.js' %}"></script>
+<script src="{% static 'js/jackil-math.js' %}"></script>
+{% endblock %}

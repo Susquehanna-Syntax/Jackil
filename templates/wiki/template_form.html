@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{% if editing.pk %}Edit {{ editing.name }}{% else %}New Template{% endif %} — Wiki — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1" style="max-width: 780px;">
+  <div class="wiki-breadcrumbs">
+    <a href="{% url 'wiki:home' %}">Wiki</a> &rsaquo;
+    <a href="{% url 'wiki:template_list' %}">Templates</a>
+    {% if editing.pk %}&rsaquo; {{ editing.name }}{% endif %}
+  </div>
+
+  <div class="page-title">{% if editing.pk %}Edit {{ editing.name }}{% else %}New Template{% endif %}</div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% if errors.non_field %}
+    <div class="message message-error">{{ errors.non_field }}</div>
+    {% endif %}
+
+    <div class="form-card fade-in d2">
+      <div class="form-group">
+        <label class="form-label" for="id_name">Name</label>
+        <input type="text" name="name" id="id_name" class="form-input" maxlength="120"
+               value="{{ editing.name }}" required>
+        {% if errors.name %}<div class="message message-error">{{ errors.name }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_description">Description</label>
+        <input type="text" name="description" id="id_description" class="form-input" maxlength="200"
+               value="{{ editing.description }}" placeholder="What this template is for">
+        {% if errors.description %}<div class="message message-error">{{ errors.description }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_body">Body</label>
+        <textarea name="body" id="id_body" class="form-input wiki-editor" rows="16"
+                  placeholder="# {{ '{' }}{{ '}' }} Title">{{ editing.body }}</textarea>
+        {% if errors.body %}<div class="message message-error">{{ errors.body }}</div>{% endif %}
+        <div class="form-card-hint" style="margin-top:6px;">
+          Markdown, <code>$LaTeX$</code>, callouts and <code>[[Page title]]</code> links — the same
+          as a page body.
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px;">
+      <button type="submit" class="btn btn-lav">{{ submit_label }}</button>
+      <a href="{% url 'wiki:template_list' %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

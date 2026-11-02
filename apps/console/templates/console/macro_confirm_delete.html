@@ -6,7 +6,7 @@
   <form method="post" class="inbox-form-actions" style="margin-top: 20px;">
     {% csrf_token %}
     <a href="{% url 'console:macro_edit' macro.pk %}" class="btn btn-outline">Cancel</a>
-    <button type="submit" class="btn btn-filled-coral">Delete macro</button>
+    <button type="submit" class="btn btn-coral">Delete macro</button>
   </form>
 </div>
 {% endblock %}

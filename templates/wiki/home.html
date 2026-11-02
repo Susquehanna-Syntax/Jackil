@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Wiki — Jackil{% endblock %}
+
+{% block content %}
+<div class="wk-top fade-in d1">
+  <span class="wk-crumb">Wiki</span>
+  <div class="wk-top-actions">
+    <a href="{% url 'wiki:tree' %}" class="btn wk-tree-btn">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="12" y1="12" x2="21" y2="12"/><line x1="12" y1="18" x2="21" y2="18"/><polyline points="3 6 5 6 5 18 8 18"/><line x1="5" y1="12" x2="8" y2="12"/></svg>
+      All pages, as a tree</a>
+    {% if can_manage_spaces %}
+    <a href="{% url 'wiki:template_list' %}" class="btn btn-outline">Templates</a>
+    <a href="{% url 'wiki:space_create' %}" class="btn btn-outline">New space</a>
+    {% endif %}
+    <a href="{% url 'wiki:page_new' %}" class="btn btn-lav">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New page
+    </a>
+  </div>
+</div>
+
+<section class="wk-hero fade-in d2">
+  <div>
+    <h1 class="wk-hero-title">Team <em>wiki</em></h1>
+    <p class="wk-hero-lead">How we run things: runbooks, setup guides, and the pages customers see in the Help center.</p>
+  </div>
+  <div>
+    <form method="get" class="wk-search" data-live-filter role="search">
+      <input type="search" name="q" value="{{ q }}" class="form-input" placeholder="Search every page" aria-label="Search every page" data-wk-search autocomplete="off">
+      <kbd>/</kbd>
+    </form>
+    <div class="wk-chips">
+      <span>{{ space_count }} space{{ space_count|pluralize }}</span>
+      <span>{{ page_count }} page{{ page_count|pluralize }}</span>
+      <span>{{ public_count }} shown in the Help center</span>
+    </div>
+  </div>
+</section>
+
+<div class="fade-in d3">{% include "wiki/_home_results.html" %}</div>
+
+<div class="wk-cols fade-in d4">
+  <section class="wk-panel">
+    <h2>Recently updated</h2>
+    {% for page in recent %}
+    <a class="wk-row" href="{{ page.get_absolute_url }}">
+      <span class="wk-row-title">{{ page.title }}</span>
+      <span class="wk-row-meta">{{ page.space.name }} &middot; {% if page.updated_by %}{{ page.updated_by.get_full_name|default:page.updated_by.username }} &middot; {% endif %}{{ page.updated_at|timesince }} ago</span>
+    </a>
+    {% empty %}
+    <p class="muted-note">No pages yet.</p>
+    {% endfor %}
+  </section>
+  <section class="wk-panel">
+    <h2>Needs attention</h2>
+    {% for page, reason in attention %}
+    <a class="wk-row" href="{{ page.get_absolute_url }}">
+      <span class="wk-row-title">{{ page.title }}</span>
+      <span class="wk-row-meta">{{ reason }}</span>
+    </a>
+    {% empty %}
+    <p class="muted-note">Every page has an owner and is up to date.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+  // "/" jumps to the wiki search, as on the website docs.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.target.closest('input, textarea, select, [contenteditable]')) return;
+    const box = document.querySelector('[data-wk-search]');
+    if (box) { e.preventDefault(); box.focus(); }
+  });
+</script>
+{% endblock %}

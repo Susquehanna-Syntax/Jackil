@@ -1,0 +1,117 @@
+{% load static %}
+<div class="hc-root{% if styling %} pt-styled{% endif %}" data-hc-root{% if can_arrange %} data-pins-url="{% url 'portals:portal_pins' portal.slug %}"{% endif %}>
+  <section class="hc-hero tc-{{ styling.tint|default:'lav' }} fade-in d1">
+    {% if styling and styling.logo_url %}<img class="pt-logo hc-logo" src="{{ styling.logo_url }}" alt="">{% endif %}
+    {% if portal and not portal.is_published %}<div class="pt-draft">Draft: only staff can see this</div>{% endif %}
+    <h1 class="hc-title">How can we <em>help?</em></h1>
+    {% if intro_html %}<div class="hc-sub hc-intro">{{ intro_html }}</div>
+    {% else %}<p class="hc-sub">Search our guides, or ask us directly.</p>{% endif %}
+    {% if not portal or portal.show_search %}
+    <form class="hc-search" method="get" role="search"
+          action="{% if portal %}{% url 'portals:portal_search' portal.slug %}{% else %}{% url 'help:home' %}{% endif %}"
+          data-hc-search data-suggest="{% if portal %}{% url 'portals:portal_suggest' portal.slug %}{% else %}{% url 'help:suggest' %}{% endif %}"
+          data-ticket="{% url 'tickets:ticket_create' %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" name="q" value="{{ query }}" autocomplete="off" aria-label="Search for help"
+             placeholder="Describe the problem, e.g. the Wi-Fi keeps dropping" aria-controls="hc-results" aria-expanded="false">
+      <div class="hc-results" id="hc-results" role="listbox" hidden></div>
+    </form>
+    {% endif %}
+    <div class="hc-cta">
+      <a class="btn hc-primary" href="{% url 'tickets:ticket_create' %}">Open a ticket</a>
+      {% if all_forms %}<button type="button" class="btn hc-secondary" data-modal-open="hc-forms">Fill out a form</button>{% endif %}
+    </div>
+  </section>
+
+  {% if can_arrange %}
+  <div class="hc-adminbar fade-in d2">
+    <b>Arrange this page</b>
+    <span class="hc-adminbar-note">Pin the forms and help sections customers see before they search, and drag them into order.</span>
+    <button type="button" class="btn btn-outline btn-sm" data-hc-arrange aria-pressed="false">Arrange</button>
+    <span class="hc-arrange-only">
+      {% if unpinned_forms %}<select class="form-select" data-hc-add="forms" aria-label="Pin a form"><option value="">Pin a form</option>{% for slug, name in unpinned_forms %}<option value="{{ slug }}">{{ name }}</option>{% endfor %}</select>{% endif %}
+      {% if unpinned_spaces %}<select class="form-select" data-hc-add="spaces" aria-label="Pin a help section"><option value="">Pin a help section</option>{% for space in unpinned_spaces %}<option value="{{ space.pk }}">{{ space.name }}</option>{% endfor %}</select>{% endif %}
+      <button type="button" class="btn btn-lav btn-sm" data-hc-save>Save</button>
+    </span>
+  </div>
+  {% endif %}
+
+  {% if forms or can_arrange %}
+  <section class="hc-sec fade-in d2">
+    <div class="hc-sec-head"><h2>Common requests</h2><span>{% if portal %}pinned by your team{% else %}every request form{% endif %}</span></div>
+    <div class="hc-forms" data-hc-list="forms">
+      {% for slug, name in forms %}
+      <a class="hc-form tc-{% cycle 'mint' 'sky' 'peach' 'rose' 'lav' 'lemon' %}" href="{% url 'tickets:ticket_create' %}?form={{ slug }}"{% if can_arrange %} data-pin="{{ slug }}"{% endif %}>
+        <b>{{ name }}</b><span class="hc-go">Fill out</span>
+        {% if can_arrange %}<button type="button" class="hc-unpin" aria-label="Unpin {{ name }}">&times;</button>{% endif %}
+      </a>
+      {% empty %}
+      <p class="muted-note hc-none">No forms pinned yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="hc-sec fade-in d3">
+    <div class="hc-sec-head"><h2>Browse help</h2><span>{% if portal and portal.spaces.exists %}pinned help sections{% else %}every section with guides{% endif %}</span></div>
+    <div class="hc-topics" data-hc-list="spaces">
+      {% for entry in help %}
+      <div class="hc-topic tc-{{ entry.tint }}"{% if can_arrange %} data-pin="{{ entry.space.pk }}"{% endif %}>
+        <div class="hc-topic-head"><i aria-hidden="true"></i><h3>{{ entry.space.name }}</h3></div>
+        {% for guide in entry.guides %}<a class="hc-guide" href="{% url 'help:article' guide.slug %}">{{ guide.title }}</a>
+        {% empty %}<p class="muted-note">No guides published here yet.</p>{% endfor %}
+        {% if entry.count > entry.guides|length %}<span class="hc-all">All {{ entry.count }} guides</span>{% endif %}
+        {% if can_arrange %}<button type="button" class="hc-unpin" aria-label="Unpin {{ entry.space.name }}">&times;</button>{% endif %}
+      </div>
+      {% empty %}
+      <p class="muted-note hc-none">No guides published yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if my_tickets is not None %}
+  <section class="hc-sec fade-in d4">
+    <div class="hc-sec-head"><h2>Your requests</h2><span>only you see these</span></div>
+    <div class="hc-mine">
+      <div class="hc-card">
+        {% for t in my_tickets %}
+        <a class="hc-ticket" href="{% url 'tickets:ticket_detail' t.pk %}"><span>#{{ t.pk }} {{ t.title }}</span><span class="pill tc-{% if t.status == 'pending' %}peach{% else %}sky{% endif %}">{{ t.get_status_display }}</span></a>
+        {% empty %}
+        <p class="muted-note">You have no open requests.</p>
+        {% endfor %}
+        <a class="hc-all" href="{% url 'tickets:customer_tickets' %}">See all your requests</a>
+      </div>
+      <div class="hc-card hc-stuck">
+        <b>Still stuck?</b>
+        <p>Tell us what's wrong and we'll pick it up.</p>
+        <a class="btn hc-primary" href="{% url 'tickets:ticket_create' %}">Open a ticket</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if status_embeds %}
+  <section class="hc-sec fade-in d4">
+    <div class="hc-sec-head"><h2>Service status</h2></div>
+    <div class="hc-status">{% include "portals/_aside.html" with status_only=True %}</div>
+  </section>
+  {% endif %}
+
+  {% if not styling or not portal.hide_powered_by %}<div class="pt-powered">Powered by Jackil</div>{% endif %}
+</div>
+
+{% if all_forms %}
+<div class="modal-overlay" id="hc-forms" aria-hidden="true">
+  <div class="modal hc-forms-modal" role="dialog" aria-modal="true" aria-labelledby="hc-forms-title">
+    <div class="modal-header"><div class="modal-title" id="hc-forms-title">Which form?</div>
+      <button type="button" class="modal-close" data-modal-close aria-label="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body hc-forms-body">
+      <input type="search" class="form-input" placeholder="Filter forms as you type" aria-label="Filter forms" data-hc-formfilter>
+      {% for slug, name in all_forms %}
+      <a class="hc-form-row tc-{% cycle 'mint' 'sky' 'peach' 'rose' 'lav' 'lemon' %}" href="{% url 'tickets:ticket_create' %}?form={{ slug }}" data-hc-formrow>{{ name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+<script src="{% static 'js/jackil-help.js' %}" defer></script>

@@ -29,3 +29,11 @@ Thumbs.db
 
 # Docker (optional - remove if you want docker files in repo)
 # docker-compose.override.yml
+
+# rexyMCP architect/executor workflow and local plans (never committed)
+CLAUDE.md
+REXYMCP.md
+rexymcp.toml
+.rexymcp/
+docs/dev/
+docs/superpowers/

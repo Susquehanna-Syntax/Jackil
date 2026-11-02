@@ -1,56 +1,94 @@
 # Jackil
 
-Free and open-source IT ticket-management (helpdesk) software for a single
-organization with departments. Built with Django, with a warm-dark, pastel
-design system.
+Free and open-source service desk and work tracker for one organization with
+departments: tickets, projects, a wiki and an inventory of items, all linked
+to each other. Built with Django, on the SQSY design language shared with
+Vigil.
 
-📖 **Full documentation:** open [`docs/wiki.html`](docs/wiki.html) in a browser
+**Full documentation:** open [`docs/wiki.html`](docs/wiki.html) in a browser
 for a single-page guide covering setup, day-to-day use, and the API.
 
 ## Tech Stack
 
 - **Backend:** Django 5.2 (LTS) + Django REST Framework
 - **Database:** PostgreSQL (production) / SQLite (zero-dependency local dev)
+- **Front end:** server-rendered templates and plain JavaScript, no build step
 - **Static:** WhiteNoise
-- **Background work:** management commands (`poll_inbox`, `check_sla`) via cron —
-  no Celery/Redis dependency
-- **Containerization:** Docker + Docker Compose
+- **Background work:** management commands (`poll_inbox`, `check_sla`) via cron,
+  with no Celery or Redis dependency
+- **Containerization:** Docker + Docker Compose (amd64 and arm64 images)
 
 ## Features
 
-### Conversations & Email
-- Unified conversation thread per ticket: public replies, internal notes
-  (agents only), inbound/outbound email, and system audit events
-- File attachments on messages, access-controlled downloads
-- Two-way email: per-inbox SMTP/IMAP config, `poll_inbox` threads inbound mail
-  onto tickets (plus-address token / `[#id]` subject), replies email the requester
+### Tickets and email
+- One conversation per ticket: public replies, internal notes (agents only),
+  inbound and outbound email, and system events
+- File attachments on messages, with access-controlled downloads
+- Two-way email: per-inbox SMTP/IMAP, `poll_inbox` threads inbound mail onto
+  tickets (plus-address token or `[#id]` subject), replies email the requester
+- SLA targets per priority on a business-hours schedule, breach detection and
+  escalation (`check_sla`), due dates
+- Custom fields and request forms; automation rules and canned-response macros
+- Saved views, global search, in-app notifications
 
-### SLA, Due Dates & Escalation
-- SLA response/resolution targets per priority, business-hours schedule
-- Auto-computed due times, first-response clock, breach detection (`check_sla`),
-  auto-escalation, due dates, dashboard "Needs Attention" widget
+### Projects
+- One screen per project with **Board**, **Reports** and **Settings** tabs; the
+  backlog and sprint planning sit under the board, and a List view filters
+  every issue as you type
+- Issue keys (`OPS-12`), columns per project, story points, sub-tasks and a
+  velocity chart
 
-### Automation, Knowledge Base, Reporting & API
-- Automation rules (trigger → conditions → actions) and canned-response macros
-- Public Help Center with categories/articles + admin authoring
-- Reporting dashboard: volume, status/priority mix, SLA compliance, CSAT, agent load
-- Token-authenticated REST API (`/api/v1/`) + outbound webhooks, with per-user/
-  anon rate throttling and a bounded, client-overridable page size (`?page_size=`)
+### Wiki
+- Built like the SQSY website docs: a home with search, space cards,
+  Recently updated and Needs attention (stale pages, pages with no owner,
+  pages linked to open tickets)
+- Pages with an always-visible page tree you can filter, On this page, the
+  page's links, Previous and Next, and an owner
+- Markdown with a side-by-side preview, history and diffs, templates and
+  attachments; suggested articles on tickets
 
-### Custom Fields & Request Forms
-- Admin-defined custom fields (text, dropdown, checkbox, number, date)
-- Request forms that drive dynamic customer intake; values shown on the ticket
+### Dynamic Links and Dynamic Items
+- Link anything to anything: a ticket to an issue, a page to a Dynamic Item, a
+  Vigil host to a ticket. The link picker asks how things are related first,
+  has a coloured tab per type, and previews what you pick before you link it
+- **Dynamic Items:** what your organization tracks, with a coloured tab per
+  kind, quick filters (warranty ending, mine, no owner, open tickets) and
+  custom fields. With Vigil linked, hosts and devices come live from Vigil,
+  which keeps the only copy: new devices are created in Vigil, and existing
+  device items move there with their links
+- Every list filters as you type; there is no Filter button
 
-### Search, Saved Views, Notifications & More
-- Global search across tickets and the knowledge base (permission-scoped)
-- **Saved views** — persist named ticket-list filter sets (status/priority/
-  assignment/search), recall in one click, share with the team
-- In-app notifications with unread badge; user profiles and preferences
-- Roles (customer / agent / admin) with role-based access throughout
+### Dashboards and reports
+- Dashboards built from widgets: counts, charts, gauges and tables over
+  tickets, projects and, when linked, Vigil hosts
+- Saved reports with sources, a date range and a grid of charts
 
-### Pro / Enterprise
-- CSV data export, activity/audit log, CSAT (satisfaction) ratings
-- White-label branding (product name, tagline, accent color)
+### Help center and portals
+- A Help center that starts with a search box (guides and forms appear as you
+  type), Open a ticket and Fill out a form
+- Admins pin the forms and help sections customers see before they search,
+  and drag them into order, on the page itself
+- A portal for each department with its own name, colours and request forms;
+  customers see their own requests and never see Vigil data or costs
+
+### Vigil integration
+- With a Vigil integration key (`vjk_`), or a Vigil SQSY Business scoped API
+  key (`vsk_`) to limit Jackil to some sites, Jackil reads hosts, tasks,
+  playbooks, runs, automations and devices from Vigil. Agents link them to
+  tickets and put them on dashboards; Vigil shows what links to its objects.
+- When a Vigil admin ticks **Can change devices** on Jackil's key, Jackil
+  creates devices in Vigil and moves its own device items there. Jackil never
+  runs tasks in Vigil.
+
+### SQSY Business
+Unlocked by an SQSY Business licence on the Vigil instance Jackil is linked
+to; Jackil verifies the licence itself.
+- SAML single sign-on
+- Portal branding, CSV export, audit log, CSAT ratings
+
+### REST API
+- Token-authenticated REST API (`/api/v1/`) with outbound webhooks, per-user
+  and anonymous rate throttling, and a bounded page size (`?page_size=`)
 
 ## Quick Start (local dev, SQLite — no Postgres needed)
 
@@ -110,8 +148,18 @@ apps/
 ├── sla/            SLA targets, business schedule, engine, check_sla
 ├── automation/     Macros + automation rules engine
 ├── kb/             Knowledge base / Help Center
+├── projects/       Projects, issues, boards, backlogs, sprints
+├── wiki/           Spaces, pages, revisions, templates, attachments
+├── links/          Dynamic Links: the link registry and the link picker
+├── items/          Dynamic Items: kinds, fields and records
+├── dashboards/     Dashboards and their widgets
+├── reports/        Saved reports and CSV export
+├── portals/        Customer portals per department
+├── vigil/          The Vigil connection: client, search, widgets, status embeds
+├── licensing/      Edition: verifies the SQSY Business licence from Vigil
+├── saml/           SAML single sign-on (SQSY Business)
+├── civilsso/       Civil SSO
 ├── api/            REST API (DRF), API keys, webhooks
-├── reports/        Reporting & analytics
 ├── customfields/   Custom fields + request forms
 ├── notifications/  In-app notifications
 └── console/        Admin settings console + branding
@@ -122,4 +170,5 @@ history in `dev/`, and the single-page user guide `wiki.html`.
 
 ## License
 
-Free and open source.
+AGPLv3 — see [LICENSE](LICENSE). SQSY Business features are unlocked by an
+SQSY Business licence on the Vigil instance Jackil is linked to.

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Diff — {{ page.title }} — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'wiki:page_history' page.slug %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to history
+  </a>
+
+  <div class="page-title">Version {{ old.number }} &rarr; version {{ new.number }}</div>
+  <div style="font-size: 13px; color: var(--text-3); margin: 4px 0 18px;">
+    {{ page.title }} &middot; v{{ old.number }} by
+    {% if old.author %}{{ old.author.get_full_name|default:old.author.username }}{% else %}nobody{% endif %},
+    {{ old.created_at|timesince }} ago &middot; v{{ new.number }} by
+    {% if new.author %}{{ new.author.get_full_name|default:new.author.username }}{% else %}nobody{% endif %},
+    {{ new.created_at|timesince }} ago
+  </div>
+
+  <pre class="wiki-diff fade-in d2">{% for kind, text in lines %}<span class="{{ kind }}">{{ text }}</span>
+{% endfor %}</pre>
+</div>
+{% endblock %}

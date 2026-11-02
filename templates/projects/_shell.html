@@ -1,0 +1,21 @@
+<div class="pj-head fade-in d1">
+  <div class="pj-head-main">
+    <span class="issue-key pj-key">{{ project.key }}</span>
+    <h1 class="pj-title">{{ project.name }}</h1>
+    <div class="pj-meta">
+      {{ project.get_method_display }}
+      {% if project.lead %}&middot; {{ project.lead.get_full_name|default:project.lead.username }}{% endif %}
+      &middot; {{ shell_open }} open issue{{ shell_open|pluralize }}
+      {% if project.department %}&middot; {{ project.department.name }}{% endif %}
+      {% if project.is_archived %}&middot; <span class="pill">Archived</span>{% endif %}
+    </div>
+  </div>
+  <div class="pj-head-actions">
+    <a href="{% url 'projects:project_list' %}" class="btn btn-outline">All projects</a>
+    <a href="{% url 'projects:issue_create' project.key %}" class="btn btn-lav">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New issue
+    </a>
+  </div>
+</div>
+<div class="fade-in d1">{% include "partials/tab_bar.html" with tabs=shell_tabs tabs_label="Project sections" %}</div>

@@ -1,0 +1,45 @@
+{% extends "console/settings_base.html" %}
+
+{% block settings_content %}
+<div class="ps-heading-row">
+  <div class="section-heading">Portals</div>
+  {% if can_add %}
+  <a href="{% url 'console:portal_create' %}" class="btn btn-lav">New portal</a>
+  {% else %}
+  <span class="ps-locked">
+    <button type="button" class="btn btn-outline" disabled>New portal</button>
+    <div class="form-card-hint">More than one portal is part of SQSY Business.</div>
+  </span>
+  {% endif %}
+</div>
+
+{% for portal in portals %}
+<div class="form-card ps-card">
+  <div class="ps-card-head">
+    <div>
+      <div class="form-card-title">{{ portal.name }}</div>
+      <div class="form-card-hint ps-link">/portal/{{ portal.slug }}/</div>
+    </div>
+    <div class="ps-pills">
+      {% if portal.is_published %}
+      <span class="pill tc-mint">Published</span>
+      {% else %}
+      <span class="pill off">Draft</span>
+      {% endif %}
+      {% if portal.is_default %}
+      <span class="pill tc-lav">Default</span>
+      {% endif %}
+    </div>
+  </div>
+  <p class="form-card-hint">{{ portal.request_forms|length }} request form{{ portal.request_forms|length|pluralize }}</p>
+  <div class="ps-actions">
+    <a href="{% url 'console:portal_edit' pk=portal.pk %}" class="btn btn-outline">Edit</a>
+  </div>
+</div>
+{% empty %}
+<div class="form-card">
+  <div class="form-card-title">No portals yet</div>
+  <div class="form-card-hint">Create a portal to give customers a help center of their own.</div>
+</div>
+{% endfor %}
+{% endblock %}

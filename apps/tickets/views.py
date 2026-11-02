@@ -1,17 +1,20 @@
-from datetime import timedelta
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import FileResponse, Http404, JsonResponse
+from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from apps.accounts.models import Department, User
+from apps.licensing.gates import business_page
+from apps.ui.live import render_live
+from config.features import feature_enabled
 
 from . import permissions
+from .filters import filter_tickets
 from .models import Attachment, SavedView, Ticket
 from .services import AttachmentTooLarge, post_message, record_system_event
 
@@ -26,59 +29,8 @@ def dashboard(request):
 
 @login_required
 def dashboard_auth(request):
-    total = Ticket.objects.count()
-    open_tickets = Ticket.objects.filter(status="open")
-    my_open = open_tickets.filter(assigned_to=request.user).count()
-    open_total = open_tickets.count()
-    in_progress = Ticket.objects.filter(status="in_progress").count()
-    resolved = Ticket.objects.filter(status="resolved").count()
-    closed = Ticket.objects.filter(status="closed").count()
-    critical = Ticket.objects.filter(
-        priority="critical", status__in=["open", "in_progress"]
-    ).count()
-    recent = Ticket.objects.select_related(
-        "created_by", "assigned_to", "department"
-    ).prefetch_related("assigned_users")[:8]
-    my_tickets = (
-        Ticket.objects.filter(assigned_to=request.user)
-        .select_related("created_by", "assigned_to", "department")
-        .prefetch_related("assigned_users")[:5]
-    )
-    today = timezone.now().date()
-    week_ago = today - timedelta(days=7)
-    this_week = Ticket.objects.filter(created_at__date__gte=week_ago).count()
-
-    now = timezone.now()
-    open_states = ["open", "in_progress", "pending"]
-    overdue_tickets = (
-        Ticket.objects.filter(status__in=open_states, resolution_due__lt=now)
-        .select_related("created_by", "assigned_to")
-        .order_by("resolution_due")[:6]
-    )
-    sla_overdue = Ticket.objects.filter(status__in=open_states, resolution_due__lt=now).count()
-    sla_breached = (
-        Ticket.objects.filter(status__in=open_states)
-        .filter(Q(response_breached=True) | Q(resolution_breached=True))
-        .count()
-    )
-
-    ctx = {
-        "total": total,
-        "my_open": my_open,
-        "open_total": open_total,
-        "in_progress": in_progress,
-        "resolved": resolved,
-        "closed": closed,
-        "critical": critical,
-        "recent": recent,
-        "my_tickets": my_tickets,
-        "this_week": this_week,
-        "overdue_tickets": overdue_tickets,
-        "sla_overdue": sla_overdue,
-        "sla_breached": sla_breached,
-        "show_needs_attention": (request.user.preferences or {}).get("show_needs_attention", True),
-    }
-    return render(request, "tickets/dashboard.html", ctx)
+    get_token(request)
+    return render(request, "dashboards/dashboard.html")
 
 
 @login_required
@@ -115,25 +67,8 @@ def ticket_list(request):
         "created_by", "assigned_to", "department"
     ).prefetch_related("assigned_users")
 
-    status = request.GET.get("status")
-    priority = request.GET.get("priority")
-    assigned = request.GET.get("assigned")
-    search = request.GET.get("search", "").strip()
-
-    if status:
-        tickets = tickets.filter(status=status)
-    if priority:
-        tickets = tickets.filter(priority=priority)
-    if assigned == "mine":
-        tickets = tickets.filter(assigned_to=request.user)
-    elif assigned == "unassigned":
-        tickets = tickets.filter(assigned_to__isnull=True)
-    if search:
-        tickets = tickets.filter(
-            Q(title__icontains=search)
-            | Q(description__icontains=search)
-            | Q(tags__icontains=search)
-        )
+    params = {key: request.GET.get(key, "") for key in ("status", "priority", "assigned", "search")}
+    tickets = filter_tickets(tickets, request.GET, request.user)
 
     tickets = tickets[:50]
 
@@ -144,14 +79,11 @@ def ticket_list(request):
 
     ctx = {
         "tickets": tickets,
-        "status": status,
-        "priority": priority,
-        "assigned": assigned,
-        "search": search,
+        **params,
         "saved_views": saved_views,
         "current_query": current_query,
     }
-    return render(request, "tickets/list.html", ctx)
+    return render_live(request, "tickets/list.html", "tickets/_results.html", ctx)
 
 
 @login_required
@@ -204,6 +136,14 @@ def ticket_detail(request, pk):
     from .models import TicketRating
 
     rating = TicketRating.objects.filter(ticket=ticket).first()
+    from apps.projects.models import Project
+    from apps.projects.permissions import can_see_projects
+
+    escalate_projects = (
+        Project.objects.filter(is_archived=False).order_by("key")
+        if can_see_projects(request.user)
+        else []
+    )
     ctx = {
         "ticket": ticket,
         "messages_thread": thread,
@@ -213,10 +153,32 @@ def ticket_detail(request, pk):
         "can_post_internal": permissions.can_post_internal(request.user),
         "agents": agents,
         "rating": rating,
-        "can_rate": request.user.id == ticket.created_by_id
+        "escalate_projects": escalate_projects,
+        "suggestions": _suggestions(ticket, request.user, request),
+        "can_rate": feature_enabled("csat")
+        and request.user.id == ticket.created_by_id
         and ticket.status in ("resolved", "closed"),
     }
     return render(request, "tickets/detail.html", ctx)
+
+
+def _suggestions(ticket, user, request=None):
+    """Articles to read while answering this ticket; empty for a customer.
+
+    A published page carries the absolute help-center URL a reply may quote.
+    An internal page has none: the customer could not open it, so it is shown
+    for the agent to read and never offered as a link.
+    """
+    from django.urls import reverse
+
+    from apps.wiki.service import suggest_pages
+
+    pages = suggest_pages(ticket, user)
+    for page in pages:
+        page.permalink = None
+        if request is not None and page.is_published_to_help_center:
+            page.permalink = request.build_absolute_uri(reverse("help:article", args=[page.slug]))
+    return pages
 
 
 def _handle_message(request, ticket):
@@ -379,6 +341,8 @@ def ticket_create(request):
         "request_forms": forms,
         "selected_form": selected_form,
         "form_fields": selected_form.ordered_fields() if selected_form else [],
+        # The Help center's "Open a ticket about ..." carries the search over.
+        "prefill_title": (request.POST.get("title") or request.GET.get("title") or "")[:200],
     }
     return render(request, "tickets/create.html", ctx)
 
@@ -487,6 +451,9 @@ def ticket_rate(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
     if ticket.created_by_id != request.user.id or ticket.status not in ("resolved", "closed"):
         return redirect("tickets:ticket_detail", pk=pk)
+    if not feature_enabled("csat"):
+        messages.info(request, "Ratings are not being collected.")
+        return redirect("tickets:ticket_detail", pk=pk)
     if request.method == "POST":
         try:
             score = int(request.POST.get("score", "0"))
@@ -507,13 +474,16 @@ def ticket_rate(request, pk):
 
 @login_required
 def ticket_export(request):
-    """Export tickets as CSV (staff only) — enterprise data export."""
+    """Export tickets as CSV (staff only)."""
     import csv
 
     from django.http import HttpResponse
 
     if request.user.role not in ("agent", "admin"):
         return redirect("tickets:dashboard")
+    gated = business_page(request, "csv_export", what="CSV export")
+    if gated is not None:
+        return gated
 
     def safe(value):
         """Neutralize CSV formula injection: prefix cells that a spreadsheet
@@ -575,6 +545,9 @@ def activity_log(request):
     """Recent audit trail across tickets (staff only)."""
     if request.user.role not in ("agent", "admin"):
         return redirect("tickets:dashboard")
+    gated = business_page(request, "audit_log", what="Activity log")
+    if gated is not None:
+        return gated
     from .models import TicketMessage
 
     events = (
@@ -589,7 +562,7 @@ def activity_log(request):
 def global_search(request):
     query = request.GET.get("q", "").strip()
     tickets = []
-    articles = []
+    pages = []
     if query:
         tq = Ticket.objects.select_related("created_by", "assigned_to")
         # Customers only match on public message bodies (never internal notes),
@@ -606,15 +579,20 @@ def global_search(request):
             | message_match
         ).distinct()[:25]
 
-        from apps.kb.service import public_only_for, search_articles
+        from apps.wiki.models import Page
 
-        articles = search_articles(query, public_only=public_only_for(request.user))[:10]
+        pq = Q(title__icontains=query) | Q(summary__icontains=query) | Q(body__icontains=query)
+        # Staff search the whole wiki; customers only what the help center shows.
+        if request.user.role == "customer":
+            pages = Page.objects.filter(is_published_to_help_center=True).filter(pq)[:10]
+        else:
+            pages = Page.objects.filter(pq)[:10]
 
     ctx = {
         "query": query,
         "tickets": tickets,
-        "articles": articles,
-        "result_count": len(tickets) + len(articles),
+        "pages": pages,
+        "result_count": len(tickets) + len(pages),
     }
     return render(request, "tickets/search.html", ctx)
 

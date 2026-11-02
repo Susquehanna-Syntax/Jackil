@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ space.name }} — Wiki — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <a href="{% url 'wiki:home' %}" class="btn btn-ghost" style="margin-bottom: 24px;">
+    &larr; Back to the Wiki
+  </a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">{{ space.name }}</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">{{ space.description }}</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      {% if can_manage_spaces %}
+      <a href="{% url 'wiki:space_edit' space.slug %}" class="btn btn-outline">Edit Space</a>
+      {% endif %}
+      <a href="{% url 'wiki:page_new' %}?space={{ space.slug }}" class="btn btn-lav">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Page
+      </a>
+    </div>
+  </div>
+
+  <div class="wiki-layout fade-in d2">
+    <nav class="wiki-tree" aria-label="Pages in {{ space.name }}">
+      {% if tree %}
+      <ul>{{ tree }}</ul>
+      {% else %}
+      <div class="form-card-hint">No pages yet.</div>
+      {% endif %}
+    </nav>
+
+    <div class="form-card">
+      <div class="form-card-title">About this space</div>
+      <div class="form-card-hint">{{ space.description|default:"No description yet." }}</div>
+      {% if can_manage_spaces %}
+      <p style="margin-top:14px;"><a class="btn btn-outline btn-sm" href="{% url 'wiki:space_edit' space.slug %}">Edit</a></p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

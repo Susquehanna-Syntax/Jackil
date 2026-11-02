@@ -3,6 +3,8 @@ from pathlib import Path
 
 from decouple import config
 
+from apps.licensing.keys import trusted_public_key
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-dev-key-change-in-production")
@@ -42,6 +44,8 @@ else:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+JACKIL_LICENSE_PUBLIC_KEY = trusted_public_key(BASE_DIR, debug=DEBUG, environ=os.environ)
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -52,6 +56,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.accounts",
     "apps.civilsso",
+    "apps.saml",
     "apps.tickets",
     "apps.inbox",
     "apps.console",
@@ -62,6 +67,15 @@ INSTALLED_APPS = [
     "apps.reports",
     "apps.customfields",
     "apps.notifications",
+    "apps.dashboards",
+    "apps.links",
+    "apps.items",
+    "apps.wiki",
+    "apps.projects",
+    "apps.vigil",
+    "apps.portals",
+    "apps.licensing",
+    "apps.mfa",
 ]
 
 MIDDLEWARE = [
@@ -90,7 +104,9 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.notifications.context_processors.notifications",
                 "config.context_processors.features",
+                "config.context_processors.business",
                 "apps.civilsso.context_processors.civil",
+                "apps.saml.context_processors.saml",
             ],
         },
     },
@@ -172,3 +188,11 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 # Civil SSO (opt-in shared identity for the SQSY family). Unset = off.
 CIVIL_URL = os.environ.get("CIVIL_URL", "")
 CIVIL_APP_SLUG = os.environ.get("CIVIL_APP_SLUG", "jackil")
+
+# Two-factor sign-in (apps.mfa, copied from Civil). Staff only; see
+# apps/accounts/mfa_policy.py. Keys need the address people open Jackil at.
+MFA_ISSUER = "Jackil"
+MFA_RP_NAME = "Jackil"
+MFA_PUBLIC_URL = config("MFA_PUBLIC_URL", default="")
+MFA_REQUIRED = "apps.accounts.mfa_policy.required"
+MFA_LOGIN_TEMPLATE = "accounts/login.html"

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.key }} — Projects — Jackil{% endblock %}
+
+{% block content %}
+{% include "projects/_shell.html" %}
+<div class="fade-in d2">
+  <div class="pj-views" role="group" aria-label="Show the issues as">
+    <a href="{% url 'projects:board' project.key %}" class="pj-view">Board</a>
+    <a href="{% url 'projects:project_detail' project.key %}" class="pj-view" aria-current="page">List</a>
+    <span class="live-count pj-views-count" data-live-count>{{ issue_count }} issue{{ issue_count|pluralize }}</span>
+  </div>
+  <form method="get" class="filter-bar fade-in d2" data-live-filter>
+    <input type="text" class="form-input" placeholder="Search titles..." name="q" value="{{ query }}">
+    <select class="form-select" name="type">
+      <option value="">All types</option>
+      {% for value, label in types %}
+      <option value="{{ value }}" {% if issue_type == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select class="form-select" name="assignee">
+      <option value="">Anyone</option>
+      <option value="me" {% if assignee == 'me' %}selected{% endif %}>Assigned to me</option>
+      <option value="none" {% if assignee == 'none' %}selected{% endif %}>Unassigned</option>
+      {% for person in staff %}
+      <option value="{{ person.pk }}" {% if assignee == person.pk|stringformat:'s' %}selected{% endif %}>{{ person.username }}</option>
+      {% endfor %}
+    </select>
+    <select class="form-select" name="status">
+      <option value="">Any status</option>
+      {% for value, label in statuses %}
+      <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  <div class="fade-in d3">{% include "projects/_issue_results.html" %}</div>
+</div>
+{% endblock %}

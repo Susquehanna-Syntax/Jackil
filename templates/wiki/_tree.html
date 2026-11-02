@@ -1,0 +1,17 @@
+<ul class="wt-list">
+  {% for node in nodes %}
+  <li class="wt-item{% if node.children %} has-kids{% endif %}{% if node.depth == 0 and node.children %} wt-section{% endif %}" data-wt-item>
+    <div class="wt-row">
+      <a href="{{ node.page.get_absolute_url }}" class="wt-link{% if current and node.page.pk == current.pk %} current{% endif %}"{% if current and node.page.pk == current.pk %} aria-current="page"{% endif %}>{{ node.page.title }}</a>
+      {% if node.children %}
+      <button type="button" class="wt-toggle" aria-expanded="true" aria-label="Show or hide the pages under {{ node.page.title }}" data-wt-toggle>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {% endif %}
+    </div>
+    {% if node.children %}
+    <div class="wt-kids"><div>{% include "wiki/_tree.html" with nodes=node.children current=current %}</div></div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>

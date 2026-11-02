@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Templates — Wiki — Jackil{% endblock %}
+
+{% block content %}
+<div class="fade-in d1">
+  <div class="wiki-breadcrumbs">
+    <a href="{% url 'wiki:home' %}">Wiki</a> &rsaquo; Templates
+  </div>
+
+  <div class="page-header">
+    <div style="min-width:0;">
+      <div class="page-title">Templates</div>
+      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
+        What a new page starts as. A built-in can be edited, never deleted.
+      </div>
+    </div>
+    <a href="{% url 'wiki:template_create' %}" class="btn btn-lav">New Template</a>
+  </div>
+
+  <div class="form-card fade-in d2" style="max-width: 860px;">
+    {% if templates_listed %}
+    <div class="inbox-list" style="margin-top: 12px;">
+      {% for template in templates_listed %}
+      <div class="inbox-row">
+        <div class="inbox-row-main">
+          <div style="min-width: 0;">
+            <div class="inbox-name">{{ template.name }}
+              {% if template.is_builtin %}<span class="wiki-builtin-pill">built-in</span>{% endif %}
+            </div>
+            <div class="inbox-addr">{{ template.description|default:"No description" }}</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          <a href="{% url 'wiki:template_edit' template.pk %}" class="btn btn-outline btn-sm">Edit</a>
+          <a href="{% url 'wiki:template_delete' template.pk %}" class="btn btn-outline btn-sm">Delete</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="form-card-hint">No templates yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
