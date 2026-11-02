@@ -379,6 +379,7 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
             <tr><td><code>ALLOWED_HOSTS</code></td><td>Comma-separated hostnames</td><td><code>help.acme.com</code></td></tr>
             <tr><td><code>DATABASE_URL</code></td><td>Postgres DSN (prod)</td><td><code>postgres://…</code></td></tr>
             <tr><td><code>MAX_ATTACHMENT_SIZE</code></td><td>Upload cap in bytes</td><td><code>26214400</code></td></tr>
+            <tr><td><code>MFA_PUBLIC_URL</code></td><td>The https address people use; security keys and passkeys work only with it set</td><td><code>https://help.example.com</code></td></tr>
           </tbody>
         </table>
       </div>
@@ -409,6 +410,9 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
       <div class="callout callout-warn">
         <div class="callout-icon">!</div>
         <div>Internal notes are <strong>never</strong> visible to customers — the visibility check runs on every message and on search results. New agents created via <code>createsuperuser</code> are corrected to the admin role automatically.</div>
+      </div>
+      <div class="prose">
+        <p><strong>Two-factor sign-in.</strong> Agents and admins finish every password sign-in, and every visit to <code>/admin/</code>, with a second factor: a six-digit code from an authenticator app, a passkey or security key tap, or one of ten one-time recovery codes. Someone signing in for the first time sets an authenticator up right there and is shown their recovery codes once. Keys and passkeys are added on <strong>Profile &rarr; Two-factor sign-in</strong>, and need <code>MFA_PUBLIC_URL</code> set to the address people use (https). Customers sign in with their password alone, and a sign-in through Civil or SAML counts as already two-factor. An admin who loses their phone and codes asks another admin to pick them in <strong>Django admin &rarr; Users</strong> and run <strong>Reset two-factor sign-in</strong>.</p>
       </div>
     </div>
 
