@@ -6,7 +6,7 @@ builder because it produces our own XML offline."""
 
 from unittest import mock
 
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from apps.accounts.models import User
@@ -254,6 +254,23 @@ class MetadataTests(SamlTestCase):
         body = response.content.decode()
         self.assertIn(f'entityID="{HOST}/saml/metadata/"', body)
         self.assertIn(f'Location="{HOST}/saml/acs/"', body)
+
+    @override_settings(SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"),
+                       ALLOWED_HOSTS=["help.acme.com"])
+    def test_behind_a_tls_proxy_the_addresses_are_https_once_the_header_is_trusted(self):
+        # What TRUST_X_FORWARDED_PROTO=1 switches on: the proxy speaks http to
+        # Jackil, but the identity provider must be told the https addresses.
+        response = self.client.get(reverse("saml-metadata"), HTTP_HOST="help.acme.com",
+                                   HTTP_X_FORWARDED_PROTO="https")
+        body = response.content.decode()
+        self.assertIn('Location="https://help.acme.com/saml/acs/"', body)
+        self.assertIn('entityID="https://help.acme.com/saml/metadata/"', body)
+
+    @override_settings(ALLOWED_HOSTS=["help.acme.com"])
+    def test_without_trusting_the_header_a_forged_one_changes_nothing(self):
+        response = self.client.get(reverse("saml-metadata"), HTTP_HOST="help.acme.com",
+                                   HTTP_X_FORWARDED_PROTO="https")
+        self.assertIn('Location="http://help.acme.com/saml/acs/"', response.content.decode())
 
 
 class SettingsPageTests(SamlTestCase):
