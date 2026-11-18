@@ -3,6 +3,7 @@
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.console.decorators import admin_required
@@ -16,15 +17,54 @@ BUSINESS_HINT = "More than one portal is part of SQSY Business."
 
 @admin_required
 def portal_list(request):
+    portals = list(Portal.objects.prefetch_related("spaces"))
+    for portal in portals:
+        # The address people are sent to, whole, so it can be copied as is.
+        portal.public_url = request.build_absolute_uri(
+            reverse("portals:portal", kwargs={"slug": portal.slug})
+        )
     return render(
         request,
         "portals/settings.html",
         {
-            "portals": Portal.objects.all(),
+            "portals": portals,
             "can_add": service.can_add_portal(),
             "section": "portals",
         },
     )
+
+
+@admin_required
+@require_POST
+def portal_publish(request, pk):
+    """Publish or unpublish from the list, without opening the editor."""
+    portal = get_object_or_404(Portal, pk=pk)
+    publish = request.POST.get("published") == "1"
+    if not publish and portal.is_default:
+        messages.error(request, "Make another portal the default before unpublishing this one.")
+        return redirect("console:portal_list")
+    portal.is_published = publish
+    portal.save(update_fields=["is_published", "updated_at"])
+    if publish:
+        messages.success(request, f"“{portal.name}” is published.")
+    else:
+        messages.success(request, f"“{portal.name}” is a draft again: only staff can open it.")
+    return redirect("console:portal_list")
+
+
+@admin_required
+@require_POST
+def portal_make_default(request, pk):
+    """The default portal is where /portal/ and the help links land, so it
+    must be one people can open."""
+    portal = get_object_or_404(Portal, pk=pk)
+    if not portal.is_published:
+        messages.error(request, "Publish this portal before making it the default.")
+        return redirect("console:portal_list")
+    portal.is_default = True
+    portal.save()
+    messages.success(request, f"“{portal.name}” is now the default portal.")
+    return redirect("console:portal_list")
 
 
 @admin_required

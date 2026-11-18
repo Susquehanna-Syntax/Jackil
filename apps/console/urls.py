@@ -20,6 +20,8 @@ urlpatterns = [
     path("portals/new/", portal_views.portal_create, name="portal_create"),
     path("portals/<int:pk>/", portal_views.portal_edit, name="portal_edit"),
     path("portals/<int:pk>/delete/", portal_views.portal_delete, name="portal_delete"),
+    path("portals/<int:pk>/publish/", portal_views.portal_publish, name="portal_publish"),
+    path("portals/<int:pk>/default/", portal_views.portal_make_default, name="portal_make_default"),
     path("vigil/", vigil_views.vigil_settings, name="vigil_settings"),
     path(
         "vigil/move-devices/",
