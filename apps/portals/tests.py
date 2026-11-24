@@ -334,7 +334,9 @@ class PortalListActionTests(TestCase):
         self.assertContains(listing, "Every space")
 
     def test_a_draft_publishes_and_unpublishes(self):
-        response = self.client.post(f"/settings/portals/{self.second.pk}/publish/", {"published": "1"})
+        response = self.client.post(
+            f"/settings/portals/{self.second.pk}/publish/", {"published": "1"}
+        )
         self.assertEqual(response.status_code, 302)
         self.second.refresh_from_db()
         self.assertTrue(self.second.is_published)
@@ -343,17 +345,23 @@ class PortalListActionTests(TestCase):
         self.assertFalse(self.second.is_published)
 
     def test_the_default_portal_cannot_be_unpublished_from_the_list(self):
-        response = self.client.post(f"/settings/portals/{self.help_center.pk}/publish/", {"published": "0"})
+        response = self.client.post(
+            f"/settings/portals/{self.help_center.pk}/publish/", {"published": "0"}
+        )
         self.help_center.refresh_from_db()
         self.assertTrue(self.help_center.is_published)
-        self.assertIn(("error", "Make another portal the default before unpublishing this one."),
-                      messages_from(response))
+        self.assertIn(
+            ("error", "Make another portal the default before unpublishing this one."),
+            messages_from(response),
+        )
 
     def test_only_a_published_portal_becomes_the_default(self):
         response = self.client.post(f"/settings/portals/{self.second.pk}/default/")
         self.second.refresh_from_db()
         self.assertFalse(self.second.is_default)
-        self.assertIn(("error", "Publish this portal before making it the default."), messages_from(response))
+        self.assertIn(
+            ("error", "Publish this portal before making it the default."), messages_from(response)
+        )
 
         self.second.is_published = True
         self.second.save()
@@ -364,8 +372,12 @@ class PortalListActionTests(TestCase):
         self.assertFalse(self.help_center.is_default)
 
     def test_the_actions_are_post_only_and_admin_only(self):
-        self.assertEqual(self.client.get(f"/settings/portals/{self.second.pk}/publish/").status_code, 405)
-        self.assertEqual(self.client.get(f"/settings/portals/{self.second.pk}/default/").status_code, 405)
+        self.assertEqual(
+            self.client.get(f"/settings/portals/{self.second.pk}/publish/").status_code, 405
+        )
+        self.assertEqual(
+            self.client.get(f"/settings/portals/{self.second.pk}/default/").status_code, 405
+        )
         agent = User.objects.create_user("agt", "agt@x.com", "pass", role="agent")
         self.client.force_login(agent)
         self.client.post(f"/settings/portals/{self.second.pk}/publish/", {"published": "1"})
