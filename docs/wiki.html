@@ -474,7 +474,7 @@ DEFAULT_FROM_EMAIL=support@acme.com</pre></div>
         <table>
           <thead><tr><th>Tag</th><th>Follows</th></tr></thead>
           <tbody>
-            <tr><td><code>2026.3.0</code></td><td>Exactly that release. Pin this in production and change it deliberately.</td></tr>
+            <tr><td><code>2026.3.1</code></td><td>Exactly that release. Pin this in production and change it deliberately.</td></tr>
             <tr><td><code>latest</code></td><td>The newest stable release.</td></tr>
             <tr><td><code>rc-latest</code></td><td>The newest release candidate (<code>-rcN</code> tags).</td></tr>
             <tr><td><code>ex-latest</code></td><td>Experimental builds. Not for real data.</td></tr>
@@ -487,7 +487,7 @@ DEFAULT_FROM_EMAIL=support@acme.com</pre></div>
       </div>
       <div class="code-block"><span class="code-label">yaml</span><pre>services:
   web:
-    image: susquehannasyntax/jackil:2026.3.0
+    image: susquehannasyntax/jackil:2026.3.1
     env_file: .env
     ports:
       - <span class="hl-string">"127.0.0.1:8000:8000"</span>   <span class="hl-comment"># only the proxy reaches it</span>
