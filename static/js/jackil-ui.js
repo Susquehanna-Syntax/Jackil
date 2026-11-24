@@ -200,3 +200,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+
+/* ── Sidebar groups (2026.4) ─────────────────────────────────────────────
+   A group folds from its heading in the expanded sidebar, and stays folded
+   on every page (localStorage). The group of the page you are on colours it
+   (data-group on <html>) and always opens to show where you are. */
+const SB_FOLDED_KEY = 'jackil-sb-folded';
+
+function _sbFolded() {
+  try { return new Set(JSON.parse(localStorage.getItem(SB_FOLDED_KEY) || '[]')); } catch (e) { return new Set(); }
+}
+
+function _sbSetFolded(group, folded) {
+  const box = document.querySelector(`.sb-group[data-group="${group}"]`);
+  if (!box) return;
+  box.classList.toggle('is-folded', folded);
+  const head = box.querySelector('.sb-group-head');
+  if (head) head.setAttribute('aria-expanded', String(!folded));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const active = document.querySelector('.sidebar .sidebar-icon.active');
+  const here = active ? active.closest('.sb-group') : null;
+  if (here) document.documentElement.dataset.group = here.dataset.group;
+  _sbFolded().forEach((g) => { if (!here || here.dataset.group !== g) _sbSetFolded(g, true); });
+});
+
+document.addEventListener('click', (ev) => {
+  const head = ev.target.closest && ev.target.closest('[data-sb-group-toggle]');
+  if (!head) return;
+  const group = head.dataset.sbGroupToggle;
+  const folded = !head.closest('.sb-group').classList.contains('is-folded');
+  _sbSetFolded(group, folded);
+  const set = _sbFolded();
+  if (folded) set.add(group); else set.delete(group);
+  try { localStorage.setItem(SB_FOLDED_KEY, JSON.stringify([...set])); } catch (e) {}
+});

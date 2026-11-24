@@ -2631,3 +2631,51 @@ a { text-decoration: none; }
 .mv-note { color: var(--text-3); font-size: 12.5px; }
 .mv-moved { color: var(--mint-ink, var(--text-2)); font-size: 12.5px; }
 .mv-failed { color: var(--coral-ink); font-size: 12.5px; }
+
+/* ── Sidebar groups (2026.4) ─────────────────────────────────────────────
+   Service Desk sky, Work peach, Insights lavender: each a whole tinted block
+   (never a stripe down one side) that folds from its heading in the expanded
+   sidebar. The page's group colours its active item; jackil-ui.js sets
+   data-group on <html> from the active link. */
+:root { --grp: var(--sky); --grp-ink: var(--sky-ink); --rgb-grp: var(--rgb-sky); }
+:root[data-group="desk"], .sb-group[data-group="desk"] { --grp: var(--sky); --grp-ink: var(--sky-ink); --rgb-grp: var(--rgb-sky); }
+:root[data-group="work"], .sb-group[data-group="work"] { --grp: var(--peach); --grp-ink: var(--peach-ink); --rgb-grp: var(--rgb-peach); }
+:root[data-group="insights"], .sb-group[data-group="insights"] { --grp: var(--lavender); --grp-ink: var(--lavender-ink); --rgb-grp: var(--rgb-lavender); }
+
+.sidebar { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.sidebar::-webkit-scrollbar { display: none; }
+.sb-top, .sb-group, .sb-group-body, .sb-quick { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sb-group { margin: 6px 0; padding: 4px; border-radius: var(--r-md); background: rgba(var(--rgb-grp), 0.1); }
+.sb-group .sidebar-icon { color: var(--grp-ink); }
+.sb-group .sidebar-icon:hover { background: rgba(var(--rgb-grp), 0.22); color: var(--grp-ink); }
+.sb-group .sidebar-icon.active { background: var(--grp); color: var(--on-accent); }
+.sb-top .sidebar-icon.active, .sb-quick .sidebar-icon.active { background: var(--lavender); color: var(--on-accent); }
+.sb-group-head { display: none; }
+.sb-chev { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.2;
+  stroke-linecap: round; stroke-linejoin: round; transition: transform 0.25s var(--ease-out-expo); }
+.sb-quick { margin-top: 8px; position: sticky; bottom: -20px; z-index: 2; background: var(--bg); padding-bottom: 6px; }
+
+:root[data-sidebar="expanded"] .layout { grid-template-columns: 236px 1fr; }
+:root[data-sidebar="expanded"] .sidebar { width: 236px; padding: 18px 12px 14px; gap: 2px; }
+:root[data-sidebar="expanded"] .sidebar-logo { margin-bottom: 14px; }
+:root[data-sidebar="expanded"] .sidebar-icon { height: 34px; }
+:root[data-sidebar="expanded"] .sb-top, :root[data-sidebar="expanded"] .sb-group,
+:root[data-sidebar="expanded"] .sb-group-body { align-items: stretch; gap: 1px; }
+:root[data-sidebar="expanded"] .sb-group { margin: 6px 0 0; padding: 2px 5px 5px; }
+:root[data-sidebar="expanded"] .sb-group-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  font: inherit; font-size: 10.5px; font-weight: 700; letter-spacing: 0.9px; text-transform: uppercase;
+  color: var(--grp-ink); background: none; border: 0; border-radius: var(--r-sm);
+  padding: 6px 7px 4px; cursor: pointer; }
+:root[data-sidebar="expanded"] .sb-group-head:hover { background: rgba(var(--rgb-grp), 0.16); }
+:root[data-sidebar="expanded"] .sb-group-head[aria-expanded="true"] .sb-chev { transform: rotate(90deg); }
+:root[data-sidebar="expanded"] .sb-group.is-folded .sb-group-body { display: none; }
+
+:root[data-sidebar="expanded"] .sb-quick {
+  flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: space-between;
+  gap: 2px; padding: 8px 4px 8px; margin-top: 10px; border-top: 1px solid var(--border); }
+:root[data-sidebar="expanded"] .sb-quick .sidebar-icon { width: 32px; height: 32px; padding: 0; justify-content: center; }
+:root[data-sidebar="expanded"] .sb-quick .sidebar-label { display: none; }
+:root[data-sidebar="expanded"] .sb-quick .sidebar-icon[data-tip]:hover::after {
+  display: block; left: 50%; top: auto; bottom: 40px; transform: translateX(-50%); animation: none; }
+:root[data-sidebar="expanded"] .sb-quick .sidebar-avatar { margin-left: 0; width: 30px; height: 30px; font-size: 12px; flex: none; }

@@ -19,7 +19,8 @@
         if (localStorage.getItem('jackil-reduce-motion') === '1') {
           document.documentElement.classList.add('rm-sim');
         }
-        if (localStorage.getItem('jackil-sidebar') === 'expanded') {
+        // Expanded unless folded: the groups need their names.
+        if (localStorage.getItem('jackil-sidebar') !== 'collapsed') {
           document.documentElement.setAttribute('data-sidebar', 'expanded');
         }
       } catch (e) {}
@@ -36,65 +37,84 @@
 {% if user.is_authenticated %}
 <div class="layout">
   <nav class="sidebar">
-
+    {% comment %}Groups: Dashboard, Search and Notifications on their own, then
+       Service Desk, Work and Insights as tinted blocks that fold from their
+       headings, then the quick bar. Logic: static/js/jackil-ui.js{% endcomment %}
     <a href="{% url 'tickets:dashboard' %}" class="sidebar-logo" data-tip="Jackil"><img src="{% static 'img/jackil-logo.png' %}" alt="Jackil" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;"></a>
+    <div class="sb-top">
     {% if user.role != "customer" %}
-    <a href="{% url 'tickets:global_search' %}" class="sidebar-icon{% if '/search/' in request.path %} active{% endif %}" data-tip="Search">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    </a>
-    <a href="{% url 'tickets:dashboard' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" data-tip="Dashboard">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    </a>
+      <a href="{% url 'tickets:dashboard' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" data-tip="Dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </a>
+      <a href="{% url 'tickets:global_search' %}" class="sidebar-icon{% if '/search/' in request.path %} active{% endif %}" data-tip="Search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </a>
     {% endif %}
-    <a href="{% url 'tickets:ticket_list' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'ticket_list' or request.resolver_match.url_name == 'customer_tickets' %} active{% endif %}" data-tip="Tickets">
-      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    </a>
-    <a href="{% url 'tickets:ticket_create' %}" class="sidebar-icon" data-tip="New Ticket">
-      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </a>
+      <a href="{% url 'notifications:list' %}" class="sidebar-icon{% if '/notifications/' in request.path %} active{% endif %}" data-tip="Notifications" style="position: relative;">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        {% if unread_notifications %}<span class="notif-badge">{{ unread_notifications }}</span>{% endif %}
+      </a>
+    </div>
+    <div class="sb-group" data-group="desk">
+      <button type="button" class="sb-group-head" data-sb-group-toggle="desk" aria-expanded="true" aria-controls="sb-body-desk"><span class="sb-group-name">Service Desk</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <div class="sb-group-body" id="sb-body-desk">
+        <a href="{% url 'tickets:ticket_list' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'ticket_list' or request.resolver_match.url_name == 'customer_tickets' %} active{% endif %}" data-tip="Tickets">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </a>
+        <a href="{% url 'tickets:ticket_create' %}" class="sidebar-icon" data-tip="New Ticket">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </a>
+        <a href="{% url 'help:home' %}" class="sidebar-icon{% if '/help/' in request.path %} active{% endif %}" data-tip="Help Center">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </a>
+      </div>
+    </div>
     {% if user.role != "customer" %}
-    <a href="{% url 'items:item_list' %}" class="sidebar-icon{% if '/items/' in request.path %} active{% endif %}" data-tip="Dynamic Items">
-      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1.5"/><rect x="2" y="15" width="20" height="6" rx="1.5"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-    </a>
-    <a href="{% url 'wiki:home' %}" class="sidebar-icon{% if '/wiki/' in request.path %} active{% endif %}" data-tip="Wiki">
-      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-    </a>
-    <a href="{% url 'projects:project_list' %}" class="sidebar-icon{% if '/projects/' in request.path %} active{% endif %}" data-tip="Projects">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></svg>
-    </a>
-    {% endif %}
-    <a href="{% url 'help:home' %}" class="sidebar-icon{% if '/help/' in request.path %} active{% endif %}" data-tip="Help Center">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </a>
-    <a href="{% url 'notifications:list' %}" class="sidebar-icon{% if '/notifications/' in request.path %} active{% endif %}" data-tip="Notifications" style="position: relative;">
-      <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-      {% if unread_notifications %}<span class="notif-badge">{{ unread_notifications }}</span>{% endif %}
-    </a>
-    {% if user.role != "customer" %}
+    <div class="sb-group" data-group="work">
+      <button type="button" class="sb-group-head" data-sb-group-toggle="work" aria-expanded="true" aria-controls="sb-body-work"><span class="sb-group-name">Work</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <div class="sb-group-body" id="sb-body-work">
+        <a href="{% url 'projects:project_list' %}" class="sidebar-icon{% if '/projects/' in request.path %} active{% endif %}" data-tip="Projects">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></svg>
+        </a>
+        <a href="{% url 'wiki:home' %}" class="sidebar-icon{% if '/wiki/' in request.path %} active{% endif %}" data-tip="Wiki">
+          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        </a>
+        <a href="{% url 'items:item_list' %}" class="sidebar-icon{% if '/items/' in request.path %} active{% endif %}" data-tip="Dynamic Items">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1.5"/><rect x="2" y="15" width="20" height="6" rx="1.5"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        </a>
+      </div>
+    </div>
     {% if 'reports' in enabled_features %}
-    <a href="{% url 'reports:reports_home' %}" class="sidebar-icon{% if request.path|slice:":9" == "/reports/" %} active{% endif %}" data-tip="Reports">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    </a>
+    <div class="sb-group" data-group="insights">
+      <button type="button" class="sb-group-head" data-sb-group-toggle="insights" aria-expanded="true" aria-controls="sb-body-insights"><span class="sb-group-name">Insights</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <div class="sb-group-body" id="sb-body-insights">
+        <a href="{% url 'reports:reports_home' %}" class="sidebar-icon{% if request.path|slice:":9" == "/reports/" %} active{% endif %}" data-tip="Reports">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </a>
+      </div>
+    </div>
     {% endif %}
-    {% endif %}
-    {% if user.role == "admin" %}
-    <a href="{% url 'console:settings_home' %}" class="sidebar-icon{% if request.path|slice:":10" == "/settings/" %} active{% endif %}" data-tip="Settings">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    </a>
     {% endif %}
     <div class="sidebar-spacer"></div>
-    <div class="sidebar-icon sidebar-toggle" id="sidebar-toggle" data-tip="Show page names"
-      role="button" tabindex="0" aria-label="Show page names" aria-expanded="false">
-      <svg viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+    <div class="sb-quick" role="toolbar" aria-label="Quick actions">
+      <div class="sidebar-icon sidebar-toggle" id="sidebar-toggle" data-tip="Show page names"
+        role="button" tabindex="0" aria-label="Show page names" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+      </div>
+      <div class="sidebar-icon" id="theme-toggle" data-tip="Theme: Dark"
+        role="button" tabindex="0" aria-label="Change theme">
+        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </div>
+    {% if user.role == "admin" %}
+      <a href="{% url 'console:settings_home' %}" class="sidebar-icon{% if request.path|slice:":10" == "/settings/" %} active{% endif %}" data-tip="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </a>
+    {% endif %}
+      <a href="{% url 'accounts:logout' %}" class="sidebar-icon" data-tip="Log out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </a>
+      <a href="{% url 'accounts:profile' %}" class="sidebar-avatar" data-tip="Your profile" style="background: var(--{{ user.avatar_color|default:'lavender' }}); overflow: hidden;">{% if user.avatar %}<img src="{{ user.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.avatar_initials }}{% endif %}</a>
     </div>
-    <div class="sidebar-icon" id="theme-toggle" data-tip="Theme: Dark"
-      role="button" tabindex="0" aria-label="Change theme">
-      <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-    </div>
-    <a href="{% url 'accounts:profile' %}" class="sidebar-avatar" data-tip="Your profile" style="background: var(--{{ user.avatar_color|default:'lavender' }}); overflow: hidden;">{% if user.avatar %}<img src="{{ user.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.avatar_initials }}{% endif %}</a>
-    <a href="{% url 'accounts:logout' %}" class="sidebar-icon" data-tip="Log out">
-      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    </a>
   </nav>
 
   <main class="main">
