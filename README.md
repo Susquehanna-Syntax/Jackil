@@ -170,8 +170,8 @@ apps/
 └── console/        Admin settings console + branding
 ```
 
-Engineering docs live under `docs/` — `architecture.md`, the milestone/phase
-history in `dev/`, and the single-page user guide `wiki.html`.
+The architecture overview is in `docs/architecture.md`. The single-page user
+guide is `docs/wiki.html`.
 
 ## License
 
