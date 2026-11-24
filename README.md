@@ -131,6 +131,11 @@ CSRF_TRUSTED_ORIGINS=https://jackil-tail.kingdom.local,https://help.acme.com
 `CSRF_TRUSTED_ORIGINS` must include the scheme. Without it, POSTs fail with
 `Forbidden (Origin checking failed … does not match any trusted origins.)`.
 
+When the proxy terminates TLS, also set `TRUST_X_FORWARDED_PROTO=1` and have it
+send `X-Forwarded-Proto` (SAML needs to know the request was https). The full
+settings reference and a production compose file are in the wiki
+(`docs/wiki.html`, Configuration and Deployment).
+
 ## Background jobs (cron)
 
 ```bash

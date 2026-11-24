@@ -19,6 +19,13 @@ CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in config("CSRF_TRUSTED_ORIGINS", default="").split(",") if o.strip()
 ]
 
+# Behind a reverse proxy that terminates TLS, Django sees plain http unless it
+# trusts the proxy's X-Forwarded-Proto. SAML builds its own addresses from the
+# request, so it needs this to advertise https. Opt in only when the proxy
+# always sets (overwrites) that header: a client could forge it otherwise.
+if config("TRUST_X_FORWARDED_PROTO", default=False, cast=bool):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Database — Postgres in production, SQLite for zero-dependency local dev.
 # Set USE_SQLITE=1 in your .env to develop without a Postgres server.
 USE_SQLITE = config("USE_SQLITE", default=False, cast=bool)

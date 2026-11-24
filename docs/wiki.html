@@ -228,6 +228,7 @@
     <a href="#overview" class="nav-link active"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Overview</a>
     <a href="#quickstart" class="nav-link"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Quick Start</a>
     <a href="#configuration" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Configuration</a>
+    <a href="#deployment" class="nav-link"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Deployment</a>
 
     <div class="nav-section-label">Core</div>
     <a href="#roles" class="nav-link"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>Roles &amp; Accounts</a>
@@ -251,10 +252,13 @@
     <a href="#branding" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10a2.5 2.5 0 002.5-2.5c0-.61-.23-1.2-.64-1.67a2.5 2.5 0 011.9-4.15H19a3 3 0 003-3c0-4.97-4.5-8.68-10-8.68z"/></svg>White-label Branding</a>
     <a href="#vigil" class="nav-link"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Vigil Integration</a>
     <a href="#business" class="nav-link"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>SQSY Business</a>
+    <a href="#sso" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Single Sign-On</a>
 
     <div class="nav-section-label">Reference</div>
     <a href="#architecture" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>Architecture</a>
     <a href="#datamodel" class="nav-link"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Data Model</a>
+    <a href="#commands" class="nav-link"><svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Commands</a>
+    <a href="#troubleshooting" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Troubleshooting</a>
 
     <div class="nav-spacer"></div>
     <div class="nav-footer">
@@ -368,28 +372,216 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
     <div class="section" id="configuration">
       <div class="section-label">Getting Started</div>
       <div class="section-title">Environment <span style="color:var(--sky)">Configuration</span></div>
-      <div class="section-desc">Jackil reads settings from a <code>.env</code> file. SQLite for dev, Postgres for production.</div>
+      <div class="section-desc">Every setting Jackil reads from the environment (or a <code>.env</code> file beside <code>manage.py</code>), with its default.</div>
+      <div class="prose">
+        <p>Settings are read with <code>python-decouple</code>: a real environment variable wins over a line in <code>.env</code>, and anything unset falls back to the default below. The defaults are for a laptop, not a server: <strong><code>DEBUG</code> defaults to on and <code>SECRET_KEY</code> to a public development key</strong>, so a production deployment must set both.</p>
+        <h3>Core</h3>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Variable</th><th>Purpose</th><th>Example</th></tr></thead>
+          <thead><tr><th>Variable</th><th>Default</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td><code>USE_SQLITE</code></td><td>Use SQLite instead of Postgres (dev)</td><td><code>1</code></td></tr>
-            <tr><td><code>SECRET_KEY</code></td><td>Django secret key</td><td><code>change-me</code></td></tr>
-            <tr><td><code>DEBUG</code></td><td>Debug mode (never on in prod)</td><td><code>0</code></td></tr>
-            <tr><td><code>ALLOWED_HOSTS</code></td><td>Comma-separated hostnames</td><td><code>help.acme.com</code></td></tr>
-            <tr><td><code>DATABASE_URL</code></td><td>Postgres DSN (prod)</td><td><code>postgres://…</code></td></tr>
-            <tr><td><code>MAX_ATTACHMENT_SIZE</code></td><td>Upload cap in bytes</td><td><code>26214400</code></td></tr>
-            <tr><td><code>MFA_PUBLIC_URL</code></td><td>The https address people use; security keys and passkeys work only with it set</td><td><code>https://help.example.com</code></td></tr>
+            <tr><td><code>SECRET_KEY</code></td><td><code>django-insecure-dev-key-change-in-production</code></td><td>Signs sessions, CSRF tokens and password-reset links. Set a long random value (<code>python -c "import secrets; print(secrets.token_urlsafe(50))"</code>) and keep it: changing it signs everyone out.</td></tr>
+            <tr><td><code>DEBUG</code></td><td><code>True</code></td><td>Django debug mode. Set <code>0</code> in production: on, it shows stack traces and settings to anyone who triggers an error.</td></tr>
+            <tr><td><code>ALLOWED_HOSTS</code></td><td><code>localhost,127.0.0.1</code></td><td>Comma-separated host names Jackil answers to. A request for any other <code>Host</code> gets a 400. Include every name people (and your proxy) use.</td></tr>
+            <tr><td><code>CSRF_TRUSTED_ORIGINS</code></td><td><em>empty</em></td><td>Comma-separated origins, <strong>scheme included</strong>, that may POST (sign in, reply, save). Required whenever Jackil is reached on anything but <code>localhost</code>, for example <code>https://help.acme.com</code>. Without it every form fails with <em>Origin checking failed</em>.</td></tr>
+            <tr><td><code>SITE_URL</code></td><td><code>http://localhost:8000</code></td><td>The public base URL used to build links in outbound email (ticket links, password resets). Set it to the address customers open.</td></tr>
+            <tr><td><code>MFA_PUBLIC_URL</code></td><td><em>empty</em></td><td>The https address people open Jackil at. Security keys and passkeys are bound to it and work only when it is set; TOTP codes work without it.</td></tr>
+            <tr><td><code>MAX_ATTACHMENT_SIZE</code></td><td><code>26214400</code></td><td>Largest ticket attachment in bytes (25 MB). Your reverse proxy's body limit must be at least this.</td></tr>
+            <tr><td><code>TRUST_X_FORWARDED_PROTO</code></td><td><code>0</code></td><td>Set <code>1</code> when a reverse proxy terminates TLS and sends <code>X-Forwarded-Proto: https</code>. Django then treats those requests as https, which SAML sign-in needs. Only set it when the proxy always overwrites that header.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose"><h3>Database</h3>
+        <p>Postgres is the default; <code>USE_SQLITE=1</code> switches to a <code>db.sqlite3</code> file next to <code>manage.py</code> for development. There is no <code>DATABASE_URL</code>: the connection is the five variables below.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Default</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>USE_SQLITE</code></td><td><code>0</code></td><td><code>1</code> uses SQLite instead of Postgres. Fine for trying Jackil; use Postgres for anything shared.</td></tr>
+            <tr><td><code>DB_NAME</code></td><td><code>jackil</code></td><td>Postgres database name.</td></tr>
+            <tr><td><code>DB_USER</code></td><td><code>jackil</code></td><td>Postgres role.</td></tr>
+            <tr><td><code>DB_PASSWORD</code></td><td><code>jackil123</code></td><td>Postgres password. Change it: the default is published here.</td></tr>
+            <tr><td><code>DB_HOST</code></td><td><code>db</code></td><td>Postgres host. <code>db</code> is the service name in the bundled compose file.</td></tr>
+            <tr><td><code>DB_PORT</code></td><td><code>5432</code></td><td>Postgres port.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose"><h3>Outbound email (system default)</h3>
+        <p>Each inbox (Settings, Email) carries its own SMTP server, and replies on its tickets go out through it. These variables are the fallback for an inbox with no SMTP host and for mail that belongs to no inbox, such as password resets and notifications. Left at the default, mail is printed to the container log instead of sent.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Default</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>EMAIL_BACKEND</code></td><td><code>django.core.mail.backends.console.EmailBackend</code></td><td>Set <code>django.core.mail.backends.smtp.EmailBackend</code> to really send.</td></tr>
+            <tr><td><code>EMAIL_HOST</code></td><td><code>localhost</code></td><td>SMTP server.</td></tr>
+            <tr><td><code>EMAIL_PORT</code></td><td><code>25</code></td><td>SMTP port; usually <code>587</code> with TLS.</td></tr>
+            <tr><td><code>EMAIL_HOST_USER</code></td><td><em>empty</em></td><td>SMTP user name.</td></tr>
+            <tr><td><code>EMAIL_HOST_PASSWORD</code></td><td><em>empty</em></td><td>SMTP password.</td></tr>
+            <tr><td><code>EMAIL_USE_TLS</code></td><td><code>False</code></td><td><code>1</code> for STARTTLS (port 587).</td></tr>
+            <tr><td><code>DEFAULT_FROM_EMAIL</code></td><td><code>support@jackil.local</code></td><td>The From address of system mail.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose"><h3>Sign-in and licence</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Default</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>CIVIL_URL</code></td><td><em>empty</em></td><td>The address of a Civil identity server for SQSY single sign-on. Set here it overrides the Civil settings page; unset, the page decides. See <a href="#sso">Single sign-on</a>.</td></tr>
+            <tr><td><code>CIVIL_APP_SLUG</code></td><td><code>jackil</code></td><td>The app name Jackil registers under in Civil. A value saved on the Civil settings page takes precedence.</td></tr>
+            <tr><td><code>JACKIL_LICENSE_PUBLIC_KEY</code></td><td><em>empty</em></td><td>Source checkouts only: the public key licences are verified against. Release images carry the production key and ignore this.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose"><h3>A complete production <code>.env</code></h3></div>
+      <div class="code-block"><span class="code-label">env</span><pre><span class="hl-comment"># core</span>
+SECRET_KEY=<span class="hl-string">replace-with-50-random-characters</span>
+DEBUG=0
+ALLOWED_HOSTS=help.acme.com
+CSRF_TRUSTED_ORIGINS=https://help.acme.com
+SITE_URL=https://help.acme.com
+MFA_PUBLIC_URL=https://help.acme.com
+TRUST_X_FORWARDED_PROTO=1
+
+<span class="hl-comment"># database</span>
+DB_HOST=db
+DB_NAME=jackil
+DB_USER=jackil
+DB_PASSWORD=<span class="hl-string">a-long-random-password</span>
+
+<span class="hl-comment"># system mail (inboxes carry their own SMTP)</span>
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.acme.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=1
+EMAIL_HOST_USER=jackil@acme.com
+EMAIL_HOST_PASSWORD=<span class="hl-string">smtp-password</span>
+DEFAULT_FROM_EMAIL=support@acme.com</pre></div>
+    </div>
+
+    <div class="section" id="deployment">
+      <div class="section-label">Getting Started</div>
+      <div class="section-title">Production <span style="color:var(--mint)">Deployment</span></div>
+      <div class="section-desc">The published image, a compose file for a server, a reverse proxy, the scheduled jobs, backups and upgrades.</div>
+      <div class="prose">
+        <h3>The image</h3>
+        <p>Release images are published as <code>susquehannasyntax/jackil</code>. Pin a version for production; the moving tags follow a channel.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tag</th><th>Follows</th></tr></thead>
+          <tbody>
+            <tr><td><code>2026.3.0</code></td><td>Exactly that release. Pin this in production and change it deliberately.</td></tr>
+            <tr><td><code>latest</code></td><td>The newest stable release.</td></tr>
+            <tr><td><code>rc-latest</code></td><td>The newest release candidate (<code>-rcN</code> tags).</td></tr>
+            <tr><td><code>ex-latest</code></td><td>Experimental builds. Not for real data.</td></tr>
           </tbody>
         </table>
       </div>
       <div class="prose">
-        <p>Two background jobs run as management commands (wire them to <code>cron</code> or a systemd timer in production):</p>
-        <ul>
-          <li><code>manage.py poll_inbox</code> — fetch new email and thread it into tickets.</li>
-          <li><code>manage.py check_sla</code> — evaluate SLA targets and fire breach escalations.</li>
-        </ul>
-        <p>Static files are served with <strong>WhiteNoise</strong>; run <code>manage.py collectstatic</code> before deploying.</p>
+        <p>The container runs <code>gunicorn</code> with three workers on port <code>8000</code>. Its entrypoint applies migrations and collects static files on every start, so an upgrade is a new image and a restart. Static files are served by WhiteNoise from inside the container; uploaded attachments live in <code>/app/media</code> and must be on a volume.</p>
+        <h3>docker-compose.yml for a server</h3>
+      </div>
+      <div class="code-block"><span class="code-label">yaml</span><pre>services:
+  web:
+    image: susquehannasyntax/jackil:2026.3.0
+    env_file: .env
+    ports:
+      - <span class="hl-string">"127.0.0.1:8000:8000"</span>   <span class="hl-comment"># only the proxy reaches it</span>
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: jackil
+      POSTGRES_USER: jackil
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [<span class="hl-string">"CMD-SHELL"</span>, <span class="hl-string">"pg_isready -U jackil"</span>]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  media:
+  pgdata:</pre></div>
+      <div class="code-block"><span class="code-label">bash</span><pre>docker compose up <span class="hl-flag">-d</span>
+docker compose exec web python manage.py createsuperuser</pre></div>
+      <div class="callout callout-warn">
+        <div class="callout-icon">!</div>
+        <div>The <code>docker-compose.yml</code> in the repository is for development: it mounts the source tree, runs with <code>DEBUG=1</code> and publishes Postgres on port 5432. Use a file like the one above on a server.</div>
+      </div>
+      <div class="prose">
+        <h3>Behind a reverse proxy</h3>
+        <p>Terminate TLS at a proxy and forward to port 8000. Three settings must agree with the address people use: <code>ALLOWED_HOSTS</code> (the bare host name), <code>CSRF_TRUSTED_ORIGINS</code> (with <code>https://</code>) and <code>SITE_URL</code>. Pass the original <code>Host</code> header through, send <code>X-Forwarded-Proto</code>, set <code>TRUST_X_FORWARDED_PROTO=1</code>, and allow request bodies at least as large as <code>MAX_ATTACHMENT_SIZE</code>.</p>
+      </div>
+      <div class="code-block"><span class="code-label">Caddyfile</span><pre>help.acme.com {
+    request_body {
+        max_size 30MB
+    }
+    reverse_proxy 127.0.0.1:8000
+}</pre></div>
+      <div class="code-block"><span class="code-label">nginx</span><pre>server {
+    listen 443 ssl;
+    server_name help.acme.com;
+    client_max_body_size 30m;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}</pre></div>
+      <div class="prose">
+        <p>Caddy sets <code>Host</code> and <code>X-Forwarded-Proto</code> itself. A Cloudflare Tunnel works the same way: point the public hostname at <code>http://&lt;server&gt;:8000</code> and set the three addresses to the public <code>https://</code> name.</p>
+        <h3>Scheduled jobs</h3>
+        <p>Nothing runs in the background inside the container. Two management commands must be scheduled on the host:</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>How often</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>poll_inbox</code></td><td>Every minute</td><td>Fetches unseen mail from every active inbox over IMAP and threads it onto tickets. <code>--inbox &lt;id&gt;</code> polls one inbox.</td></tr>
+            <tr><td><code>check_sla</code></td><td>Every 5 minutes</td><td>Marks SLA breaches on open tickets and runs their escalations. <code>--dry-run</code> reports without changing anything.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-block"><span class="code-label">crontab</span><pre>* * * * *   cd /srv/jackil &amp;&amp; docker compose exec -T web python manage.py poll_inbox
+*/5 * * * * cd /srv/jackil &amp;&amp; docker compose exec -T web python manage.py check_sla</pre></div>
+      <div class="prose">
+        <p><code>-T</code> stops <code>docker compose exec</code> asking for a terminal, which cron does not have. Each run writes what it did to its output: redirect it to a file while you set up an inbox.</p>
+        <h3>Backups</h3>
+        <p>Two things hold Jackil's data: the Postgres database and the <code>media</code> volume (attachments, logos). Back up both, at the same time.</p>
+      </div>
+      <div class="code-block"><span class="code-label">bash</span><pre><span class="hl-comment"># database, compressed custom format</span>
+docker compose exec -T db pg_dump -U jackil -Fc jackil &gt; jackil-$(date +%F).dump
+<span class="hl-comment"># attachments</span>
+docker run --rm -v jackil_media:/m -v "$PWD":/b alpine tar czf /b/media-$(date +%F).tgz -C /m .
+
+<span class="hl-comment"># restore into an empty database</span>
+docker compose exec -T db pg_restore -U jackil -d jackil --clean --if-exists &lt; jackil-2026-11-17.dump</pre></div>
+      <div class="prose">
+        <p>The volume name is the compose project name plus <code>_media</code>; <code>docker volume ls</code> shows it. Keep the <code>.env</code> with the backups: without the same <code>SECRET_KEY</code> a restored copy works, but everyone has to sign in again.</p>
+        <h3>Upgrading</h3>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-content"><strong>Back up</strong> the database and media as above.</div></div>
+        <div class="step"><div class="step-content"><strong>Change the tag</strong> in <code>docker-compose.yml</code> to the new version and read its release notes.</div></div>
+        <div class="step"><div class="step-content"><strong>Pull and restart</strong>: <code>docker compose pull &amp;&amp; docker compose up -d</code>. The entrypoint migrates the database before gunicorn starts; <code>docker compose logs -f web</code> shows it.</div></div>
+      </div>
+      <div class="prose">
+        <p>Migrations only move forward. To go back a version, restore the backup taken before the upgrade.</p>
       </div>
     </div>
 
@@ -483,6 +675,19 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
         <div class="step"><div class="step-content"><strong>Add an inbox</strong> under Settings → Email Inboxes with host, port, and credentials.</div></div>
         <div class="step"><div class="step-content"><strong>Schedule</strong> <code>manage.py poll_inbox</code> (e.g. every minute via cron).</div></div>
         <div class="step"><div class="step-content"><strong>Reply</strong> from the ticket view — Jackil sends it out and records an outgoing-email event.</div></div>
+      </div>
+      <div class="prose">
+        <h3>How a message finds its ticket</h3>
+        <p>Every reply Jackil sends has the subject <code>[#&lt;ticket id&gt;] &lt;title&gt;</code>, a plus-addressed Reply-To (<code>support+&lt;id&gt;@acme.com</code> for an inbox at <code>support@acme.com</code>), and <code>In-Reply-To</code> / <code>References</code> headers naming the customer's last message. When mail comes in, <code>poll_inbox</code> looks for the ticket in this order:</p>
+        <ol>
+          <li>a <code>+&lt;id&gt;</code> token in the <code>To</code>, <code>Cc</code> or <code>Delivered-To</code> address;</li>
+          <li>a <code>[#&lt;id&gt;]</code> token in the subject.</li>
+        </ol>
+        <p>A match appends the message to that ticket; anything else opens a new ticket titled with the subject (the token removed), with the sender as requester, creating a customer account for an address Jackil has not seen. Attachments are stored with the message. Your mail server must deliver plus-addressed mail to the inbox (most do; on Microsoft 365 plus addressing has to be switched on).</p>
+        <h3>What polling does</h3>
+        <p>Each run logs in over IMAP (SSL on port 993 by default), searches the configured folder (<code>INBOX</code> by default) for <code>UNSEEN</code> messages, and ingests them. Each message is flagged <code>\Seen</code> once it has been taken, so it is ingested once. Another client reading the mailbox first marks the message seen too, and Jackil then skips it: give the inbox to Jackil alone. Each inbox records its last poll time and status, shown on its settings page.</p>
+        <h3>Outbound</h3>
+        <p>Replies leave through the ticket's inbox's SMTP server (STARTTLS on 587 by default) from that inbox's address, with its signature. An inbox without an SMTP host falls back to the system <code>EMAIL_*</code> settings.</p>
       </div>
     </div>
 
@@ -671,6 +876,36 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
       </div>
     </div>
 
+    <div class="section" id="sso">
+      <div class="section-label">Advanced</div>
+      <div class="section-title">Single <span style="color:var(--lavender)">Sign-On</span></div>
+      <div class="section-desc">Sign staff and customers in through SAML 2.0 or through Civil, the SQSY identity server.</div>
+      <div class="prose">
+        <h3>SAML 2.0 (SQSY Business)</h3>
+        <p>Jackil is a SAML service provider on the Business edition. Configure it under Settings, SSO, with your identity provider's entity ID, its SSO URL and its signing certificate (the PEM body or the whole PEM). Give the identity provider these two addresses:</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>What</th><th>Address</th></tr></thead>
+          <tbody>
+            <tr><td>Entity ID (metadata)</td><td><code>https://help.acme.com/saml/metadata/</code></td></tr>
+            <tr><td>Assertion consumer service (ACS)</td><td><code>https://help.acme.com/saml/acs/</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p>The user is matched by the assertion's <code>NameID</code> and created on first sign-in when new users are allowed, with the e-mail and name taken from the attributes you name (<code>email</code> and <code>name</code> by default) and the role you choose for newcomers (customer by default). A user who signs in this way once is recognised by that <code>NameID</code> from then on. The sign-in page shows the single sign-on button only while SAML is enabled and all three identity provider fields are filled in.</p>
+      </div>
+      <div class="callout callout-warn">
+        <div class="callout-icon">!</div>
+        <div>Jackil builds both addresses from the request it receives. Behind a proxy that terminates TLS, set <code>TRUST_X_FORWARDED_PROTO=1</code> and pass <code>X-Forwarded-Proto</code>, or Jackil advertises <code>http://</code> addresses and the identity provider rejects the response.</div>
+      </div>
+      <div class="prose">
+        <h3>Civil (SQSY single sign-on)</h3>
+        <p>Civil is the shared identity server for the SQSY products: one account and one two-factor setup across Vigil, Jackil and the rest. Point Jackil at it with <code>CIVIL_URL</code> or on the Civil settings page (<code>/accounts/civil/config/</code>); the sign-in page then offers <em>Sign in with Civil</em>, which returns to <code>/accounts/civil/callback</code>. Jackil verifies Civil's tokens against its public key; after rotating that key on Civil, run <code>python manage.py civil_refresh_key</code>.</p>
+      </div>
+    </div>
+
     <div class="section" id="architecture">
       <div class="section-label">Reference</div>
       <div class="section-title">Modular <span style="color:var(--lavender)">Architecture</span></div>
@@ -714,6 +949,50 @@ docker compose exec web python manage.py seed_demo <span class="hl-flag">--fresh
             <tr><td><code>AutomationRule</code> / <code>Macro</code></td><td>automation</td><td>Event-driven rules and canned replies.</td></tr>
             <tr><td><code>CustomField</code> / <code>RequestForm</code></td><td>customfields</td><td>Typed fields grouped into request forms.</td></tr>
             <tr><td><code>ApiKey</code> / <code>Webhook</code></td><td>api</td><td>Token auth and outbound event delivery.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="commands">
+      <div class="section-label">Reference</div>
+      <div class="section-title">Management <span style="color:var(--sky)">Commands</span></div>
+      <div class="section-desc">Run as <code>python manage.py &lt;command&gt;</code>, or <code>docker compose exec web python manage.py &lt;command&gt;</code> in a container.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>createsuperuser</code></td><td>Create the first administrator.</td></tr>
+            <tr><td><code>poll_inbox [--inbox ID]</code></td><td>Fetch unseen mail over IMAP and thread it onto tickets. Schedule every minute.</td></tr>
+            <tr><td><code>check_sla [--dry-run]</code></td><td>Flag SLA breaches and escalate. Schedule every few minutes.</td></tr>
+            <tr><td><code>licence</code></td><td>Show, or re-check, the SQSY licence edition this Jackil is running.</td></tr>
+            <tr><td><code>civil_refresh_key</code></td><td>Re-fetch Civil's token-signing public key after it was rotated.</td></tr>
+            <tr><td><code>seed_demo [--fresh]</code></td><td>Load demo departments, users and tickets. Never on real data: <code>--fresh</code> deletes first.</td></tr>
+            <tr><td><code>mfa_set_secret USER BASE32</code></td><td>Set a known TOTP secret for a user. Test environments only.</td></tr>
+            <tr><td><code>migrate</code>, <code>collectstatic</code></td><td>Run by the container's entrypoint on every start; by hand only in a source checkout.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="troubleshooting">
+      <div class="section-label">Reference</div>
+      <div class="section-title">Trouble<span style="color:var(--coral)">shooting</span></div>
+      <div class="section-desc">The errors people meet first, and what each one means.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead>
+          <tbody>
+            <tr><td><em>Forbidden (403): CSRF verification failed. Origin checking failed ... does not match any trusted origins.</em></td><td>The address in the browser is not in <code>CSRF_TRUSTED_ORIGINS</code>. Add it with its scheme, e.g. <code>https://help.acme.com</code>, and restart.</td></tr>
+            <tr><td><em>Bad Request (400)</em> on every page</td><td>The host name is not in <code>ALLOWED_HOSTS</code>. Add the bare name (no scheme, no port).</td></tr>
+            <tr><td>Links in emails point at <code>localhost:8000</code></td><td><code>SITE_URL</code> is unset. Set it to the public address.</td></tr>
+            <tr><td>Replies are not sent; they appear in <code>docker compose logs web</code></td><td>The inbox has no SMTP host and <code>EMAIL_BACKEND</code> is still the console backend. Configure the inbox's SMTP server or the <code>EMAIL_*</code> variables.</td></tr>
+            <tr><td>Incoming mail never becomes tickets</td><td><code>poll_inbox</code> is not scheduled, or the inbox's IMAP login fails: Settings, Email shows each inbox's last poll time and status.</td></tr>
+            <tr><td>Security keys or passkeys cannot be added</td><td><code>MFA_PUBLIC_URL</code> is unset, or differs from the address in the browser. It must be the exact https origin.</td></tr>
+            <tr><td>SAML sign-in fails after the identity provider redirects back</td><td>Jackil saw the request as http behind a TLS proxy. Set <code>TRUST_X_FORWARDED_PROTO=1</code> and pass <code>X-Forwarded-Proto</code>; check the entity ID and ACS addresses match what the identity provider holds.</td></tr>
+            <tr><td>Uploads fail with <em>413 Request Entity Too Large</em></td><td>The proxy's body limit is below <code>MAX_ATTACHMENT_SIZE</code>; raise <code>client_max_body_size</code> (nginx) or <code>request_body max_size</code> (Caddy).</td></tr>
+            <tr><td>Pages have no styling</td><td>Static files were not collected. The container does it on start; in a source checkout run <code>collectstatic</code> with <code>DEBUG=0</code>.</td></tr>
+            <tr><td>Everyone is signed out after a restart</td><td><code>SECRET_KEY</code> changed, often because it was never set and a new container used another value. Set it once in <code>.env</code>.</td></tr>
           </tbody>
         </table>
       </div>
