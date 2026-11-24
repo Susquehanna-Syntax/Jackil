@@ -712,6 +712,14 @@ body {
   width: 100%;
   max-width: 420px;
 }
+.auth-logo {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 24px;
+  border-radius: var(--r-md);
+  object-fit: cover;
+}
 .auth-title {
   font-family: 'Fraunces', serif;
   font-size: 28px;
@@ -2156,12 +2164,25 @@ a.dash-card { text-decoration: none; }
 .modal-body > .form-group, .modal-body > .muted-note, .modal-body > [data-links-results] { margin-left: 24px; margin-right: 24px; }
 
 /* ── Portals settings (M7 p01) ───────────────────────────────────────────── */
-.ps-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.ps-heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .ps-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.ps-link { font-family: var(--font-mono); font-size: 12px; margin-bottom: 0; }
+.ps-link { font-family: var(--font-mono); font-size: 12px; margin-bottom: 0; color: var(--text-2); overflow-wrap: anywhere; }
+.ps-link:hover { color: var(--text); }
+.ps-intro { margin: 4px 0 0; max-width: 640px; }
+.ps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; }
+.ps-grid > .form-card { margin: 0; min-width: 0; display: flex; flex-direction: column; }
+.ps-card-title { min-width: 0; }
+.ps-url { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding: 6px 6px 6px 12px; background: var(--s2); border-radius: var(--r-md); }
+.ps-url .ps-link { min-width: 0; }
+.ps-url .btn { flex-shrink: 0; }
+.ps-facts { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; }
+.ps-facts li { font-size: 12px; color: var(--text-2); border: 1px solid var(--s2); border-radius: 999px; padding: 3px 10px; }
+.ps-card .ps-actions { margin-top: auto; padding-top: 16px; flex-wrap: wrap; }
+.ps-actions form { display: contents; }
+@media (max-width: 520px) { .ps-grid { grid-template-columns: 1fr; } }
 .ps-locked { text-align: right; }
 .ps-pills { display: flex; gap: 6px; flex-shrink: 0; }
-.ps-actions { display: flex; gap: 8px; margin-top: 16px; }
+.ps-actions { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
 .ps-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); gap: 18px; align-items: start; }
 .ps-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .ps-checks { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }

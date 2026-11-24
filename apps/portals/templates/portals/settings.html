@@ -2,7 +2,10 @@
 
 {% block settings_content %}
 <div class="ps-heading-row">
-  <div class="section-heading">Portals</div>
+  <div>
+    <div class="section-heading">Portals</div>
+    <p class="form-card-hint ps-intro">Each portal is a help center of its own, with its own address, guides and request forms. Send people the link; drafts open for staff only.</p>
+  </div>
   {% if can_add %}
   <a href="{% url 'console:portal_create' %}" class="btn btn-lav">New portal</a>
   {% else %}
@@ -13,13 +16,11 @@
   {% endif %}
 </div>
 
+<div class="ps-grid">
 {% for portal in portals %}
 <div class="form-card ps-card">
   <div class="ps-card-head">
-    <div>
-      <div class="form-card-title">{{ portal.name }}</div>
-      <div class="form-card-hint ps-link">/portal/{{ portal.slug }}/</div>
-    </div>
+    <div class="form-card-title ps-card-title">{{ portal.name }}</div>
     <div class="ps-pills">
       {% if portal.is_published %}
       <span class="pill tc-mint">Published</span>
@@ -31,9 +32,37 @@
       {% endif %}
     </div>
   </div>
-  <p class="form-card-hint">{{ portal.request_forms|length }} request form{{ portal.request_forms|length|pluralize }}</p>
+  <div class="ps-url">
+    <a class="ps-link" href="{{ portal.public_url }}" target="_blank" rel="noopener">{{ portal.public_url }}</a>
+    <button type="button" class="btn btn-ghost btn-sm" data-copy="{{ portal.public_url }}" aria-label="Copy the link to {{ portal.name }}">Copy</button>
+  </div>
+  <ul class="ps-facts">
+    <li>{% with n=portal.spaces.all|length %}{% if n %}{{ n }} space{{ n|pluralize }}{% else %}Every space{% endif %}{% endwith %}</li>
+    <li>{{ portal.request_forms|length }} request form{{ portal.request_forms|length|pluralize }}</li>
+    {% if portal.vigil_status_pages %}<li>{{ portal.vigil_status_pages|length }} Vigil status page{{ portal.vigil_status_pages|length|pluralize }}</li>{% endif %}
+    {% if portal.show_search %}<li>Search</li>{% endif %}
+    {% if portal.show_my_tickets %}<li>My tickets</li>{% endif %}
+  </ul>
   <div class="ps-actions">
-    <a href="{% url 'console:portal_edit' pk=portal.pk %}" class="btn btn-outline">Edit</a>
+    <a href="{% url 'console:portal_edit' pk=portal.pk %}" class="btn btn-outline btn-sm">Edit</a>
+    <a href="{{ portal.public_url }}" class="btn btn-outline btn-sm" target="_blank" rel="noopener">{% if portal.is_published %}Open{% else %}Preview{% endif %}</a>
+    {% if portal.is_published %}
+      {% if not portal.is_default %}
+      <form method="post" action="{% url 'console:portal_publish' pk=portal.pk %}">
+        {% csrf_token %}<input type="hidden" name="published" value="0">
+        <button type="submit" class="btn btn-ghost btn-sm">Unpublish</button>
+      </form>
+      <form method="post" action="{% url 'console:portal_make_default' pk=portal.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm">Make default</button>
+      </form>
+      {% endif %}
+    {% else %}
+      <form method="post" action="{% url 'console:portal_publish' pk=portal.pk %}">
+        {% csrf_token %}<input type="hidden" name="published" value="1">
+        <button type="submit" class="btn btn-mint btn-sm">Publish</button>
+      </form>
+    {% endif %}
   </div>
 </div>
 {% empty %}
@@ -42,4 +71,5 @@
   <div class="form-card-hint">Create a portal to give customers a help center of their own.</div>
 </div>
 {% endfor %}
+</div>
 {% endblock %}

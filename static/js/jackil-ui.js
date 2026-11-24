@@ -182,6 +182,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Any [data-copy] button copies its value: a portal's link, for one.
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-copy]');
+    if (!btn || !navigator.clipboard) return;
+    navigator.clipboard.writeText(btn.dataset.copy).then(
+      () => showToast('Link copied', 'success'),
+      () => showToast('Could not copy the link', 'error'),
+    );
+  });
+
   const mode = storedThemeMode();
   setTheme(mode);
   if (mode === 'system') {
