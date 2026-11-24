@@ -38,8 +38,8 @@
 <div class="layout">
   <nav class="sidebar">
     {% comment %}Groups: Dashboard, Search and Notifications on their own, then
-       Service Desk, Work and Insights as tinted blocks that fold from their
-       headings, then the quick bar. Logic: static/js/jackil-ui.js{% endcomment %}
+       Tickets, Knowledge, Work and Insights as tinted blocks that fold from
+       their headings, then the quick bar. Logic: static/js/jackil-ui.js{% endcomment %}
     <a href="{% url 'tickets:dashboard' %}" class="sidebar-logo" data-tip="Jackil"><img src="{% static 'img/jackil-logo.png' %}" alt="Jackil" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;"></a>
     <div class="sb-top">
     {% if user.role != "customer" %}
@@ -55,31 +55,38 @@
         {% if unread_notifications %}<span class="notif-badge">{{ unread_notifications }}</span>{% endif %}
       </a>
     </div>
-    <div class="sb-group" data-group="desk">
-      <button type="button" class="sb-group-head" data-sb-group-toggle="desk" aria-expanded="true" aria-controls="sb-body-desk"><span class="sb-group-name">Service Desk</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
-      <div class="sb-group-body" id="sb-body-desk">
-        <a href="{% url 'tickets:ticket_list' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'ticket_list' or request.resolver_match.url_name == 'customer_tickets' %} active{% endif %}" data-tip="Tickets">
+    <div class="sb-group" data-group="tickets">
+      <button type="button" class="sb-group-head" data-sb-group-toggle="tickets" aria-expanded="true" aria-controls="sb-body-tickets"><span class="sb-group-name">Tickets</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <div class="sb-group-body" id="sb-body-tickets">
+      <a href="{% url 'tickets:ticket_list' %}" class="sidebar-icon{% if request.resolver_match.url_name == 'ticket_list' or request.resolver_match.url_name == 'customer_tickets' %} active{% endif %}" data-tip="Tickets">
           <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         </a>
-        <a href="{% url 'tickets:ticket_create' %}" class="sidebar-icon" data-tip="New Ticket">
+      <a href="{% url 'tickets:ticket_create' %}" class="sidebar-icon" data-tip="New Ticket">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </a>
-        <a href="{% url 'help:home' %}" class="sidebar-icon{% if '/help/' in request.path %} active{% endif %}" data-tip="Help Center">
+      </div>
+    </div>
+    <div class="sb-group" data-group="knowledge">
+      <button type="button" class="sb-group-head" data-sb-group-toggle="knowledge" aria-expanded="true" aria-controls="sb-body-knowledge"><span class="sb-group-name">Knowledge</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <div class="sb-group-body" id="sb-body-knowledge">
+      <a href="{% url 'help:home' %}" class="sidebar-icon{% if '/help/' in request.path %} active{% endif %}" data-tip="Help Center">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </a>
+    {% if user.role != "customer" %}
+      <a href="{% url 'wiki:home' %}" class="sidebar-icon{% if '/wiki/' in request.path %} active{% endif %}" data-tip="Wiki">
+          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        </a>
+    {% endif %}
       </div>
     </div>
     {% if user.role != "customer" %}
     <div class="sb-group" data-group="work">
       <button type="button" class="sb-group-head" data-sb-group-toggle="work" aria-expanded="true" aria-controls="sb-body-work"><span class="sb-group-name">Work</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
       <div class="sb-group-body" id="sb-body-work">
-        <a href="{% url 'projects:project_list' %}" class="sidebar-icon{% if '/projects/' in request.path %} active{% endif %}" data-tip="Projects">
+      <a href="{% url 'projects:project_list' %}" class="sidebar-icon{% if '/projects/' in request.path %} active{% endif %}" data-tip="Projects">
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></svg>
         </a>
-        <a href="{% url 'wiki:home' %}" class="sidebar-icon{% if '/wiki/' in request.path %} active{% endif %}" data-tip="Wiki">
-          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-        </a>
-        <a href="{% url 'items:item_list' %}" class="sidebar-icon{% if '/items/' in request.path %} active{% endif %}" data-tip="Dynamic Items">
+      <a href="{% url 'items:item_list' %}" class="sidebar-icon{% if '/items/' in request.path %} active{% endif %}" data-tip="Dynamic Items">
           <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1.5"/><rect x="2" y="15" width="20" height="6" rx="1.5"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
         </a>
       </div>
@@ -88,7 +95,7 @@
     <div class="sb-group" data-group="insights">
       <button type="button" class="sb-group-head" data-sb-group-toggle="insights" aria-expanded="true" aria-controls="sb-body-insights"><span class="sb-group-name">Insights</span><svg class="sb-chev" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
       <div class="sb-group-body" id="sb-body-insights">
-        <a href="{% url 'reports:reports_home' %}" class="sidebar-icon{% if request.path|slice:":9" == "/reports/" %} active{% endif %}" data-tip="Reports">
+      <a href="{% url 'reports:reports_home' %}" class="sidebar-icon{% if request.path|slice:":9" == "/reports/" %} active{% endif %}" data-tip="Reports">
           <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </a>
       </div>
